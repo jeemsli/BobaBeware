@@ -13,6 +13,126 @@ class Room {
     }
 }
 
+class Enemy {
+
+    constructor(sprite, speed, roomX, roomY, state) {
+      this.sprite = sprite;
+      this.speed = speed;
+      this.state = 'idle'
+      this.timeToNextRoom = 0;
+      this.rotation = 'down'
+      this.roomX = roomX;
+      this.roomY = roomY;
+    }
+}
+
+class Node {
+  constructor(obj) {
+    this.tile = obj.tile;
+    this.x = obj.x;
+    this.y = obj.y;
+    this.g = this.h = 0;
+    this.blocked = obj.tile.collideDown;
+    this.parent = null;
+  }
+
+  getF() {
+    return this.g + this.h;
+  }
+
+  resetNode() {
+    this.g = this.h = 0;
+    this.parent = null;
+  }
+}
+
+function getAdjacent(node, nodes, rows, cols) {
+  var adjacentNodes = new Array();
+
+  for(var x = -1; x < 2; x++) {
+    for(var y = -1; y < 2; y++) {
+      if (x || y) {
+        var x2 = node.x + x;
+        var y2 = node.y + y;
+
+        if(x2 >= 0 && x2 < cols && y2 >= 0 && y2 < rows) {
+          adjacentNodes.push(nodes[y2][x2]);
+        }
+      }
+    }
+  }
+
+  return adjacentNodes;
+}
+
+function getDistance(start, end) {
+  var diffX = Math.abs(start.x - end.x);
+  var diffY = Math.abs(start.y - end.y);
+  return diffX > diffY ? (10 * (diffX - diffY)) + (14 * diffY) : (10 * (diffY - diffX)) + (14 * diffX);
+}
+
+function getPath(start, end) {
+  var path = [];
+  var current = end;
+
+  while(current != start) {
+    path.push(current);
+    current = current.parent;
+  }
+  path.reverse();
+
+  return path;
+}
+
+function findPath(start, end, nodes, row, col) {
+  var start_node = nodes[start.y][start.x];
+  var end_node = nodes[end.y][end.x];
+
+  var open = new Array();
+  var closed = new Array();
+  open.push(start_node);
+
+  while(open.length > 0) {
+    //TRAVERSE
+    var current = open[0];
+    for(var i = 0; i < open.length; i++) {
+      if(open[i].getF() < current.getF() || open[i].getF() == current.getF()) {
+        if(open[i].h < current.h) {
+          current = open[i];
+        }
+      }
+    }
+
+    //SET NEW COSTS FOR SURROUNDING NODES
+    open.splice(open.indexOf(current), 1);
+    closed.push(current);
+
+    if (current == end_node) {
+      //RETRACE
+      return getPath(start_node, end_node);
+    }
+
+    var adjacentNodes = getAdjacent(current, nodes, row, col);
+    Array.prototype.forEach.call(adjacentNodes, neighbor => {
+      if(neighbor.blocked || closed.includes(neighbor)) {
+        return;
+      }
+      var newCost = current.g + getDistance(current, neighbor);
+      if (newCost < neighbor.g || !open.includes(neighbor)) {
+        neighbor.g = newCost;
+        neighbor.h = getDistance(neighbor, end_node);
+        neighbor.parent = current;
+
+        if(!open.includes(neighbor)) {
+          open.push(neighbor);
+        }
+      }
+    });
+  }
+
+  return null;
+}
+
 function drawGraphics(graphics, game, rooms, currentRoom) {
   graphics.kill();
   graphics = game.add.graphics();
@@ -129,7 +249,10 @@ TopDownGame.Game.prototype = {
     //create player
     this.player = this.game.add.sprite(400, 300, 'player');
     this.game.physics.arcade.enable(this.player);
-    this.graphics.draw
+    
+    //create enemy
+    this.enemy = this.game.add.sprite(300, 300, 'abg');
+    this.game.physics.arcade.enable(this.enemy);
 
     //the camera will follow the player in the world
     this.game.camera.follow(this.player);
@@ -413,6 +536,7 @@ TopDownGame.Game.prototype = {
               break;
           }
           // SET NEW MAP, CURRENT DOORS, AND LAYERS
+          this.oldMap = this.map;
           this.map = this.mapList[parseInt(this.currentRoom.tileMap) - 1];
           this.currentDoors = [];
           this.map.objects['doorLayer'].forEach(function(obj) {
@@ -477,11 +601,10 @@ TopDownGame.Game.prototype = {
             this.game.world.bringToTop(this.aboveLayer);
             this.graphics = drawGraphics(this.graphics, this.game, this.rooms, this.currentRoom);
             this.graphics.fixedToCamera = true;
-            console.log(this.currentRoom);
-            console.log(this.currentDoors);
             this.locked = false;
           } else {
             this.currentRoom = this.oldRoom;
+            console.log(this.currentDoors);
             switch(direction) {
               case 'up':
                 this.currentRoom.roomDown = null;
@@ -500,6 +623,17 @@ TopDownGame.Game.prototype = {
                 this.otherRoom.roomLeft = null;
                 break;
             }
+
+            this.map = this.oldMap;
+            this.currentDoors = [];
+            this.map.objects['doorLayer'].forEach(function(obj) {
+              this.currentDoors.push({
+                x: Math.floor(obj.x / 32),
+                y: Math.floor(obj.y / 32),
+                properties: obj.properties
+              });
+            }.bind(this));
+            this.oldMap = null;
             this.oldRoom = null;
             this.otherRoom = null;
             this.locked = true;

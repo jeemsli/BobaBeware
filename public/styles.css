@@ -1,0 +1,13 @@
+body {
+    height: 100%;
+    overflow: hidden;
+    padding: 0;
+    margin: 0;
+    background: rgb(81,19,8);
+    background: linear-gradient(90deg, rgba(81,19,8,1) 0%, rgba(0,0,0,1) 50%, rgba(81,19,8,1) 100%);
+}
+
+canvas {
+    border-left: 2px darkgoldenrod solid;
+    border-right: 2px darkgoldenrod solid;  
+}

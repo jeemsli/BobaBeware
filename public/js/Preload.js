@@ -14,7 +14,7 @@ TopDownGame.Preload.prototype = {
     //load game assets
     this.load.image('logo','assets/Menu/BobaBeware.png');
     this.load.image('play','assets/Menu/play.png');
-    this.load.image('level','assets/Menu/level.png');
+    this.load.image('level','assets/Menu/levelselection.png');
     this.load.image('controls','assets/Menu/controls.png');
     this.load.image('help','assets/Menu/help.png');
 

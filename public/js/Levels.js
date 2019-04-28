@@ -4,11 +4,14 @@ TopDownGame.Levels = function(game) {
 
 };
 
+var levelsText;
 
 TopDownGame.Levels.prototype = {
     create: function(game) {
+        levelsText = game.add.sprite(game.world.centerX+192,game.world.centerY-224,'levelsText');
+        levelsText.anchor.setTo(0.5,0.5);
 
-        this.createButton(game,"levelsBack",game.world.centerX-284,game.world.centerY-224,75,75,
+        this.createButton(game,"levelsBack",game.world.centerX-224,game.world.centerY-224,150,50,
             function(){
                 this.state.start('MainMenu');
             });

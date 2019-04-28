@@ -26,9 +26,9 @@ TopDownGame.MainMenu.prototype = {
                 this.state.start('Controls');
             });
 
-        this.createButton(game,"help",game.world.centerX,game.world.centerY+224,250,75,
+        this.createButton(game,"about",game.world.centerX,game.world.centerY+224,250,75,
             function(){
-                this.state.start('Help');
+                this.state.start('About');
             });
 
     },

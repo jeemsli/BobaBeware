@@ -16,16 +16,19 @@ TopDownGame.Preload.prototype = {
     this.load.image('play','assets/Menu/play.png');
     this.load.image('level','assets/Menu/levelselection.png');
     this.load.image('controls','assets/Menu/controls.png');
-    this.load.image('help','assets/Menu/help.png');
+    this.load.image('about','assets/Menu/about.png');
 
     this.load.image('levelsBack','assets/Levels/levelsBack.png');
+    this.load.image('levelsText','assets/Levels/levelsText.png');
     this.load.image('level1','assets/Levels/level1.png');
+  
+    this.load.image('controlsBack','assets/Controls/controlsBack.png');    
+    this.load.image('controlsScreen','assets/Controls/controlsScreen.png');
+    this.load.image('controlsText','assets/Controls/controlsText.png');
 
-    this.load.image('controlBack','assets/Controls/controlBack.png');    
-    this.load.image('controlScreen','assets/Controls/controlScreen.png');
-
-    this.load.image('helpBack','assets/Help/helpBack.png');
-    this.load.image('helpScreen','assets/Help/helpScreen.png');
+    this.load.image('aboutBack','assets/About/aboutBack.png');
+    this.load.image('aboutScreen','assets/About/aboutScreen.png');
+    this.load.image('aboutText','assets/About/aboutText.png');
 
     this.load.tilemap('1', '../maps/Floor 1/1.json', null, Phaser.Tilemap.TILED_JSON);
     this.load.tilemap('2', '../maps/Floor 1/2.json', null, Phaser.Tilemap.TILED_JSON);

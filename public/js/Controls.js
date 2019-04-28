@@ -16,7 +16,7 @@ TopDownGame.Controls.prototype = {
         controlsText = game.add.sprite(game.world.centerX+208,game.world.centerY-224,'controlsText');
         controlsText.anchor.setTo(0.5,0.5);
 
-        this.createButton(game,"controlsBack",game.world.centerX-224,game.world.centerY-224,150,50,
+        this.createButton(game,"controlsBack",game.world.centerX-224,game.world.centerY-224,100,75,
             function(){
                 this.state.start('MainMenu');
             });

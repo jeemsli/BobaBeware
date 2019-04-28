@@ -5,15 +5,18 @@ TopDownGame.Controls = function(game) {
 };
 
 var controls;
+var controlsText;
 
 TopDownGame.Controls.prototype = {
     create: function(game) {
-
-        controls = game.add.sprite(game.world.centerX,game.world.centerY+64,'controlScreen');
+        controls = game.add.sprite(game.world.centerX,game.world.centerY+64,'controlsScreen');
         controls.scale.setTo(0.5,0.5);
         controls.anchor.setTo(0.5,0.5);
 
-        this.createButton(game,"controlBack",game.world.centerX-284,game.world.centerY-224,75,75,
+        controlsText = game.add.sprite(game.world.centerX+208,game.world.centerY-224,'controlsText');
+        controlsText.anchor.setTo(0.5,0.5);
+
+        this.createButton(game,"controlsBack",game.world.centerX-224,game.world.centerY-224,150,50,
             function(){
                 this.state.start('MainMenu');
             });

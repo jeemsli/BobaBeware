@@ -52,7 +52,7 @@ TopDownGame.Preload.prototype = {
     this.load.image('gameTiles', 'assets/Floor 1/Floors/f1spritesheet.png');
     this.load.image('objectTiles', 'assets/Floor 1/Floors/objspritesheet.png');
     this.load.spritesheet('player', 'assets/PlayerSheet/playerspritesheet.png', 64, 64, 72);
-    this.load.spritesheet('abg', 'assets/Enemies/ABG/AbgSpriteSheet.png', 64, 64, 72);
+    this.load.spritesheet('abg', 'assets/Enemies/ABG/AbgSpriteSheet1.png', 64, 64, 72);
     this.game.load.audio('music', 'assets/audio/music.mp3');
   },
   create: function() {

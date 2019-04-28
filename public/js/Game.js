@@ -13,17 +13,307 @@ class Room {
     }
 }
 
+let BotState = {
+  IDLE: 1
+}
+
 class Enemy {
 
-    constructor(sprite, speed, roomX, roomY, state) {
+    constructor(sprite, speed, roomX, roomY, nodes, tiles, objects) {
       this.sprite = sprite;
+      this.spritePosition = {
+        x: Math.floor(this.sprite.body.x / 32),
+        y: Math.floor(this.sprite.body.y / 32),
+        tile: null      
+      }
+      this.spritePosition.tile = getTile(this.spritePosition.x, this.spritePosition.y, tiles);
       this.speed = speed;
-      this.state = 'idle'
+      this.state = BotState.IDLE;
       this.timeToNextRoom = 0;
       this.rotation = 'down'
       this.roomX = roomX;
       this.roomY = roomY;
+      this.nodes = nodes;
+      this.tiles = tiles;
+      this.objects = objects;
+      this.currentPath = null;
+
+      this.sprite.animations.add('top', [30,31,32,33,34,35], 8, true);
+      this.sprite.animations.add('idle', [0,1,2], 8, true);
+      this.sprite.animations.add('bottom', [6,7,8,9,10,11], 8, true);
+      this.sprite.animations.add('bottomleft', [12,13,14,15], 8, true);
+      this.sprite.animations.add('left', [18,19,20,21], 8, true);
+      this.sprite.animations.add('topleft', [24,25,26,27], 8, true);
+      this.sprite.animations.add('topright', [36,37,38,39], 8, true);
+      this.sprite.animations.add('right', [42,43,44,45], 8, true);
+      this.sprite.animations.add('bottomright', [48,49,50,51], 8, true);
+
+      this.sprite.animations.add('toprun', [30,31,32,33,34,35], 16, true);
+      this.sprite.animations.add('idlerun', [0,1,2], 16, true);
+      this.sprite.animations.add('bottomrun', [6,7,8,9,10,11], 16, true);
+      this.sprite.animations.add('bottomleftrun', [12,13,14,15], 16, true);
+      this.sprite.animations.add('leftrun', [18,19,20,21], 16, true);
+      this.sprite.animations.add('topleftrun', [24,25,26,27], 16, true);
+      this.sprite.animations.add('toprightrun', [36,37,38,39], 16, true);
+      this.sprite.animations.add('rightrun', [42,43,44,45], 16, true);
+      this.sprite.animations.add('bottomrightrun', [48,49,50,51], 16, true);
+      this.sprite.body.setSize(24,16,20,48);
+      console.log(this.sprite.body.x + ", " + this.sprite.body.y);
+      console.log(this.sprite.x + ", " + this.sprite.y);
+      this.sprite.animations.play('idle');
+      this.behaviors = {};
+      this.counter = false;
+
+      setInterval(function() {
+        this.baseBehavior();
+        this.think();
+      }.bind(this), 1);
     }
+
+    addBehavior(state, behavior) {
+      this.behaviors[state] = behavior;
+    }
+
+    setState(initState) {
+      this.state = initState;
+    }
+
+    think() {
+      if(this.behaviors[this.state]) {
+        this.behaviors[this.state].think();
+      }
+    }
+
+    baseBehavior() {
+      // if(this.currentPath == null) {
+      //   if(this.sprite.body.velocity.x > 0) {
+      //     if(this.sprite.body.velocity.x < 5) {
+      //       this.sprite.body.velocity.x = 0;
+      //     } else {
+      //       this.sprite.body.velocity.x = this.sprite.body.velocity.x / 3;
+      //     }
+      //   } else if (this.sprite.body.velocity.x < 0) {
+      //       if(this.sprite.body.velocity.x > -5) {
+      //         this.sprite.body.velocity.x = 0;
+      //       } else {
+      //         this.sprite.body.velocity.x = this.sprite.body.velocity.x / 3;
+      //       }
+      //   }
+      //   if(this.sprite.body.velocity.y > 0) {
+      //     if(this.sprite.body.velocity.y < 5) {
+      //       this.sprite.body.velocity.y = 0;
+      //     } else {
+      //       this.sprite.body.velocity.y = this.sprite.body.velocity.y / 3;
+      //     }
+      //   }
+      //   else if (this.sprite.body.velocity.y < 0) {
+      //       if(this.sprite.body.velocity.y > -5) {
+      //         this.sprite.body.velocity.y = 0;
+      //       } else {
+      //         this.sprite.body.velocity.y = this.sprite.body.velocity.y / 3;
+      //       }
+      //   }
+      // }
+    }
+
+    toNewMap(roomX, roomY, newNodes, newTiles, newObjects) {
+      this.roomX = roomX;
+      this.roomY = roomY;
+      this.nodes = newNodes;
+      this.newTiles = newTiles;
+      this.objects = newObjects;
+    }
+}
+
+class IdleBehavior {
+  constructor(bot) {
+    this.bot = bot;
+  }
+
+  think() {
+    if(this.bot.currentPath && this.bot.currentPath.length > 0) {
+      var x2 = this.bot.currentPath[0].x;
+      var y2 = this.bot.currentPath[0].y;
+      
+      var x = this.bot.spritePosition.x + 1;
+      var y = this.bot.spritePosition.y + 2;
+      
+      var bodyX = this.bot.sprite.body.x;
+      var bodyY = this.bot.sprite.body.y;
+      
+      if(x2 < x && y2 < y) {
+        //TOP LEFT
+        if((bodyY / 32) < y2 && (bodyX / 32) < x2) {
+          var node = this.bot.currentPath.shift();
+          this.bot.sprite.body.velocity.y = 0;
+          this.bot.sprite.body.velocity.x = 0;
+          this.bot.spritePosition = {x: node.x - 1, y: node.y - 2, tile: node.tile};
+          this.bot.sprite.body.y = y2 * 32;
+          this.bot.sprite.body.x = x2 * 32;
+          this.bot.sprite.animations.stop();
+          this.bot.counter = true;
+        } else {
+          this.bot.sprite.body.velocity.y = -(this.bot.speed);
+          this.bot.sprite.body.velocity.x = -(this.bot.speed);
+          if(this.bot.counter) {
+            this.bot.counter = false;
+            this.bot.sprite.animations.play('topleft');
+          }
+        }
+      } else if (x2 == x && y2 < y) {
+        //TOP
+        if((bodyY / 32) < y2) {
+          var node = this.bot.currentPath.shift();
+          this.bot.sprite.body.velocity.y = 0;
+          this.bot.spritePosition = {x: node.x - 1, y: node.y - 2, tile: node.tile};
+          this.bot.sprite.body.y = y2 * 32;
+          this.bot.counter = true;
+          this.bot.sprite.animations.stop();
+        } else {
+          this.bot.sprite.body.velocity.y = -(this.bot.speed);
+          if(this.bot.counter) {
+            this.bot.counter = false;
+            this.bot.sprite.animations.play('top');
+          }
+        }
+      } else if (x2 > x && y2 < y) {
+        //TOP RIGHT
+        if((bodyY / 32) < y2 && (bodyX / 32) > x2) {
+          var node = this.bot.currentPath.shift();
+          this.bot.sprite.body.velocity.y = 0;
+          this.bot.sprite.body.velocity.x = 0;
+          this.bot.spritePosition = {x: node.x - 1, y: node.y - 2, tile: node.tile};
+          this.bot.sprite.body.y = y2 * 32;
+          this.bot.sprite.body.x = x2 * 32;
+          this.bot.counter = true;
+          this.bot.sprite.animations.stop();
+        } else {
+          this.bot.sprite.body.velocity.y = -(this.bot.speed);
+          this.bot.sprite.body.velocity.x = (this.bot.speed);
+          if(this.bot.counter) {
+            this.bot.counter = false;
+            this.bot.sprite.animations.play('topright');
+          }
+        }
+      } else if (x2 < x && y2 == y) {
+        // LEFT
+        if((bodyX / 32) < x2) {
+          var node = this.bot.currentPath.shift();
+          this.bot.sprite.body.velocity.x = 0;
+          this.bot.spritePosition = {x: node.x - 1, y: node.y - 2, tile: node.tile};
+          this.bot.sprite.body.x = x2 * 32;
+          this.bot.sprite.animations.stop();
+          this.bot.counter = true;
+        } else {
+          this.bot.sprite.body.velocity.x = -(this.bot.speed);
+          if(this.bot.counter) {
+            this.bot.counter = false;
+            this.bot.sprite.animations.play('left');
+          }
+        }
+      } else if (x2 > x && y2 == y) {
+        // RIGHT
+        if((bodyX / 32) > x2) {
+          var node = this.bot.currentPath.shift();
+          this.bot.sprite.body.velocity.x = 0;
+          this.bot.spritePosition = {x: node.x - 1, y: node.y - 2, tile: node.tile};
+          this.bot.sprite.body.x = x2 * 32;
+          this.bot.sprite.animations.stop();
+          this.bot.counter = true;
+        } else {
+          this.bot.sprite.body.velocity.x = (this.bot.speed);
+          if(this.bot.counter) {
+            this.bot.counter = false;
+            this.bot.sprite.animations.play('right');
+          }
+        }
+      } else if (x2 < x && y2 > y) {
+        // BOTTOM LEFT
+        if((bodyY / 32) > y2 && (bodyX / 32) < x2) {
+          var node = this.bot.currentPath.shift();
+          this.bot.sprite.body.velocity.y = 0;
+          this.bot.sprite.body.velocity.x = 0;
+          this.bot.spritePosition = {x: node.x - 1, y: node.y - 2, tile: node.tile};
+          this.bot.sprite.body.y = y2 * 32;
+          this.bot.sprite.body.x = x2 * 32;
+          this.bot.sprite.animations.stop();
+          this.bot.counter = true;
+        } else {
+          this.bot.sprite.body.velocity.y = (this.bot.speed);
+          this.bot.sprite.body.velocity.x = -(this.bot.speed);
+          if(this.bot.counter) {
+            this.bot.counter = false;
+            this.bot.sprite.animations.play('bottomleft');
+          }
+        }
+      } else if (x2 == x && y2 > y) {
+        // BOTTOM
+        if((bodyY / 32) > y2) {
+          var node = this.bot.currentPath.shift();
+          this.bot.sprite.body.velocity.y = 0;
+          this.bot.spritePosition = {x: node.x - 1, y: node.y - 2, tile: node.tile};
+          this.bot.sprite.body.y = y2 * 32;
+          this.bot.sprite.animations.stop();
+          this.bot.counter = true;
+        } else {
+          this.bot.sprite.body.velocity.y = (this.bot.speed);
+          if(this.bot.counter) {
+            this.bot.counter = false;
+            this.bot.sprite.animations.play('bottom');
+          }
+        }
+      } else {
+        // BOTTOM RIGHT
+        if((bodyY / 32) > y2 && (bodyX / 32) > x2) {
+          var node = this.bot.currentPath.shift();
+          this.bot.sprite.body.velocity.y = 0;
+          this.bot.sprite.body.velocity.x = 0;
+          this.bot.spritePosition = {x: node.x - 1, y: node.y - 2, tile: node.tile};
+          this.bot.sprite.body.y = y2 * 32;
+          this.bot.sprite.body.x = x2 * 32;
+          this.bot.sprite.animations.stop();
+          this.bot.counter = true;
+        } else {
+          this.bot.sprite.body.velocity.y = (this.bot.speed);
+          this.bot.sprite.body.velocity.x = (this.bot.speed);
+          if(this.bot.counter) {
+            this.bot.counter = false;
+            this.bot.sprite.animations.play('bottomright');
+          }
+        }
+      }
+    } else {
+      //BOT IS CURRENTLY IDLE, LET'S PICK A RANDOM PLACE TO GO
+      var move = Math.random() > 0.997 ? true : false;
+      if(move) {
+        var tiles = [];
+        for(var i = this.bot.spritePosition.y - 1; i < this.bot.spritePosition.y + 5; i++) {
+          for(var x = this.bot.spritePosition.x - 2; x < this.bot.spritePosition.x + 4; x++) {
+            if(i > 0 && x > 0 && !this.bot.tiles[i][x].tile.collideDown) {
+              tiles.push(this.bot.tiles[i][x]);
+            }
+          }
+        }
+        var objList = this.bot.objects.map(obj => JSON.stringify(obj));
+        tiles = tiles.filter(tile => !objList.includes(JSON.stringify({x: tile.x, y: tile.y})));
+        console.log(tiles);        
+        var destTile = tiles[Math.floor(Math.random()*tiles.length)];
+        var offPosition = {x:this.bot.spritePosition.x + 1, y:this.bot.spritePosition.y + 2, tile: this.bot.spritePosition.tile};
+        this.bot.currentPath = findPath(offPosition, {x: destTile.x, y: destTile.y, tile: destTile}, this.bot.nodes, 25, 25);
+      }
+    }
+    this.bot.counter = true;
+  }
+}
+
+function drawPathGraphics(graphics, game, graphics_array) {
+  graphics.kill();
+  graphics = game.add.graphics();
+  for(var i = 0; i < graphics_array.length; i++) {
+    graphics.beginFill(0xFF0000, 0.4);
+    graphics.drawRect(graphics_array[i].tile.worldX, graphics_array[i].tile.worldY, 32, 32);
+  }
+  return graphics;
 }
 
 class Node {
@@ -133,6 +423,17 @@ function findPath(start, end, nodes, row, col) {
   return null;
 }
 
+function getTile(x_coords, y_coords, tiles) {
+  for(var i = 0; i < tiles.length; i++) {
+    for(var x = 0; x < tiles[i].length; x++) {
+      if(tiles[i][x].x == x_coords && tiles[i][x].y == y_coords) {
+        return tiles[i].tile;
+      }
+    }
+  }
+  return null;
+}
+
 function drawGraphics(graphics, game, rooms, currentRoom) {
   graphics.kill();
   graphics = game.add.graphics();
@@ -158,6 +459,9 @@ TopDownGame.Game.prototype = {
     this.currentRoom = new Room(null, null, null, null, '2', 0, 0);
     this.currentDoors = [];
     this.mapList = [];
+    this.tileList = [];
+    this.nodeList = [];
+    this.objs = [];
     this.graphics = this.game.add.graphics();
     // ROOMS THAT ARE CHOSEN IF YOU WENT THROUGH A DOOR IN
     // SOME DIRECTION, ex: choose a down door, go into an
@@ -171,7 +475,6 @@ TopDownGame.Game.prototype = {
     this.rooms = [new Room(null, null, null, null, '2', 0, 0)];
     this.graphics = drawGraphics(this.graphics, this.game, this.rooms, this.currentRoom);
     this.graphics.fixedToCamera = true;
-
 
     // SET UP ALL MAPS
     for(var i = 0; i < this.numRooms; i++) {
@@ -240,6 +543,46 @@ TopDownGame.Game.prototype = {
     //resizes the game world to match the layer dimensions
     this.backgroundlayer.resizeWorld();
 
+    //LOAD PATHFINDING TILES AND NODES
+    for(var i = 0; i < this.numRooms; i++) {
+      //LOAD PATHFINDING NODES
+      var nodes = [];
+      var tiles = [];
+      var newObjArr = []
+      Array.prototype.forEach.call(this.mapList[i].layers[2].data, row => {
+        Array.prototype.forEach.call(row, tile => {
+          if(tile.collideDown) {
+            newObjArr.push({x: tile.x, y: tile.y});
+          }
+        });
+      });
+      this.objs.push(newObjArr);
+      var tempArr = newObjArr.map(obj => JSON.stringify(obj));
+      Array.prototype.forEach.call(this.mapList[i].layers[1].data, row => {
+        var newArr = [];
+        var newArr2 = [];
+        Array.prototype.forEach.call(row, tile => {
+          if(tempArr.includes(JSON.stringify({x:tile.x,y:tile.y}))) {
+            tile.collideDown = true;
+          }
+          newArr.push(new Node({
+            x: tile.x,
+            y: tile.y,
+            tile: tile
+          }));
+          newArr2.push({
+            x: tile.x,
+            y: tile.y,
+            tile: tile
+          });
+        });
+        nodes.push(newArr);
+        tiles.push(newArr2);
+      });
+    
+      this.nodeList.push(nodes);
+      this.tileList.push(tiles);
+    }
     // this.createItems();
     // this.createDoors(); 
     // readTextFile('../maps/Floor 1/4.json').then((data) => {
@@ -249,11 +592,11 @@ TopDownGame.Game.prototype = {
     //create player
     this.player = this.game.add.sprite(400, 300, 'player');
     this.game.physics.arcade.enable(this.player);
-    
     //create enemy
-    this.enemy = this.game.add.sprite(300, 300, 'abg');
-    this.game.physics.arcade.enable(this.enemy);
-
+    this.enemies = [];
+    var enemy = this.game.add.sprite(300, 300, 'abg');
+    this.game.physics.arcade.enable(enemy);
+    this.enemies.push(new Enemy(enemy, 50, 0, 0, this.nodeList[this.mapList.indexOf(this.map)], this.tileList[this.mapList.indexOf(this.map)], this.objs[this.mapList.indexOf(this.map)]));
     //the camera will follow the player in the world
     this.game.camera.follow(this.player);
     this.game.stage.backgroundColor = '#000000';
@@ -288,6 +631,10 @@ TopDownGame.Game.prototype = {
     this.player.animations.play('idle');
     this.player.body.setSize(24,16,20,48);
     this.shift = this.game.input.keyboard.addKey(Phaser.Keyboard.SHIFT);
+
+    //ENEMY AI
+    this.enemies[0].addBehavior(BotState.IDLE, new IdleBehavior(this.enemies[0]));
+    this.pathGraphics = this.game.add.graphics();
 
     //GENERATE MAP
     console.log(this.map);
@@ -640,7 +987,14 @@ TopDownGame.Game.prototype = {
           }
         }
       }
+      Array.prototype.forEach.call(this.enemies, enemy => {
+        if(enemy.currentPath) {
+          this.pathGraphics = drawPathGraphics(this.pathGraphics, this.game, enemy.currentPath);
+        }
+      });
     }.bind(this), 10);
+
+    console.log(this.nodeList[this.mapList.indexOf(this.map)].filter(node => node.blocked == true));
 
     setInterval(function() {
       this.text.destroy();
@@ -651,11 +1005,13 @@ TopDownGame.Game.prototype = {
       });
       this.text.fixedToCamera = true;
       this.text.text = Math.floor(this.player.x / 32) + ", " + Math.floor(this.player.y / 32) + "\n"
-      + this.currentRoom.x + ", " + this.currentRoom.y;
+      + this.currentRoom.x + ", " + this.currentRoom.y + "\n" 
+      + (this.enemies[0].sprite.body.x + 32) + ", " + (this.enemies[0].sprite.body.y + 64) + "\n"
+      + Math.floor((this.game.input.mousePointer.x + this.game.camera.x - 32)/32) + ", " + Math.floor((this.game.input.mousePointer.y + this.game.camera.y - 64)/32);
       if(this.locked) {
         this.text.text += "\nThe door is locked!";
       }
-    }.bind(this), 10);
+    }.bind(this), 5);
   },
   createItems: function() {
     //create items
@@ -706,6 +1062,13 @@ TopDownGame.Game.prototype = {
     //collision
     this.game.physics.arcade.collide(this.player, this.wallLayer);
     this.game.physics.arcade.collide(this.player, this.objectLayer);
+    // for(var i = 0; i < this.enemies.length; i++) {
+    //   if(this.enemies[i].roomX == this.currentRoom.x && this.enemies[i].roomY == this.currentRoom.y) {
+    //     this.game.physics.arcade.collide(this.player, this.enemies[i].sprite);
+    //     this.game.physics.arcade.collide(this.enemies[i].sprite, this.wallLayer);
+    //     this.game.physics.arcade.collide(this.enemies[i].sprite, this.objectLayer);
+    //   }
+    // }
     // this.game.physics.arcade.overlap(this.player, this.items, this.collect, null, this);
     // this.game.physics.arcade.overlap(this.player, this.doors, this.enterDoor, null, this);
 

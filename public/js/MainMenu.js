@@ -11,6 +11,8 @@ TopDownGame.MainMenu.prototype = {
         logo = game.add.sprite(game.world.centerX,game.world.centerY-192,'logo');
         logo.anchor.setTo(0.5,0.5);
 
+        game.add.tween(logo).from( { y: -200 }, 2000, Phaser.Easing.Bounce.Out, true);
+
         this.createButton(game,"play",game.world.centerX,game.world.centerY-64,250,75,
             function(){
                 this.state.start('Game');

@@ -14,12 +14,16 @@ class Room {
 }
 
 let BotState = {
-  IDLE: 1
+  IDLE: 1,
+  ENRAGED: 2,
+  NONE: 0
 }
 
 class Enemy {
 
-    constructor(sprite, speed, roomX, roomY, nodes, tiles, objects) {
+    constructor(sprite, speed, roomX, roomY, nodes, tiles, objects, player, currentRoom) {
+      this.player = player;
+      this.currentRoom = currentRoom;
       this.sprite = sprite;
       this.spritePosition = {
         x: Math.floor(this.sprite.body.x / 32),
@@ -35,11 +39,13 @@ class Enemy {
       this.roomY = roomY;
       this.nodes = nodes;
       this.tiles = tiles;
+      this.swapped = false;
       this.objects = objects;
       this.currentPath = null;
+      this.pathGraphics = null;
 
       this.sprite.animations.add('top', [30,31,32,33,34,35], 8, true);
-      this.sprite.animations.add('idle', [0,1,2], 8, true);
+      this.sprite.animations.add('idle', [0], 8, true);
       this.sprite.animations.add('bottom', [6,7,8,9,10,11], 8, true);
       this.sprite.animations.add('bottomleft', [12,13,14,15], 8, true);
       this.sprite.animations.add('left', [18,19,20,21], 8, true);
@@ -49,7 +55,7 @@ class Enemy {
       this.sprite.animations.add('bottomright', [48,49,50,51], 8, true);
 
       this.sprite.animations.add('toprun', [30,31,32,33,34,35], 16, true);
-      this.sprite.animations.add('idlerun', [0,1,2], 16, true);
+      this.sprite.animations.add('idlerun', [0], 16, true);
       this.sprite.animations.add('bottomrun', [6,7,8,9,10,11], 16, true);
       this.sprite.animations.add('bottomleftrun', [12,13,14,15], 16, true);
       this.sprite.animations.add('leftrun', [18,19,20,21], 16, true);
@@ -58,16 +64,15 @@ class Enemy {
       this.sprite.animations.add('rightrun', [42,43,44,45], 16, true);
       this.sprite.animations.add('bottomrightrun', [48,49,50,51], 16, true);
       this.sprite.body.setSize(24,16,20,48);
-      console.log(this.sprite.body.x + ", " + this.sprite.body.y);
-      console.log(this.sprite.x + ", " + this.sprite.y);
       this.sprite.animations.play('idle');
       this.behaviors = {};
       this.counter = false;
+      this.visible = true;
 
       setInterval(function() {
-        this.baseBehavior();
+        //this.baseBehavior();
         this.think();
-      }.bind(this), 1);
+      }.bind(this), 5);
     }
 
     addBehavior(state, behavior) {
@@ -76,6 +81,10 @@ class Enemy {
 
     setState(initState) {
       this.state = initState;
+    }
+
+    setVisible(visibility) {
+      this.visible = visibility;
     }
 
     think() {
@@ -125,9 +134,21 @@ class Enemy {
     }
 }
 
-class IdleBehavior {
+class EnrageBehavior {
   constructor(bot) {
     this.bot = bot;
+
+  }
+
+  think_more() {
+    var x = Math.floor(this.bot.player.x / 32);
+    var y = Math.floor(this.bot.player.y / 32);
+    var x2 = this.bot.spritePosition.x;
+    var y2 = this.bot.spritePosition.y;
+    if((x > (x2 - 5)) && (x < (x2 + 5)) && (y > (y2 - 5)) && (y < (y2 + 5)) && this.bot.currentRoom.x == this.bot.roomX && this.bot.currentRoom.y == this.bot.roomY) {
+      var tile = this.bot.tiles[y + 2][x + 1];
+      this.bot.currentPath = findPath({x: x2 + 1, y: y2 + 2, tile: this.bot.spritePosition.tile}, {x: x + 1, y: y + 2, tile: tile}, this.bot.nodes, 25, 25);
+    }
   }
 
   think() {
@@ -152,6 +173,191 @@ class IdleBehavior {
           this.bot.sprite.body.x = x2 * 32;
           this.bot.sprite.animations.stop();
           this.bot.counter = true;
+          this.think_more();
+        } else {
+          this.bot.sprite.body.velocity.y = -(this.bot.speed * 2);
+          this.bot.sprite.body.velocity.x = -(this.bot.speed * 2);
+          if(this.bot.counter) {
+            this.bot.counter = false;
+            this.bot.sprite.animations.play('topleftrun');
+          }
+        }
+      } else if (x2 == x && y2 < y) {
+        //TOP
+        if((bodyY / 32) < y2) {
+          var node = this.bot.currentPath.shift();
+          this.bot.sprite.body.velocity.y = 0;
+          this.bot.spritePosition = {x: node.x - 1, y: node.y - 2, tile: node.tile};
+          this.bot.sprite.body.y = y2 * 32;
+          this.bot.counter = true;
+          this.bot.sprite.animations.stop();
+          this.think_more();
+        } else {
+          this.bot.sprite.body.velocity.y = -(this.bot.speed * 2);
+          if(this.bot.counter) {
+            this.bot.counter = false;
+            this.bot.sprite.animations.play('toprun');
+          }
+        }
+      } else if (x2 > x && y2 < y) {
+        //TOP RIGHT
+        if((bodyY / 32) < y2 && (bodyX / 32) > x2) {
+          var node = this.bot.currentPath.shift();
+          this.bot.sprite.body.velocity.y = 0;
+          this.bot.sprite.body.velocity.x = 0;
+          this.bot.spritePosition = {x: node.x - 1, y: node.y - 2, tile: node.tile};
+          this.bot.sprite.body.y = y2 * 32;
+          this.bot.sprite.body.x = x2 * 32;
+          this.bot.counter = true;
+          this.bot.sprite.animations.stop();
+          this.think_more();
+        } else {
+          this.bot.sprite.body.velocity.y = -(this.bot.speed * 2);
+          this.bot.sprite.body.velocity.x = (this.bot.speed * 2);
+          if(this.bot.counter) {
+            this.bot.counter = false;
+            this.bot.sprite.animations.play('toprightrun');
+          }
+        }
+      } else if (x2 < x && y2 == y) {
+        // LEFT
+        if((bodyX / 32) < x2) {
+          var node = this.bot.currentPath.shift();
+          this.bot.sprite.body.velocity.x = 0;
+          this.bot.spritePosition = {x: node.x - 1, y: node.y - 2, tile: node.tile};
+          this.bot.sprite.body.x = x2 * 32;
+          this.bot.sprite.animations.stop();
+          this.bot.counter = true;
+          this.think_more();
+        } else {
+          this.bot.sprite.body.velocity.x = -(this.bot.speed * 2);
+          if(this.bot.counter) {
+            this.bot.counter = false;
+            this.bot.sprite.animations.play('leftrun');
+          }
+        }
+      } else if (x2 > x && y2 == y) {
+        // RIGHT
+        if((bodyX / 32) > x2) {
+          var node = this.bot.currentPath.shift();
+          this.bot.sprite.body.velocity.x = 0;
+          this.bot.spritePosition = {x: node.x - 1, y: node.y - 2, tile: node.tile};
+          this.bot.sprite.body.x = x2 * 32;
+          this.bot.sprite.animations.stop();
+          this.bot.counter = true;
+          this.think_more();
+        } else {
+          this.bot.sprite.body.velocity.x = (this.bot.speed * 2);
+          if(this.bot.counter) {
+            this.bot.counter = false;
+            this.bot.sprite.animations.play('rightrun');
+          }
+        }
+      } else if (x2 < x && y2 > y) {
+        // BOTTOM LEFT
+        if((bodyY / 32) > y2 && (bodyX / 32) < x2) {
+          var node = this.bot.currentPath.shift();
+          this.bot.sprite.body.velocity.y = 0;
+          this.bot.sprite.body.velocity.x = 0;
+          this.bot.spritePosition = {x: node.x - 1, y: node.y - 2, tile: node.tile};
+          this.bot.sprite.body.y = y2 * 32;
+          this.bot.sprite.body.x = x2 * 32;
+          this.bot.sprite.animations.stop();
+          this.bot.counter = true;
+          this.think_more();
+        } else {
+          this.bot.sprite.body.velocity.y = (this.bot.speed * 2);
+          this.bot.sprite.body.velocity.x = -(this.bot.speed * 2);
+          if(this.bot.counter) {
+            this.bot.counter = false;
+            this.bot.sprite.animations.play('bottomleftrun');
+          }
+        }
+      } else if (x2 == x && y2 > y) {
+        // BOTTOM
+        if((bodyY / 32) > y2) {
+          var node = this.bot.currentPath.shift();
+          this.bot.sprite.body.velocity.y = 0;
+          this.bot.spritePosition = {x: node.x - 1, y: node.y - 2, tile: node.tile};
+          this.bot.sprite.body.y = y2 * 32;
+          this.bot.sprite.animations.stop();
+          this.bot.counter = true;
+          this.think_more();
+        } else {
+          this.bot.sprite.body.velocity.y = (this.bot.speed * 2);
+          if(this.bot.counter) {
+            this.bot.counter = false;
+            this.bot.sprite.animations.play('bottomrun');
+          }
+        }
+      } else {
+        // BOTTOM RIGHT
+        if((bodyY / 32) > y2 && (bodyX / 32) > x2) {
+          var node = this.bot.currentPath.shift();
+          this.bot.sprite.body.velocity.y = 0;
+          this.bot.sprite.body.velocity.x = 0;
+          this.bot.spritePosition = {x: node.x - 1, y: node.y - 2, tile: node.tile};
+          this.bot.sprite.body.y = y2 * 32;
+          this.bot.sprite.body.x = x2 * 32;
+          this.bot.sprite.animations.stop();
+          this.bot.counter = true;
+          this.think_more();
+        } else {
+          this.bot.sprite.body.velocity.y = (this.bot.speed * 2);
+          this.bot.sprite.body.velocity.x = (this.bot.speed * 2);
+          if(this.bot.counter) {
+            this.bot.counter = false;
+            this.bot.sprite.animations.play('bottomrightrun');
+          }
+        }
+      }
+    } else {
+      this.bot.setState(BotState.IDLE);
+    }
+    this.bot.counter = true;
+  }
+}
+
+class IdleBehavior {
+  constructor(bot) {
+    this.bot = bot;
+  }
+
+  think_more() {
+    var x = Math.floor(this.bot.player.x / 32);
+    var y = Math.floor(this.bot.player.y / 32);
+    var x2 = this.bot.spritePosition.x;
+    var y2 = this.bot.spritePosition.y;
+    if((x > (x2 - 5)) && (x < (x2 + 5)) && (y > (y2 - 5)) && (y < (y2 + 5)) && this.bot.currentRoom.x == this.bot.roomX && this.bot.currentRoom.y == this.bot.roomY) {
+      var tile = this.bot.tiles[y + 2][x + 1];
+      this.bot.currentPath = findPath({x: x2 + 1, y: y2 + 2, tile: this.bot.spritePosition.tile}, {x: x + 1, y: y + 2, tile: tile}, this.bot.nodes, 25, 25);
+      this.bot.setState(BotState.ENRAGED);
+    }
+  }
+
+  think() {
+    if(this.bot.currentPath && this.bot.currentPath.length > 0) {
+      var x2 = this.bot.currentPath[0].x;
+      var y2 = this.bot.currentPath[0].y;
+      
+      var x = this.bot.spritePosition.x + 1;
+      var y = this.bot.spritePosition.y + 2;
+      
+      var bodyX = this.bot.sprite.body.x;
+      var bodyY = this.bot.sprite.body.y;
+      
+      if(x2 < x && y2 < y) {
+        //TOP LEFT
+        if((bodyY / 32) < y2 && (bodyX / 32) < x2) {
+          var node = this.bot.currentPath.shift();
+          this.bot.sprite.body.velocity.y = 0;
+          this.bot.sprite.body.velocity.x = 0;
+          this.bot.spritePosition = {x: node.x - 1, y: node.y - 2, tile: node.tile};
+          this.bot.sprite.body.y = y2 * 32;
+          this.bot.sprite.body.x = x2 * 32;
+          this.bot.sprite.animations.stop();
+          this.bot.counter = true;
+          this.think_more();
         } else {
           this.bot.sprite.body.velocity.y = -(this.bot.speed);
           this.bot.sprite.body.velocity.x = -(this.bot.speed);
@@ -169,6 +375,7 @@ class IdleBehavior {
           this.bot.sprite.body.y = y2 * 32;
           this.bot.counter = true;
           this.bot.sprite.animations.stop();
+          this.think_more();
         } else {
           this.bot.sprite.body.velocity.y = -(this.bot.speed);
           if(this.bot.counter) {
@@ -187,6 +394,7 @@ class IdleBehavior {
           this.bot.sprite.body.x = x2 * 32;
           this.bot.counter = true;
           this.bot.sprite.animations.stop();
+          this.think_more();
         } else {
           this.bot.sprite.body.velocity.y = -(this.bot.speed);
           this.bot.sprite.body.velocity.x = (this.bot.speed);
@@ -204,6 +412,7 @@ class IdleBehavior {
           this.bot.sprite.body.x = x2 * 32;
           this.bot.sprite.animations.stop();
           this.bot.counter = true;
+          this.think_more();
         } else {
           this.bot.sprite.body.velocity.x = -(this.bot.speed);
           if(this.bot.counter) {
@@ -220,6 +429,7 @@ class IdleBehavior {
           this.bot.sprite.body.x = x2 * 32;
           this.bot.sprite.animations.stop();
           this.bot.counter = true;
+          this.think_more();
         } else {
           this.bot.sprite.body.velocity.x = (this.bot.speed);
           if(this.bot.counter) {
@@ -238,6 +448,7 @@ class IdleBehavior {
           this.bot.sprite.body.x = x2 * 32;
           this.bot.sprite.animations.stop();
           this.bot.counter = true;
+          this.think_more();
         } else {
           this.bot.sprite.body.velocity.y = (this.bot.speed);
           this.bot.sprite.body.velocity.x = -(this.bot.speed);
@@ -255,6 +466,7 @@ class IdleBehavior {
           this.bot.sprite.body.y = y2 * 32;
           this.bot.sprite.animations.stop();
           this.bot.counter = true;
+          this.think_more();
         } else {
           this.bot.sprite.body.velocity.y = (this.bot.speed);
           if(this.bot.counter) {
@@ -273,6 +485,7 @@ class IdleBehavior {
           this.bot.sprite.body.x = x2 * 32;
           this.bot.sprite.animations.stop();
           this.bot.counter = true;
+          this.think_more();
         } else {
           this.bot.sprite.body.velocity.y = (this.bot.speed);
           this.bot.sprite.body.velocity.x = (this.bot.speed);
@@ -284,7 +497,7 @@ class IdleBehavior {
       }
     } else {
       //BOT IS CURRENTLY IDLE, LET'S PICK A RANDOM PLACE TO GO
-      var move = Math.random() > 0.997 ? true : false;
+      var move = Math.random() > 0.995 ? true : false;
       if(move) {
         var tiles = [];
         for(var i = this.bot.spritePosition.y - 1; i < this.bot.spritePosition.y + 5; i++) {
@@ -295,8 +508,7 @@ class IdleBehavior {
           }
         }
         var objList = this.bot.objects.map(obj => JSON.stringify(obj));
-        tiles = tiles.filter(tile => !objList.includes(JSON.stringify({x: tile.x, y: tile.y})));
-        console.log(tiles);        
+        tiles = tiles.filter(tile => !objList.includes(JSON.stringify({x: tile.x, y: tile.y})));      
         var destTile = tiles[Math.floor(Math.random()*tiles.length)];
         var offPosition = {x:this.bot.spritePosition.x + 1, y:this.bot.spritePosition.y + 2, tile: this.bot.spritePosition.tile};
         this.bot.currentPath = findPath(offPosition, {x: destTile.x, y: destTile.y, tile: destTile}, this.bot.nodes, 25, 25);
@@ -306,9 +518,40 @@ class IdleBehavior {
   }
 }
 
+function findRoom(rooms, x, y) {
+  for(var i = 0; i < rooms.length; i++) {
+    if(rooms[i].x == x && rooms[i].y == y) {
+      return rooms[i];
+    }
+  }
+}
+
+function findMap(room, maps) {
+  for(var i = 0; i < maps.length; i++) {
+    if(maps[i].key == room.tileMap) {
+      return maps[i];
+    }
+  }
+}
+
+function getValidDoors(room, maps) {
+  var currentDoors = [];
+  var map = findMap(room, maps);
+  map.objects['doorLayer'].forEach(function(obj) {
+    currentDoors.push({
+      x: Math.floor(obj.x / 32),
+      y: Math.floor(obj.y / 32),
+      properties: obj.properties
+    });
+  });
+  return currentDoors;
+}
+
 function drawPathGraphics(graphics, game, graphics_array) {
-  graphics.kill();
-  graphics = game.add.graphics();
+  if(graphics) {
+    graphics.kill();
+  }
+  var graphics = game.add.graphics();
   for(var i = 0; i < graphics_array.length; i++) {
     graphics.beginFill(0xFF0000, 0.4);
     graphics.drawRect(graphics_array[i].tile.worldX, graphics_array[i].tile.worldY, 32, 32);
@@ -435,8 +678,10 @@ function getTile(x_coords, y_coords, tiles) {
 }
 
 function drawGraphics(graphics, game, rooms, currentRoom) {
-  graphics.kill();
-  graphics = game.add.graphics();
+  if(graphics) {
+    graphics.kill();
+  }
+  var graphics = game.add.graphics();
   for(var i = 0; i < rooms.length; i++) {
     if(rooms[i].x == currentRoom.x && rooms[i].y == currentRoom.y) {
       // DRAW GREEN
@@ -471,7 +716,7 @@ TopDownGame.Game.prototype = {
     this.leftRooms = [];
     this.rightRooms = [];
     this.deadEnds = [];
-    this.numRooms = 22;
+    this.numRooms = 37;
     this.rooms = [new Room(null, null, null, null, '2', 0, 0)];
     this.graphics = drawGraphics(this.graphics, this.game, this.rooms, this.currentRoom);
     this.graphics.fixedToCamera = true;
@@ -583,11 +828,6 @@ TopDownGame.Game.prototype = {
       this.nodeList.push(nodes);
       this.tileList.push(tiles);
     }
-    // this.createItems();
-    // this.createDoors(); 
-    // readTextFile('../maps/Floor 1/4.json').then((data) => {
-    //   console.log(data);
-    // });
 
     //create player
     this.player = this.game.add.sprite(400, 300, 'player');
@@ -596,7 +836,7 @@ TopDownGame.Game.prototype = {
     this.enemies = [];
     var enemy = this.game.add.sprite(300, 300, 'abg');
     this.game.physics.arcade.enable(enemy);
-    this.enemies.push(new Enemy(enemy, 50, 0, 0, this.nodeList[this.mapList.indexOf(this.map)], this.tileList[this.mapList.indexOf(this.map)], this.objs[this.mapList.indexOf(this.map)]));
+    this.enemies.push(new Enemy(enemy, 65, 0, 0, this.nodeList[this.mapList.indexOf(this.map)], this.tileList[this.mapList.indexOf(this.map)], this.objs[this.mapList.indexOf(this.map)], this.player, this.currentRoom));
     //the camera will follow the player in the world
     this.game.camera.follow(this.player);
     this.game.stage.backgroundColor = '#000000';
@@ -631,19 +871,48 @@ TopDownGame.Game.prototype = {
     this.player.animations.play('idle');
     this.player.body.setSize(24,16,20,48);
     this.shift = this.game.input.keyboard.addKey(Phaser.Keyboard.SHIFT);
+    this.graphics = this.game.add.graphics();
 
     //ENEMY AI
     this.enemies[0].addBehavior(BotState.IDLE, new IdleBehavior(this.enemies[0]));
-    this.pathGraphics = this.game.add.graphics();
+    this.enemies[0].addBehavior(BotState.ENRAGED, new EnrageBehavior(this.enemies[0]));
 
     //GENERATE MAP
     console.log(this.map);
 
+    // DEBUG TOGGLE
+    this.toggle = false;
+    this.t = this.game.input.keyboard.addKey(Phaser.Keyboard.T);
+    this.t.onDown.add(function() {
+      this.toggle = !this.toggle;
+      console.log(this.toggle);
+      if(!this.toggle) {
+        if(this.graphics && this.graphics.alive) {
+          this.graphics.kill();
+          this.graphics = null;
+        }
+        if(this.enemies) {
+          Array.prototype.forEach.call(this.enemies, enemy => {
+            if(enemy.pathGraphics) {
+              enemy.pathGraphics.kill();
+              enemy.pathGraphics = null;
+            }
+          });
+        }
+        if(this.text) {
+          this.text.destroy();
+          this.text = null;
+        }
+      }
+    }.bind(this));
+
+    // MAIN PLAYER LOOP
     setInterval(function() {
       // PLAYER ENTER DOOR
       for(var i = 0; i < this.currentDoors.length; i++) {
         if(this.currentDoors[i].x - 1 == Math.floor(this.player.x / 32) && this.currentDoors[i].y - 3 == Math.floor(this.player.y / 32)) {
           var direction = this.currentDoors[i].properties[0].value;
+          var rooms = this.rooms;
           switch(direction) {
             case 'up': 
               direction = 'down';
@@ -668,7 +937,7 @@ TopDownGame.Game.prototype = {
                 if(counter == 0) {
                   //FIND A RANDOM ROOM AND LINK TO IT
                   // DETERMINE IF WE NEED A DEAD END
-                  if ((this.currentRoom.y > 10 || this.currentRoom.y < -10) || Math.random(0, 10) > Math.pow(1.23, this.currentRoom.y)) {
+                  if ((this.currentRoom.y > 10 || this.currentRoom.y < -10) || Math.random(0, 10) > Math.pow(1.3, this.currentRoom.y)) {
                     //GENERATE DEAD END
                     var deadendlist = [];
                     for(var x = 0; x < this.deadEnds.length; x++) {
@@ -896,7 +1165,6 @@ TopDownGame.Game.prototype = {
 
           var door = this.currentDoors.filter(door => door.properties[0].value == direction);
           if(door.length != 0) {
-            console.log(door);
             var xOffset = 0;
             var yOffset = 0;
             switch(direction) {
@@ -945,13 +1213,30 @@ TopDownGame.Game.prototype = {
             //resizes the game world to match the layer dimensions
             this.backgroundlayer.resizeWorld();
             this.game.world.bringToTop(this.player);
+            for(var i = 0; i < this.enemies.length; i++) {
+              if(this.enemies[i].roomX == this.currentRoom.x && this.enemies[i].roomY == this.currentRoom.y) {
+                this.enemies[i].setVisible(true);
+                this.game.world.bringToTop(this.enemies[i].sprite);
+              } else {
+                this.enemies[i].setVisible(false);
+              }
+            }
+            this.game.world.bringToTop(this.aboveObjectLayer);
             this.game.world.bringToTop(this.aboveLayer);
-            this.graphics = drawGraphics(this.graphics, this.game, this.rooms, this.currentRoom);
-            this.graphics.fixedToCamera = true;
+            if(this.toggle) {
+              this.graphics = drawGraphics(this.graphics, this.game, this.rooms, this.currentRoom);
+              this.graphics.fixedToCamera = true;
+            }
             this.locked = false;
+
+            //refractor rooms
+            Array.prototype.forEach.call(this.rooms, room => {
+              var x = room.x;
+              var y = room.y;
+
+            });
           } else {
             this.currentRoom = this.oldRoom;
-            console.log(this.currentDoors);
             switch(direction) {
               case 'up':
                 this.currentRoom.roomDown = null;
@@ -987,76 +1272,46 @@ TopDownGame.Game.prototype = {
           }
         }
       }
+
+      // ENEMY DISPLAY   
       Array.prototype.forEach.call(this.enemies, enemy => {
-        if(enemy.currentPath) {
-          this.pathGraphics = drawPathGraphics(this.pathGraphics, this.game, enemy.currentPath);
+        if(enemy.currentPath && this.toggle && enemy.visible) {
+          enemy.pathGraphics = drawPathGraphics(enemy.pathGraphics, this.game, enemy.currentPath);
         }
       });
-    }.bind(this), 10);
 
-    console.log(this.nodeList[this.mapList.indexOf(this.map)].filter(node => node.blocked == true));
+      this.enemies.sort(enemy => enemy.sprite.y);
+      for(var i = 0; i < this.enemies.length; i++) {
+        if(this.enemies[i].visible) {
+          if(this.enemies[i].sprite.y < this.player.y && !this.enemies[i].swapped) {
+            this.game.world.swap(this.player, this.enemies[i].sprite);
+            this.enemies[i].swapped = true;
+          } else if (this.enemies[i].sprite.y >= this.player.y && this.enemies[i].swapped) {
+            this.game.world.swap(this.player, this.enemies[i].sprite);
+            this.enemies[i].swapped = false;
+          }
+        }
+      }
 
-    setInterval(function() {
-      this.text.destroy();
-      this.text = this.game.add.text(20, 20, '', {
-        font: '24px courier',
-        fill: '#ff0000',
-        fontWeight: 'bold'
-      });
-      this.text.fixedToCamera = true;
-      this.text.text = Math.floor(this.player.x / 32) + ", " + Math.floor(this.player.y / 32) + "\n"
-      + this.currentRoom.x + ", " + this.currentRoom.y + "\n" 
-      + (this.enemies[0].sprite.body.x + 32) + ", " + (this.enemies[0].sprite.body.y + 64) + "\n"
-      + Math.floor((this.game.input.mousePointer.x + this.game.camera.x - 32)/32) + ", " + Math.floor((this.game.input.mousePointer.y + this.game.camera.y - 64)/32);
-      if(this.locked) {
-        this.text.text += "\nThe door is locked!";
+      //DEBUG TEXT
+      if(this.toggle) {
+        if(this.text) {
+          this.text.destroy();
+        }
+        this.text = this.game.add.text(20, 20, '', {
+          font: '24px courier',
+          fill: '#ff0000',
+          fontWeight: 'bold'
+        });
+        this.text.fixedToCamera = true;
+        this.text.text = (Math.floor(this.player.x / 32)+1) + ", " + (Math.floor(this.player.y / 32)+2) + "\n"
+        + this.currentRoom.x + ", " + this.currentRoom.y + "\n"
+        + this.currentRoom.tileMap;
+        if(this.locked) {
+          this.text.text += "\nThe door is locked!";
+        }
       }
     }.bind(this), 5);
-  },
-  createItems: function() {
-    //create items
-    this.items = this.game.add.group();
-    this.items.enableBody = true;
-    var item;    
-    result = this.findObjectsByType('item', this.map, 'objectsLayer');
-    result.forEach(function(element){
-      this.createFromTiledObject(element, this.items);
-    }, this);
-  },
-  createDoors: function() {
-    //create doors
-    this.doors = this.game.add.group();
-    this.doors.enableBody = true;
-    result = this.findObjectsByType('door', this.map, 'doorLayer');
-
-    result.forEach(function(element){
-      this.createFromTiledObject(element, this.doors);
-    }, this);
-  },
-
-  //find objects in a Tiled layer that containt a property called "type" equal to a certain value
-  findObjectsByType: function(type, map, layer) {
-    var result = new Array();
-    console.log(map);
-    map.objects[layer].forEach(function(element){
-      if(element.properties.door) {
-        //Phaser uses top left, Tiled bottom left so we have to adjust
-        //also keep in mind that the cup images are a bit smaller than the tile which is 16x16
-        //so they might not be placed in the exact position as in Tiled
-        element.y -= map.tileHeight;
-        result.push(element);
-      }      
-    });
-    return result;
-  },
-  //create a sprite from an object
-  createFromTiledObject: function(element, group) {
-    var sprite = group.create(element.x, element.y, element.properties.sprite);
-
-      //copy all properties to the sprite
-      Object.keys(element.properties).forEach(function(key){
-        sprite[key] = element.properties[key];
-      });
   },
   update: function() {
     //collision
@@ -1074,10 +1329,6 @@ TopDownGame.Game.prototype = {
 
     var x = this.backgroundlayer.getTileX(this.game.input.activePointer.worldX);
     var y = this.backgroundlayer.getTileY(this.game.input.activePointer.worldY);
-
-    var tile = this.map.getTile(x, y, this.backgroundLayer);
-    
-    // Note: JSON.stringify will convert the object tile properties to a string
     
     if (this.game.input.mousePointer.leftButton.isDown && this.game.sound.context.state === 'suspended') {
       this.game.sound.context.resume();
@@ -1175,14 +1426,5 @@ TopDownGame.Game.prototype = {
       this.player.body.velocity.y = 0;
       this.player.body.velocity.x = 0;
     }
-  },
-  collect: function(player, collectable) {
-    console.log('yummy!');
-
-    //remove sprite
-    collectable.destroy();
-  },
-  enterDoor: function(player, door) {
-    console.log('entering door that will take you to '+door.targetTilemap+' on x:'+door.targetX+' and y:'+door.targetY);
   },
 };

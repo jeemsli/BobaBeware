@@ -5,13 +5,9 @@ TopDownGame.Preload = function(){};
  
 TopDownGame.Preload.prototype = {
   preload: function() { 
-    // show loading screen
     this.preloadBar = this.add.sprite(this.game.world.centerX, this.game.world.centerY, 'logo');
     this.preloadBar.anchor.setTo(0.5);
     this.load.setPreloadSprite(this.preloadBar);
-
-    //load the font
-    this.game.load.script('webfont', '//ajax.googleapis.com/ajax/libs/webfont/1.4.7/webfont.js');
 
     //load game assets 
     this.load.spritesheet('play','assets/Menu/playButton.png',250,75,2);

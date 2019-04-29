@@ -5,6 +5,7 @@ TopDownGame.Splash = function(game) {
 };
 
 var logo;
+var splash;
 
 TopDownGame.Splash.prototype = {
     create: function(game) {
@@ -12,9 +13,15 @@ TopDownGame.Splash.prototype = {
         logo.scale.setTo(1.5,1.5);
         logo.anchor.setTo(0.5,0.5);
 
-        var text = "Click anywhere to begin...";
-        var style = { font: "30px Arial", fill: "#fff", align: "center" };
-        var t = this.game.add.text(this.game.width/2, this.game.height/2, text, style);
+        splash = this.game.add.tileSprite(0, 
+            this.game.height - this.game.cache.getImage('about').height, 
+            this.game.width, 
+            this.game.cache.getImage('about').height, 
+            'about'
+        );
+
+        var style = {font: "40px ThinkNothing", fill: "#eeeeee"};
+        var t = this.game.add.text(this.game.world.centerX,this.game.world.centerY,"Click to begin...", style);
         t.anchor.setTo(0.5,0.5);
     },
 
@@ -22,5 +29,6 @@ TopDownGame.Splash.prototype = {
         if(this.game.input.activePointer.justPressed()) {
             this.game.state.start('MainMenu');
           }
+        splash.tilePosition.x -= 0.5;
     },
 }

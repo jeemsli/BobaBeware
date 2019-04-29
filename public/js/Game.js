@@ -524,6 +524,7 @@ function findRoom(rooms, x, y) {
       return rooms[i];
     }
   }
+  return null;
 }
 
 function findMap(room, maps) {
@@ -538,11 +539,9 @@ function getValidDoors(room, maps) {
   var currentDoors = [];
   var map = findMap(room, maps);
   map.objects['doorLayer'].forEach(function(obj) {
-    currentDoors.push({
-      x: Math.floor(obj.x / 32),
-      y: Math.floor(obj.y / 32),
-      properties: obj.properties
-    });
+    currentDoors.push(
+      obj.properties[0].value
+    );
   });
   return currentDoors;
 }
@@ -831,12 +830,23 @@ TopDownGame.Game.prototype = {
 
     //create player
     this.player = this.game.add.sprite(400, 300, 'player');
+    this.staminaBar = this.game.add.sprite(40, 580, 'barInGreen');
+    this.staminaBarOut = this.game.add.sprite(40, 580, 'barOut');
+    this.staminaBar.fixedToCamera = true;
+    this.staminaBarOut.fixedToCamera = true;
+    this.staminaBar.scale.y = 0.5;
+    this.staminaBarOut.scale.y = 0.5;
     this.game.physics.arcade.enable(this.player);
+    this.currentRoomIndex = this.rooms.indexOf(this.currentRoom);
+    this.stamina = 1000;
+    this.regen = true;
+    this.staminaTimer = null;
+    
     //create enemy
     this.enemies = [];
     var enemy = this.game.add.sprite(300, 300, 'abg');
     this.game.physics.arcade.enable(enemy);
-    this.enemies.push(new Enemy(enemy, 65, 0, 0, this.nodeList[this.mapList.indexOf(this.map)], this.tileList[this.mapList.indexOf(this.map)], this.objs[this.mapList.indexOf(this.map)], this.player, this.currentRoom));
+    this.enemies.push(new Enemy(enemy, 75, 0, 0, this.nodeList[this.mapList.indexOf(this.map)], this.tileList[this.mapList.indexOf(this.map)], this.objs[this.mapList.indexOf(this.map)], this.player, this.currentRoom));
     //the camera will follow the player in the world
     this.game.camera.follow(this.player);
     this.game.stage.backgroundColor = '#000000';
@@ -1229,32 +1239,27 @@ TopDownGame.Game.prototype = {
             }
             this.locked = false;
 
-            //refractor rooms
-            Array.prototype.forEach.call(this.rooms, room => {
-              var x = room.x;
-              var y = room.y;
-
-            });
+            this.currentRoomIndex = this.rooms.indexOf(this.currentRoom);
           } else {
-            this.currentRoom = this.oldRoom;
-            switch(direction) {
-              case 'up':
-                this.currentRoom.roomDown = null;
-                this.otherRoom.roomUp = null;
-                break;
-              case 'down':
-                this.currentRoom.roomUp = null;
-                this.otherRoom.roomDown = null;
-                break;
-              case 'right':
-                this.currentRoom.roomLeft = null;
-                this.otherRoom.roomRight = null;
-                break;
-              case 'left':
-                this.currentRoom.roomRight = null;
-                this.otherRoom.roomLeft = null;
-                break;
-            }
+            this.currentRoom = this.rooms[this.currentRoomIndex];
+            // switch(direction) {
+            //   case 'up':
+            //     this.currentRoom.roomDown = null;
+            //     this.otherRoom.roomUp = null;
+            //     break;
+            //   case 'down':
+            //     this.currentRoom.roomUp = null;
+            //     this.otherRoom.roomDown = null;
+            //     break;
+            //   case 'right':
+            //     this.currentRoom.roomLeft = null;
+            //     this.otherRoom.roomRight = null;
+            //     break;
+            //   case 'left':
+            //     this.currentRoom.roomRight = null;
+            //     this.otherRoom.roomLeft = null;
+            //     break;
+            // }
 
             this.map = this.oldMap;
             this.currentDoors = [];
@@ -1269,6 +1274,44 @@ TopDownGame.Game.prototype = {
             this.oldRoom = null;
             this.otherRoom = null;
             this.locked = true;
+          }
+        }
+      }
+
+      //REFACTOR
+      for(var i = 0; i < this.rooms.length; i++) {
+        var current = this.rooms[i];
+        var cDoors = getValidDoors(current, this.mapList);
+        for(var x = 0; x < cDoors.length; x++) {
+          switch(cDoors[x]) {
+            case 'up':
+              var uRoom = findRoom(this.rooms, current.x, current.y - 1);
+              if(uRoom) {
+                current.roomUp = uRoom;
+                uRoom.roomDown = current;
+              }
+              break;
+            case 'down':
+              var dRoom = findRoom(this.rooms, current.x, current.y + 1);
+              if(dRoom) {
+                current.roomDown = dRoom;
+                dRoom.roomUp = current;
+              }
+              break;
+            case 'left':
+              var lRoom = findRoom(this.rooms, current.x - 1, current.y);
+              if(lRoom) {
+                current.roomLeft = lRoom;
+                lRoom.roomRight = current;
+              }
+              break;
+            case 'right':
+              var rRoom = findRoom(this.rooms, current.x + 1, current.y);
+              if(rRoom) {
+                current.roomRight = rRoom;
+                rRoom.roomLeft = current;
+              }
+              break;
           }
         }
       }
@@ -1306,11 +1349,37 @@ TopDownGame.Game.prototype = {
         this.text.fixedToCamera = true;
         this.text.text = (Math.floor(this.player.x / 32)+1) + ", " + (Math.floor(this.player.y / 32)+2) + "\n"
         + this.currentRoom.x + ", " + this.currentRoom.y + "\n"
-        + this.currentRoom.tileMap;
+        + this.currentRoom.tileMap + "/" + this.stamina;
         if(this.locked) {
           this.text.text += "\nThe door is locked!";
         }
       }
+
+      //STAMINA HANDLER
+      if(Math.abs(this.player.body.velocity.x) == this.playerSpeed * 2 || Math.abs(this.player.body.velocity.y) == this.playerSpeed * 2) {
+        //PLAYER IS RUNNING
+        clearTimeout(this.staminaTimer);
+        this.regen = false;
+        this.staminaTimer = setTimeout(function() {
+          this.regen = true;
+        }.bind(this), 2500);
+        if(this.stamina != 0) {
+          this.stamina--;
+          if(this.stamina == 0) {
+            console.log("TEST");
+            clearTimeout(this.staminaTimer);
+            this.staminaTimer = setTimeout(function() {
+              this.regen = true;
+            }.bind(this), 6000);
+          }
+        }
+      }
+
+      if(this.regen && this.stamina != 1000) {
+        this.stamina++;
+      }
+
+      this.staminaBar.scale.x = this.stamina/1000;
     }.bind(this), 5);
   },
   update: function() {
@@ -1338,7 +1407,7 @@ TopDownGame.Game.prototype = {
     this.player.body.velocity.x = 0;
 
     if(this.cursors.up.isDown && this.cursors.left.isDown) {
-      if(this.shift.isDown) {
+      if(this.shift.isDown && this.stamina != 0) {
         this.player.animations.play('topleftrun');
         this.player.body.velocity.y = -(this.playerSpeed * 2);
         this.player.body.velocity.x = -(this.playerSpeed * 2);
@@ -1349,7 +1418,7 @@ TopDownGame.Game.prototype = {
       }
 
     } else if (this.cursors.up.isDown && this.cursors.right.isDown) {
-      if(this.shift.isDown) {
+      if(this.shift.isDown && this.stamina != 0) {
         this.player.animations.play('toprightrun');
         this.player.body.velocity.y = -(this.playerSpeed * 2);
         this.player.body.velocity.x = this.playerSpeed * 2;
@@ -1359,7 +1428,7 @@ TopDownGame.Game.prototype = {
         this.player.body.velocity.x = this.playerSpeed;
       }
     } else if (this.cursors.up.isDown) {
-        if(this.shift.isDown) {
+        if(this.shift.isDown && this.stamina != 0) {
           this.player.animations.play('toprun');
           this.player.body.velocity.y = -(this.playerSpeed * 2);
           this.player.body.velocity.x = 0;
@@ -1369,7 +1438,7 @@ TopDownGame.Game.prototype = {
           this.player.body.velocity.x = 0;
         }
     } else if (this.cursors.down.isDown && this.cursors.left.isDown) {
-        if(this.shift.isDown) {
+        if(this.shift.isDown && this.stamina != 0) {
           this.player.animations.play('bottomleftrun');
           this.player.body.velocity.y = this.playerSpeed * 2;
           this.player.body.velocity.x = -(this.playerSpeed * 2);
@@ -1379,7 +1448,7 @@ TopDownGame.Game.prototype = {
           this.player.body.velocity.x = -(this.playerSpeed);
         }
     } else if (this.cursors.down.isDown && this.cursors.right.isDown) {
-        if(this.shift.isDown) {
+        if(this.shift.isDown && this.stamina != 0) {
           this.player.animations.play('bottomrightrun');
           this.player.body.velocity.y = this.playerSpeed * 2;
           this.player.body.velocity.x = this.playerSpeed * 2;
@@ -1390,7 +1459,7 @@ TopDownGame.Game.prototype = {
         }
 
     } else if (this.cursors.down.isDown) {
-        if(this.shift.isDown) {
+        if(this.shift.isDown && this.stamina != 0) {
           this.player.animations.play('bottomrun');
           this.player.body.velocity.y = this.playerSpeed * 2;
           this.player.body.velocity.x = 0;
@@ -1401,7 +1470,7 @@ TopDownGame.Game.prototype = {
         }
 
     } else if (this.cursors.right.isDown) {
-        if(this.shift.isDown) {
+        if(this.shift.isDown && this.stamina != 0) {
           this.player.animations.play('rightrun');
           this.player.body.velocity.y = 0;
           this.player.body.velocity.x = this.playerSpeed * 2;
@@ -1412,7 +1481,7 @@ TopDownGame.Game.prototype = {
         }
 
     } else if (this.cursors.left.isDown) {
-        if(this.shift.isDown) {
+        if(this.shift.isDown && this.stamina != 0) {
           this.player.animations.play('leftrun');
           this.player.body.velocity.y = 0;
           this.player.body.velocity.x = -(this.playerSpeed * 2);

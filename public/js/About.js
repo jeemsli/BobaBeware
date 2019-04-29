@@ -29,9 +29,10 @@ TopDownGame.About.prototype = {
     },
 
     createButton: function(game,string,x,y,w,h,callback) {
-        var button = game.add.button(x,y,string,callback,this,1,1,0);
+        var button = game.add.button(x,y,string,callback,this,2,1,0);
         button.anchor.setTo(0.5,0.5);
         button.width = w;
         button.height = h;
+        return button;
     }
 }

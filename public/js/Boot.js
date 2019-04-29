@@ -6,7 +6,7 @@ TopDownGame.Boot = function(){};
 TopDownGame.Boot.prototype = {
   preload: function() {
     //assets we'll use in the loading screen
-
+    this.load.image('logo','assets/Menu/BobaBeware.png');
   },
   create: function() {
     //loading screen will have a white background
@@ -14,7 +14,9 @@ TopDownGame.Boot.prototype = {
  
     //scaling options
     this.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
-    
+    this.scale.minWidth = 640;
+	  this.scale.minHeight = 640;
+
     //have the game centered horizontally
     this.scale.pageAlignHorizontally = true;
     this.scale.pageAlignVertically = true;

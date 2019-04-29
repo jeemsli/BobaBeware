@@ -4,29 +4,27 @@ var TopDownGame = TopDownGame || {};
 TopDownGame.Preload = function(){};
  
 TopDownGame.Preload.prototype = {
-  preload: function() {
-    // // show loading screen
-    // this.preloadBar = this.add.sprite(this.game.world.centerX, this.game.world.centerY + 128, 'preloadbar');
-    // this.preloadBar.anchor.setTo(0.5);
- 
-    // this.load.setPreloadSprite(this.preloadBar);
- 
-    //load game assets
-    this.load.image('logo','assets/Menu/BobaBeware.png');
+  preload: function() { 
+    // show loading screen
+    this.preloadBar = this.add.sprite(this.game.world.centerX, this.game.world.centerY, 'logo');
+    this.preloadBar.anchor.setTo(0.5);
+    this.load.setPreloadSprite(this.preloadBar);
+
+    //load game assets 
     this.load.spritesheet('play','assets/Menu/playButton.png',250,75,2);
     this.load.spritesheet('levels','assets/Menu/levelsButton.png',250,75,2);
     this.load.spritesheet('controls','assets/Menu/controlsButton.png',250,75,2);
     this.load.spritesheet('about','assets/Menu/aboutButton.png',250,75,2);
 
-    this.load.image('levelsBack','assets/Levels/levelsBack.png');
+    this.load.spritesheet('levelsBack','assets/Levels/levelsBack.png',56,48,2);  
     this.load.image('levelsText','assets/Levels/levelsText.png');
     this.load.image('level1','assets/Levels/level1.png');
   
-    this.load.image('controlsBack','assets/Controls/controlsBack.png');    
+    this.load.spritesheet('controlsBack','assets/Controls/controlsBack.png',56,48,2);  
     this.load.image('controlsScreen','assets/Controls/controlsScreen.png');
     this.load.image('controlsText','assets/Controls/controlsText.png');
 
-    this.load.image('aboutBack','assets/About/aboutBack.png');
+    this.load.spritesheet('aboutBack','assets/About/aboutBack.png',56,48,2);
     this.load.image('aboutScreen','assets/About/aboutScreen.png');
     this.load.image('aboutText','assets/About/aboutText.png');
 
@@ -59,6 +57,6 @@ TopDownGame.Preload.prototype = {
     this.game.load.audio('music', 'assets/audio/music.mp3');
   },
   create: function() {
-    this.state.start('MainMenu');
+    this.state.start('Splash');
   }
 };

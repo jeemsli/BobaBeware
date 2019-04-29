@@ -5,7 +5,6 @@ TopDownGame.Preload = function(){};
  
 TopDownGame.Preload.prototype = {
   preload: function() { 
-    // show loading screen
     this.preloadBar = this.add.sprite(this.game.world.centerX, this.game.world.centerY, 'logo');
     this.preloadBar.anchor.setTo(0.5);
     this.load.setPreloadSprite(this.preloadBar);

@@ -7,6 +7,8 @@ TopDownGame.Boot.prototype = {
   preload: function() {
     //assets we'll use in the loading screen
     this.load.image('logo','assets/Menu/BobaBeware.png');
+    this.game.add.text(0, 0, "font", {font:"1px ThinkNothing", fill:"#FFFFFF"});
+    this.game.load.shader('background', 'assets/Shaders/background.frag');
   },
   create: function() {
     //loading screen will have a white background

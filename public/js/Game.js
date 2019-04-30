@@ -69,7 +69,7 @@ class Enemy {
       this.counter = false;
       this.visible = true;
 
-      setInterval(function() {
+      this.interval = setInterval(function() {
         //this.baseBehavior();
         this.think();
       }.bind(this), 5);
@@ -760,11 +760,11 @@ TopDownGame.Game.prototype = {
     this.map = this.mapList[1];
 
     // TEST
-    // this.music = this.game.add.audio('music');
-    // this.game.sound.setDecodedCallback(this.music, function() {
-    //   this.music.loopFull(0.5);
-    //   this.music.volume = 0.5;
-    // }.bind(this), this);
+    this.music = this.game.add.audio('music');
+    this.game.sound.setDecodedCallback(this.music, function() {
+      this.music.loopFull(0.5);
+      this.music.volume = 0.5;
+    }.bind(this), this);
     // SET UP DOORS
 
     //LOAD PATHFINDING TILES AND NODES
@@ -942,7 +942,7 @@ TopDownGame.Game.prototype = {
     }.bind(this));
 
     // MAIN PLAYER LOOP
-    setInterval(function() {
+    this.playerLoop = setInterval(function() {
       // PLAYER ENTER DOOR
       var roomsIndex = this.rooms.length;
       for(var i = 0; i < this.currentDoors.length; i++) {
@@ -973,7 +973,7 @@ TopDownGame.Game.prototype = {
                 if(counter == 0) {
                   //FIND A RANDOM ROOM AND LINK TO IT
                   // DETERMINE IF WE NEED A DEAD END
-                  if ((this.currentRoom.y > 10 || this.currentRoom.y < -10) || Math.random(0, 10) < Math.pow(1.4, Math.abs(this.currentRoom.y))) {
+                  if ((this.currentRoom.y > 5 || this.currentRoom.y < -5) || Math.random(0, 20) >  Math.pow(1.7, Math.abs(this.currentRoom.y))) {
                     //GENERATE DEAD END
                     var deadendlist = [];
                     for(var x = 0; x < this.deadEnds.length; x++) {
@@ -1032,7 +1032,7 @@ TopDownGame.Game.prototype = {
                 if(counter == 0) {
                   //FIND A RANDOM ROOM AND LINK TO IT
                   // DETERMINE IF WE NEED A DEAD END
-                  if ((this.currentRoom.y > 10 || this.currentRoom.y < -10) || Math.random(0, 10) < Math.pow(1.4, Math.abs(this.currentRoom.y))) {
+                  if ((this.currentRoom.y > 5 || this.currentRoom.y < -5) || Math.random(0, 20) >  Math.pow(1.7, Math.abs(this.currentRoom.y))) {
                     //GENERATE DEAD END
                     var deadendlist = [];
                     for(var x = 0; x < this.deadEnds.length; x++) {
@@ -1091,7 +1091,7 @@ TopDownGame.Game.prototype = {
                 if(counter == 0) {
                   //FIND A RANDOM ROOM AND LINK TO IT
                   // DETERMINE IF WE NEED A DEAD END
-                  if ((this.currentRoom.x > 10 || this.currentRoom.x < -10) || Math.random(0, 10) < Math.pow(1.4, Math.abs(this.currentRoom.x))) {
+                  if ((this.currentRoom.x > 5 || this.currentRoom.x < -5) || Math.random(0, 20) >  Math.pow(1.7, Math.abs(this.currentRoom.x))) {
                     //GENERATE DEAD END
                     var deadendlist = [];
                     for(var x = 0; x < this.deadEnds.length; x++) {
@@ -1150,7 +1150,7 @@ TopDownGame.Game.prototype = {
                 if(counter == 0) {
                   //FIND A RANDOM ROOM AND LINK TO IT
                   // DETERMINE IF WE NEED A DEAD END
-                  if ((this.currentRoom.x > 10 || this.currentRoom.x < -10) || Math.random(0, 10) < Math.pow(1.4, Math.abs(this.currentRoom.x))) {
+                  if ((this.currentRoom.x > 5 || this.currentRoom.x < -5) || Math.random(0, 20) > Math.pow(1.7, Math.abs(this.currentRoom.x))) {
                     //GENERATE DEAD END
                     var deadendlist = [];
                     for(var x = 0; x < this.deadEnds.length; x++) {
@@ -1435,8 +1435,8 @@ TopDownGame.Game.prototype = {
       }
 
       Array.prototype.forEach.call(this.enemies, enemy => {
-        if(enemy.sprite.x - 16 <= this.player.x && enemy.sprite.x + 16 >= this.player.x && enemy.sprite.y - 16 <= this.player.y && enemy.sprite.y + 16 >= this.player.y) {
-          this.lose = true;
+        if(enemy.sprite.x - 16 <= this.player.x && enemy.sprite.x + 16 >= this.player.x && enemy.sprite.y - 16 <= this.player.y && enemy.sprite.y + 16 >= this.player.y && this.currentRoom.x == enemy.roomX && this.currentRoom.y == enemy.roomY) {
+          this.loadLevel('MainMenu');
         }
       });
 
@@ -1472,9 +1472,15 @@ TopDownGame.Game.prototype = {
       }
       this.staminaBar.scale.x = this.stamina/1000;
     }.bind(this), 5);
+   
   },
-  start: function() {
-    this.game.start('MainMenu');
+  loadLevel(level) {
+    clearInterval(this.playerLoop);
+    this.music.destroy();
+    Array.prototype.forEach.call(this.enemies, enemy => {
+      clearInterval(enemy.interval);
+    });
+    this.game.state.start(level, true, false);
   },
   update: function() {
     if(this.lose) {

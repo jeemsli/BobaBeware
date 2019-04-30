@@ -12,27 +12,29 @@ var about;
 
 TopDownGame.MainMenu.prototype = {
     create: function(game) {
-        logo = game.add.sprite(game.world.centerX,game.world.centerY-192,'logo');
+        var centerX = 320;
+        var centerY = 320;
+        logo = game.add.sprite(centerX,centerY-192,'logo');
         logo.anchor.setTo(0.5,0.5);
 
         game.add.tween(logo).from( { y: -200 }, 2000, Phaser.Easing.Elastic.Out, true);
 
-        play = this.createButton(game,"play",game.world.centerX,game.world.centerY-64,250,75,
+        play = this.createButton(game,"play",centerX,centerY-64,250,75,
             function(){
-                this.state.start('Game');
+                this.state.start('Game', true, false);
             });
 
-        levelselection = this.createButton(game,"levels",game.world.centerX,game.world.centerY+32,250,75,
+        levelselection = this.createButton(game,"levels",centerX,centerY+32,250,75,
             function(){
                 this.state.start('Levels');
             });
 
-        controls = this.createButton(game,"controls",game.world.centerX,game.world.centerY+128,250,75,
+        controls = this.createButton(game,"controls",centerX,centerY+128,250,75,
             function(){
                 this.state.start('Controls');
             });
 
-        about = this.createButton(game,"about",game.world.centerX,game.world.centerY+224,250,75,
+        about = this.createButton(game,"about",centerX,centerY+224,250,75,
             function(){
                 this.state.start('About');
             });

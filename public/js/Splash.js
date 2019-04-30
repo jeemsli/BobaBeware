@@ -7,38 +7,50 @@ TopDownGame.Splash = function(game) {
 var logo;
 var splash;
 var sprite;
+var text;
+
+function distanceToPointer(displayObject, pointer) {
+
+    this._dx = displayObject.x - pointer.x;
+    this._dy = displayObject.y - pointer.y;
+    
+    return Math.sqrt(this._dx * this._dx + this._dy * this._dy);
+
+}
+
+function moveToXY(displayObject, x, y, speed) {
+
+    var _angle = Math.atan2(y - displayObject.y, x - displayObject.x);
+    
+    var x = Math.cos(_angle) * speed;
+    var y = Math.sin(_angle) * speed;
+
+    return { x: x, y: y };
+
+}
 
 TopDownGame.Splash.prototype = {
     create: function(game) {
-        logo = game.add.sprite(game.world.centerX,game.world.centerY-176,'logo');
+        logo = game.add.sprite(game.world.centerX,game.world.centerY-112,'logo');
         logo.scale.setTo(1.5,1.5);
         logo.anchor.setTo(0.5,0.5);
 
         splash = new Phaser.Filter(game, null, game.cache.getShader('background'));
 
-        // sprite = game.add.sprite();
-        // sprite.width = 640;
-        // sprite.height = 640;
-
-        // sprite.filters = [ splash ];
-
-        // splash = this.game.add.tileSprite(0, 
-        //     this.game.height - this.game.cache.getImage('about').height, 
-        //     this.game.width, 
-        //     this.game.cache.getImage('about').height, 
-        //     'about',
-        // );
-
         var style = {font: "40px ThinkNothing", fill: "#eeeeee"};
-        var t = this.game.add.text(this.game.world.centerX,this.game.world.centerY,"Click to begin...", style);
-        t.anchor.setTo(0.5,0.5);
+        text = this.game.add.text(this.game.world.centerX,this.game.world.centerY+128,"Click to begin...", style);
+        text.anchor.setTo(0.5,0.5);
+        game.add.tween(text).from( { y: -200 }, 1000, Phaser.Easing.Linear.Out, true);
+
+        text.setShadow(0, 0, 'rgba(132, 34, 34, 0.95)', 0);
     },
 
     update: function(game) {
         if(this.game.input.activePointer.justPressed()) {
             this.game.state.start('MainMenu');
           }
-        // splash.tilePosition.x -= 0.5;
-        splash.update();
+
+        var offset = moveToXY(game.input.activePointer, text.x, text.y, 8);
+        text.setShadow(offset.x, offset.y, 'rgba(132, 34, 34, 0.95)', distanceToPointer(text, game.input.activePointer) / 30);
     },
 }

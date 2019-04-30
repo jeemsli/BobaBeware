@@ -914,6 +914,7 @@ TopDownGame.Game.prototype = {
 
     //GENERATE MAP
     console.log(this.map);
+    this.lose = false;
 
     // DEBUG TOGGLE
     this.toggle = false;
@@ -972,7 +973,7 @@ TopDownGame.Game.prototype = {
                 if(counter == 0) {
                   //FIND A RANDOM ROOM AND LINK TO IT
                   // DETERMINE IF WE NEED A DEAD END
-                  if ((this.currentRoom.y > 10 || this.currentRoom.y < -10) || Math.random(0, 10) > Math.pow(1.285, Math.abs(this.currentRoom.y))) {
+                  if ((this.currentRoom.y > 10 || this.currentRoom.y < -10) || Math.random(0, 10) > Math.pow(1.295, Math.abs(this.currentRoom.y))) {
                     //GENERATE DEAD END
                     var deadendlist = [];
                     for(var x = 0; x < this.deadEnds.length; x++) {
@@ -1031,7 +1032,7 @@ TopDownGame.Game.prototype = {
                 if(counter == 0) {
                   //FIND A RANDOM ROOM AND LINK TO IT
                   // DETERMINE IF WE NEED A DEAD END
-                  if ((this.currentRoom.y > 10 || this.currentRoom.y < -10) || Math.random(0, 10) > Math.pow(1.285, Math.abs(this.currentRoom.y))) {
+                  if ((this.currentRoom.y > 10 || this.currentRoom.y < -10) || Math.random(0, 10) > Math.pow(1.295, Math.abs(this.currentRoom.y))) {
                     //GENERATE DEAD END
                     var deadendlist = [];
                     for(var x = 0; x < this.deadEnds.length; x++) {
@@ -1090,7 +1091,7 @@ TopDownGame.Game.prototype = {
                 if(counter == 0) {
                   //FIND A RANDOM ROOM AND LINK TO IT
                   // DETERMINE IF WE NEED A DEAD END
-                  if ((this.currentRoom.x > 10 || this.currentRoom.x < -10) || Math.random(0, 10) > Math.pow(1.285, Math.abs(this.currentRoom.x))) {
+                  if ((this.currentRoom.x > 10 || this.currentRoom.x < -10) || Math.random(0, 10) > Math.pow(1.295, Math.abs(this.currentRoom.x))) {
                     //GENERATE DEAD END
                     var deadendlist = [];
                     for(var x = 0; x < this.deadEnds.length; x++) {
@@ -1149,7 +1150,7 @@ TopDownGame.Game.prototype = {
                 if(counter == 0) {
                   //FIND A RANDOM ROOM AND LINK TO IT
                   // DETERMINE IF WE NEED A DEAD END
-                  if ((this.currentRoom.x > 10 || this.currentRoom.x < -10) || Math.random(0, 10) > Math.pow(1.285, Math.abs(this.currentRoom.x))) {
+                  if ((this.currentRoom.x > 10 || this.currentRoom.x < -10) || Math.random(0, 10) > Math.pow(1.295, Math.abs(this.currentRoom.x))) {
                     //GENERATE DEAD END
                     var deadendlist = [];
                     for(var x = 0; x < this.deadEnds.length; x++) {
@@ -1249,7 +1250,7 @@ TopDownGame.Game.prototype = {
             this.backgroundlayer.resizeWorld();
 
             // DETERMINE IF WE SPAWN ENEMIES, WE ONLY SPAWN THEM
-            if(roomsIndex != this.rooms.length && Math.random() < 1) {
+            if(roomsIndex != this.rooms.length && Math.random() < 0.2 - (this.enemies.length / 25)) {
               // PLACE SUCH THAT CURRENT PATH CAN GO TO DOOR!
               var tiles = this.tileList[this.mapList.indexOf(this.map)];
               var possibleTiles = [];
@@ -1435,8 +1436,7 @@ TopDownGame.Game.prototype = {
 
       Array.prototype.forEach.call(this.enemies, enemy => {
         if(enemy.sprite.x - 16 <= this.player.x && enemy.sprite.x + 16 >= this.player.x && enemy.sprite.y - 16 <= this.player.y && enemy.sprite.y + 16 >= this.player.y) {
-          this.game.state.destroy('Game');
-          this.game.state.start('MainMenu');
+          this.lose = true;
         }
       });
 
@@ -1473,7 +1473,13 @@ TopDownGame.Game.prototype = {
       this.staminaBar.scale.x = this.stamina/1000;
     }.bind(this), 5);
   },
+  start: function() {
+    this.game.start('MainMenu');
+  },
   update: function() {
+    if(this.lose) {
+      console.log("YOU LOSE");
+    }
     //collision
     this.game.physics.arcade.collide(this.player, this.wallLayer);
     this.game.physics.arcade.collide(this.player, this.objectLayer);

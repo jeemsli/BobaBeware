@@ -973,7 +973,7 @@ TopDownGame.Game.prototype = {
                 if(counter == 0) {
                   //FIND A RANDOM ROOM AND LINK TO IT
                   // DETERMINE IF WE NEED A DEAD END
-                  if ((this.currentRoom.y > 10 || this.currentRoom.y < -10) || Math.random(0, 10) > Math.pow(1.29, Math.abs(this.currentRoom.y))) {
+                  if ((this.currentRoom.y > 10 || this.currentRoom.y < -10) || Math.random(0, 10) > Math.pow(1.4, Math.abs(this.currentRoom.y))) {
                     //GENERATE DEAD END
                     var deadendlist = [];
                     for(var x = 0; x < this.deadEnds.length; x++) {
@@ -1032,7 +1032,7 @@ TopDownGame.Game.prototype = {
                 if(counter == 0) {
                   //FIND A RANDOM ROOM AND LINK TO IT
                   // DETERMINE IF WE NEED A DEAD END
-                  if ((this.currentRoom.y > 10 || this.currentRoom.y < -10) || Math.random(0, 10) > Math.pow(1.29, Math.abs(this.currentRoom.y))) {
+                  if ((this.currentRoom.y > 10 || this.currentRoom.y < -10) || Math.random(0, 10) > Math.pow(1.4, Math.abs(this.currentRoom.y))) {
                     //GENERATE DEAD END
                     var deadendlist = [];
                     for(var x = 0; x < this.deadEnds.length; x++) {
@@ -1091,7 +1091,7 @@ TopDownGame.Game.prototype = {
                 if(counter == 0) {
                   //FIND A RANDOM ROOM AND LINK TO IT
                   // DETERMINE IF WE NEED A DEAD END
-                  if ((this.currentRoom.x > 10 || this.currentRoom.x < -10) || Math.random(0, 10) > Math.pow(1.29, Math.abs(this.currentRoom.x))) {
+                  if ((this.currentRoom.x > 10 || this.currentRoom.x < -10) || Math.random(0, 10) > Math.pow(1.4, Math.abs(this.currentRoom.x))) {
                     //GENERATE DEAD END
                     var deadendlist = [];
                     for(var x = 0; x < this.deadEnds.length; x++) {
@@ -1150,7 +1150,7 @@ TopDownGame.Game.prototype = {
                 if(counter == 0) {
                   //FIND A RANDOM ROOM AND LINK TO IT
                   // DETERMINE IF WE NEED A DEAD END
-                  if ((this.currentRoom.x > 10 || this.currentRoom.x < -10) || Math.random(0, 10) > Math.pow(1.29, Math.abs(this.currentRoom.x))) {
+                  if ((this.currentRoom.x > 10 || this.currentRoom.x < -10) || Math.random(0, 10) > Math.pow(1.4, Math.abs(this.currentRoom.x))) {
                     //GENERATE DEAD END
                     var deadendlist = [];
                     for(var x = 0; x < this.deadEnds.length; x++) {

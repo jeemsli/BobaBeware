@@ -118,7 +118,7 @@
         {
          "columns":9,
          "firstgid":1,
-         "image":"..\/..\/..\/..\/380 Final Project\/assets\/Floor 1\/Floors\/f1spritesheet.png",
+         "image":"..\/..\/..\/..\/..\/Boba-Beware\/public\/assets\/Floor 1\/Floors\/f1spritesheet.png",
          "imageheight":288,
          "imagewidth":288,
          "margin":0,
@@ -168,7 +168,7 @@
         {
          "columns":4,
          "firstgid":82,
-         "image":"..\/..\/..\/..\/380 Final Project\/assets\/Floor 1\/Floors\/objspritesheet.png",
+         "image":"..\/..\/..\/..\/..\/Boba-Beware\/public\/assets\/Floor 1\/Floors\/objspritesheet.png",
          "imageheight":160,
          "imagewidth":128,
          "margin":0,

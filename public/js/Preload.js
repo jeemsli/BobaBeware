@@ -27,7 +27,7 @@ TopDownGame.Preload.prototype = {
     this.load.image('aboutScreen','assets/About/aboutScreen.png');
     this.load.image('aboutText','assets/About/aboutText.png');
     this.load.image('barOut', 'assets/UI/barOut.png');
-    this.load.image('barInGreen', 'assets/UI/barInGreen.png');
+    this.load.spritesheet('barIn', 'assets/UI/barSpriteSheet.png', 160, 64, 3);
 
     this.load.tilemap('1', '../maps/Floor 1/1.json', null, Phaser.Tilemap.TILED_JSON);
     this.load.tilemap('2', '../maps/Floor 1/2.json', null, Phaser.Tilemap.TILED_JSON);

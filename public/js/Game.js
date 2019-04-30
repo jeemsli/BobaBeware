@@ -148,6 +148,7 @@ class EnrageBehavior {
     if((x > (x2 - 5)) && (x < (x2 + 5)) && (y > (y2 - 5)) && (y < (y2 + 5)) && this.bot.currentRoom.x == this.bot.roomX && this.bot.currentRoom.y == this.bot.roomY) {
       var tile = this.bot.tiles[y + 2][x + 1];
       this.bot.currentPath = findPath({x: x2 + 1, y: y2 + 2, tile: this.bot.spritePosition.tile}, {x: x + 1, y: y + 2, tile: tile}, this.bot.nodes, 25, 25);
+      this.bot.setState(BotState.ENRAGED);
     }
   }
 
@@ -331,7 +332,9 @@ class IdleBehavior {
     if((x > (x2 - 5)) && (x < (x2 + 5)) && (y > (y2 - 5)) && (y < (y2 + 5)) && this.bot.currentRoom.x == this.bot.roomX && this.bot.currentRoom.y == this.bot.roomY) {
       var tile = this.bot.tiles[y + 2][x + 1];
       this.bot.currentPath = findPath({x: x2 + 1, y: y2 + 2, tile: this.bot.spritePosition.tile}, {x: x + 1, y: y + 2, tile: tile}, this.bot.nodes, 25, 25);
-      this.bot.setState(BotState.ENRAGED);
+      if(this.bot.currentPath && this.bot.currentPath != []) {
+        this.bot.setState(BotState.ENRAGED);
+      }
     }
   }
 
@@ -497,21 +500,24 @@ class IdleBehavior {
       }
     } else {
       //BOT IS CURRENTLY IDLE, LET'S PICK A RANDOM PLACE TO GO
-      var move = Math.random() > 0.995 ? true : false;
-      if(move) {
-        var tiles = [];
-        for(var i = this.bot.spritePosition.y - 1; i < this.bot.spritePosition.y + 5; i++) {
-          for(var x = this.bot.spritePosition.x - 2; x < this.bot.spritePosition.x + 4; x++) {
-            if(i > 0 && x > 0 && !this.bot.tiles[i][x].tile.collideDown) {
-              tiles.push(this.bot.tiles[i][x]);
+      this.think_more();
+      if(!this.bot.currentPath || this.bot.currentPath.length == 0) {
+        var move = Math.random() > 0.995 ? true : false;
+        if(move) {
+          var tiles = [];
+          for(var i = this.bot.spritePosition.y - 1; i < this.bot.spritePosition.y + 5; i++) {
+            for(var x = this.bot.spritePosition.x - 2; x < this.bot.spritePosition.x + 4; x++) {
+              if(i > 0 && x > 0 && !this.bot.tiles[i][x].tile.collideDown) {
+                tiles.push(this.bot.tiles[i][x]);
+              }
             }
           }
+          var objList = this.bot.objects.map(obj => JSON.stringify(obj));
+          tiles = tiles.filter(tile => !objList.includes(JSON.stringify({x: tile.x, y: tile.y})));      
+          var destTile = tiles[Math.floor(Math.random()*tiles.length)];
+          var offPosition = {x:this.bot.spritePosition.x + 1, y:this.bot.spritePosition.y + 2, tile: this.bot.spritePosition.tile};
+          this.bot.currentPath = findPath(offPosition, {x: destTile.x, y: destTile.y, tile: destTile}, this.bot.nodes, 25, 25);
         }
-        var objList = this.bot.objects.map(obj => JSON.stringify(obj));
-        tiles = tiles.filter(tile => !objList.includes(JSON.stringify({x: tile.x, y: tile.y})));      
-        var destTile = tiles[Math.floor(Math.random()*tiles.length)];
-        var offPosition = {x:this.bot.spritePosition.x + 1, y:this.bot.spritePosition.y + 2, tile: this.bot.spritePosition.tile};
-        this.bot.currentPath = findPath(offPosition, {x: destTile.x, y: destTile.y, tile: destTile}, this.bot.nodes, 25, 25);
       }
     }
     this.bot.counter = true;
@@ -760,32 +766,6 @@ TopDownGame.Game.prototype = {
     //   this.music.volume = 0.5;
     // }.bind(this), this);
     // SET UP DOORS
-    this.map.objects['doorLayer'].forEach(function(obj) {
-      this.currentDoors.push({
-        x: Math.floor(obj.x / 32),
-        y: Math.floor(obj.y / 32),
-        properties: obj.properties
-      });
-    }.bind(this));
-
-    //the first parameter is the tileset name as specified in Tiled, the second is the key to the asset
-    this.map.addTilesetImage('floor1tiles', 'gameTiles');
-    this.map.addTilesetImage('objects', 'objectTiles');
-
-    //create layer
-    this.backgroundlayer = this.map.createLayer('backgroundLayer');
-    this.wallLayer = this.map.createLayer('wallLayer');
-    this.aboveLayer = this.map.createLayer('aboveLayer');
-    this.objectLayer = this.map.createLayer('objectLayer');
-    this.aboveObjectLayer = this.map.createLayer('objectAboveLayer');
-
-    //collision on blockedLayer
-    this.map.setCollisionBetween(1, 2000, true, 'wallLayer');
-    this.map.setCollisionBetween(1, 2000, true, 'objectLayer');
-    this.map.setCollisionBetween(1, 2000, true, 'objectAboveLayer');
-
-    //resizes the game world to match the layer dimensions
-    this.backgroundlayer.resizeWorld();
 
     //LOAD PATHFINDING TILES AND NODES
     for(var i = 0; i < this.numRooms; i++) {
@@ -793,6 +773,25 @@ TopDownGame.Game.prototype = {
       var nodes = [];
       var tiles = [];
       var newObjArr = []
+      //the first parameter is the tileset name as specified in Tiled, the second is the key to the asset
+      this.mapList[i].addTilesetImage('floor1tiles', 'gameTiles');
+      this.mapList[i].addTilesetImage('objects', 'objectTiles');
+
+      //create layer
+      this.backgroundlayer = this.mapList[i].createLayer('backgroundLayer');
+      this.wallLayer = this.mapList[i].createLayer('wallLayer');
+      this.aboveLayer = this.mapList[i].createLayer('aboveLayer');
+      this.objectLayer = this.mapList[i].createLayer('objectLayer');
+      this.aboveObjectLayer = this.mapList[i].createLayer('objectAboveLayer');
+
+      //collision on blockedLayer
+      this.mapList[i].setCollisionBetween(1, 2000, true, 'wallLayer');
+      this.mapList[i].setCollisionBetween(1, 2000, true, 'objectLayer');
+      this.mapList[i].setCollisionBetween(1, 2000, true, 'objectAboveLayer');
+
+      //resizes the game world to match the layer dimensions
+      this.backgroundlayer.resizeWorld();
+
       Array.prototype.forEach.call(this.mapList[i].layers[2].data, row => {
         Array.prototype.forEach.call(row, tile => {
           if(tile.collideDown) {
@@ -826,11 +825,43 @@ TopDownGame.Game.prototype = {
     
       this.nodeList.push(nodes);
       this.tileList.push(tiles);
+      this.backgroundlayer.destroy();
+      this.wallLayer.destroy();
+      this.objectLayer.destroy();
+      this.aboveObjectLayer.destroy();
+      this.aboveLayer.destroy();
     }
+
+    this.map.objects['doorLayer'].forEach(function(obj) {
+      this.currentDoors.push({
+        x: Math.floor(obj.x / 32),
+        y: Math.floor(obj.y / 32),
+        properties: obj.properties
+      });
+    }.bind(this));
+
+    //the first parameter is the tileset name as specified in Tiled, the second is the key to the asset
+    this.map.addTilesetImage('floor1tiles', 'gameTiles');
+    this.map.addTilesetImage('objects', 'objectTiles');
+
+    //create layer
+    this.backgroundlayer = this.map.createLayer('backgroundLayer');
+    this.wallLayer = this.map.createLayer('wallLayer');
+    this.aboveLayer = this.map.createLayer('aboveLayer');
+    this.objectLayer = this.map.createLayer('objectLayer');
+    this.aboveObjectLayer = this.map.createLayer('objectAboveLayer');
+
+    //collision on blockedLayer
+    this.map.setCollisionBetween(1, 2000, true, 'wallLayer');
+    this.map.setCollisionBetween(1, 2000, true, 'objectLayer');
+    this.map.setCollisionBetween(1, 2000, true, 'objectAboveLayer');
+
+    //resizes the game world to match the layer dimensions
+    this.backgroundlayer.resizeWorld();
 
     //create player
     this.player = this.game.add.sprite(400, 300, 'player');
-    this.staminaBar = this.game.add.sprite(40, 580, 'barInGreen');
+    this.staminaBar = this.game.add.sprite(40, 580, 'barIn');
     this.staminaBarOut = this.game.add.sprite(40, 580, 'barOut');
     this.staminaBar.fixedToCamera = true;
     this.staminaBarOut.fixedToCamera = true;
@@ -844,9 +875,7 @@ TopDownGame.Game.prototype = {
     
     //create enemy
     this.enemies = [];
-    var enemy = this.game.add.sprite(300, 300, 'abg');
-    this.game.physics.arcade.enable(enemy);
-    this.enemies.push(new Enemy(enemy, 75, 0, 0, this.nodeList[this.mapList.indexOf(this.map)], this.tileList[this.mapList.indexOf(this.map)], this.objs[this.mapList.indexOf(this.map)], this.player, this.currentRoom));
+    
     //the camera will follow the player in the world
     this.game.camera.follow(this.player);
     this.game.stage.backgroundColor = '#000000';
@@ -883,10 +912,6 @@ TopDownGame.Game.prototype = {
     this.shift = this.game.input.keyboard.addKey(Phaser.Keyboard.SHIFT);
     this.graphics = this.game.add.graphics();
 
-    //ENEMY AI
-    this.enemies[0].addBehavior(BotState.IDLE, new IdleBehavior(this.enemies[0]));
-    this.enemies[0].addBehavior(BotState.ENRAGED, new EnrageBehavior(this.enemies[0]));
-
     //GENERATE MAP
     console.log(this.map);
 
@@ -895,7 +920,6 @@ TopDownGame.Game.prototype = {
     this.t = this.game.input.keyboard.addKey(Phaser.Keyboard.T);
     this.t.onDown.add(function() {
       this.toggle = !this.toggle;
-      console.log(this.toggle);
       if(!this.toggle) {
         if(this.graphics && this.graphics.alive) {
           this.graphics.kill();
@@ -919,6 +943,7 @@ TopDownGame.Game.prototype = {
     // MAIN PLAYER LOOP
     setInterval(function() {
       // PLAYER ENTER DOOR
+      var roomsIndex = this.rooms.length;
       for(var i = 0; i < this.currentDoors.length; i++) {
         if(this.currentDoors[i].x - 1 == Math.floor(this.player.x / 32) && this.currentDoors[i].y - 3 == Math.floor(this.player.y / 32)) {
           var direction = this.currentDoors[i].properties[0].value;
@@ -947,7 +972,7 @@ TopDownGame.Game.prototype = {
                 if(counter == 0) {
                   //FIND A RANDOM ROOM AND LINK TO IT
                   // DETERMINE IF WE NEED A DEAD END
-                  if ((this.currentRoom.y > 10 || this.currentRoom.y < -10) || Math.random(0, 10) > Math.pow(1.3, this.currentRoom.y)) {
+                  if ((this.currentRoom.y > 10 || this.currentRoom.y < -10) || Math.random(0, 10) > Math.pow(1.285, Math.abs(this.currentRoom.y))) {
                     //GENERATE DEAD END
                     var deadendlist = [];
                     for(var x = 0; x < this.deadEnds.length; x++) {
@@ -1006,7 +1031,7 @@ TopDownGame.Game.prototype = {
                 if(counter == 0) {
                   //FIND A RANDOM ROOM AND LINK TO IT
                   // DETERMINE IF WE NEED A DEAD END
-                  if ((this.currentRoom.y > 10 || this.currentRoom.y < -10) || Math.random(0, 10) > Math.pow(1.23, this.currentRoom.y)) {
+                  if ((this.currentRoom.y > 10 || this.currentRoom.y < -10) || Math.random(0, 10) > Math.pow(1.285, Math.abs(this.currentRoom.y))) {
                     //GENERATE DEAD END
                     var deadendlist = [];
                     for(var x = 0; x < this.deadEnds.length; x++) {
@@ -1065,7 +1090,7 @@ TopDownGame.Game.prototype = {
                 if(counter == 0) {
                   //FIND A RANDOM ROOM AND LINK TO IT
                   // DETERMINE IF WE NEED A DEAD END
-                  if ((this.currentRoom.x > 10 || this.currentRoom.x < -10) || Math.random(0, 10) > Math.pow(1.23, this.currentRoom.x)) {
+                  if ((this.currentRoom.x > 10 || this.currentRoom.x < -10) || Math.random(0, 10) > Math.pow(1.285, Math.abs(this.currentRoom.x))) {
                     //GENERATE DEAD END
                     var deadendlist = [];
                     for(var x = 0; x < this.deadEnds.length; x++) {
@@ -1124,7 +1149,7 @@ TopDownGame.Game.prototype = {
                 if(counter == 0) {
                   //FIND A RANDOM ROOM AND LINK TO IT
                   // DETERMINE IF WE NEED A DEAD END
-                  if ((this.currentRoom.x > 10 || this.currentRoom.x < -10) || Math.random(0, 10) > Math.pow(1.23, this.currentRoom.x)) {
+                  if ((this.currentRoom.x > 10 || this.currentRoom.x < -10) || Math.random(0, 10) > Math.pow(1.285, Math.abs(this.currentRoom.x))) {
                     //GENERATE DEAD END
                     var deadendlist = [];
                     for(var x = 0; x < this.deadEnds.length; x++) {
@@ -1222,6 +1247,57 @@ TopDownGame.Game.prototype = {
 
             //resizes the game world to match the layer dimensions
             this.backgroundlayer.resizeWorld();
+
+            // DETERMINE IF WE SPAWN ENEMIES, WE ONLY SPAWN THEM
+            if(roomsIndex != this.rooms.length && Math.random() < 1) {
+              // PLACE SUCH THAT CURRENT PATH CAN GO TO DOOR!
+              var tiles = this.tileList[this.mapList.indexOf(this.map)];
+              var possibleTiles = [];
+              var doorTo = this.currentDoors[0];
+              var doorTile = this.tileList[this.mapList.indexOf(this.map)][doorTo.y-1][doorTo.x];
+              for(var m = 0; m < tiles.length; m++) {
+                for(var n = 0; n < tiles[m].length; n++) {
+                  var tile = tiles[m][n];
+                  var objl = this.objs[this.mapList.indexOf(this.map)];
+                  // ENEMIES CANNOT SPAWN IN OBJECTS
+                  for(var x = 0; x < objl.length; x++) {
+                    if(objl[x].x == tile.x && objl[x].y == tile.y) {
+                      tile = null;
+                      break;
+                    }
+                  }
+                  if(!tile) {
+                    continue;
+                  }
+                  for(var x = 0; x < this.currentDoors.length; x++) {
+                    if(this.currentDoors[x].x - 3 <= tile.x && this.currentDoors[x].x + 3 >= tile.x
+                      && this.currentDoors[x].y - 3 <= tile.y && this.currentDoors[x].y + 3 >= tile.y) {
+                        tile = null;
+                        break;
+                      }
+                  }
+                  if(!tile || tile.tile.collideDown) {
+                    continue;
+                  }
+                  var cPath = findPath({x:tile.x, y: tile.y, tile: tile.tile}, {x:doorTile.x, y:doorTile.y, tile: doorTile.tile}, this.nodeList[this.mapList.indexOf(this.map)], 25, 25);
+                  if(cPath) {
+                    possibleTiles.push(tile);
+                  }
+                }
+              }
+              this.pathGraphics = null;
+              this.pathGraphics = drawPathGraphics(this.pathGraphics, this.game, possibleTiles);
+              var tile = possibleTiles[Math.floor(Math.random()*possibleTiles.length)];
+              
+              var enemy = this.game.add.sprite((tile.x * 32) - 16, (tile.y * 32) - 48, 'abg');
+              this.game.physics.arcade.enable(enemy);
+              var bot = new Enemy(enemy, 60, this.currentRoom.x, this.currentRoom.y, this.nodeList[this.mapList.indexOf(this.map)], this.tileList[this.mapList.indexOf(this.map)], this.objs[this.mapList.indexOf(this.map)], this.player, this.currentRoom)
+              bot.addBehavior(BotState.IDLE, new IdleBehavior(bot));
+              bot.addBehavior(BotState.ENRAGED, new EnrageBehavior(bot));
+              this.enemies.push(bot);
+            }
+
+
             this.game.world.bringToTop(this.player);
             for(var i = 0; i < this.enemies.length; i++) {
               if(this.enemies[i].roomX == this.currentRoom.x && this.enemies[i].roomY == this.currentRoom.y) {
@@ -1233,6 +1309,8 @@ TopDownGame.Game.prototype = {
             }
             this.game.world.bringToTop(this.aboveObjectLayer);
             this.game.world.bringToTop(this.aboveLayer);
+            this.game.world.bringToTop(this.staminaBar);
+            this.game.world.bringToTop(this.staminaBarOut);
             if(this.toggle) {
               this.graphics = drawGraphics(this.graphics, this.game, this.rooms, this.currentRoom);
               this.graphics.fixedToCamera = true;
@@ -1355,6 +1433,13 @@ TopDownGame.Game.prototype = {
         }
       }
 
+      Array.prototype.forEach.call(this.enemies, enemy => {
+        if(enemy.sprite.x - 16 <= this.player.x && enemy.sprite.x + 16 >= this.player.x && enemy.sprite.y - 16 <= this.player.y && enemy.sprite.y + 16 >= this.player.y) {
+          this.game.state.destroy('Game');
+          this.game.state.start('MainMenu');
+        }
+      });
+
       //STAMINA HANDLER
       if(Math.abs(this.player.body.velocity.x) == this.playerSpeed * 2 || Math.abs(this.player.body.velocity.y) == this.playerSpeed * 2) {
         //PLAYER IS RUNNING
@@ -1362,15 +1447,14 @@ TopDownGame.Game.prototype = {
         this.regen = false;
         this.staminaTimer = setTimeout(function() {
           this.regen = true;
-        }.bind(this), 2500);
+        }.bind(this), 2000);
         if(this.stamina != 0) {
           this.stamina--;
           if(this.stamina == 0) {
-            console.log("TEST");
             clearTimeout(this.staminaTimer);
             this.staminaTimer = setTimeout(function() {
               this.regen = true;
-            }.bind(this), 6000);
+            }.bind(this), 5000);
           }
         }
       }
@@ -1378,7 +1462,14 @@ TopDownGame.Game.prototype = {
       if(this.regen && this.stamina != 1000) {
         this.stamina++;
       }
-
+      
+      if(this.stamina >= 650) {
+        this.staminaBar.frame = 0;
+      } else if (this.stamina >= 300) {
+        this.staminaBar.frame = 2;
+      } else {
+        this.staminaBar.frame = 1;
+      }
       this.staminaBar.scale.x = this.stamina/1000;
     }.bind(this), 5);
   },

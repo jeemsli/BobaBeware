@@ -8,7 +8,7 @@
          "name":"backgroundLayer",
          "opacity":1,
          "type":"tilelayer",
-         "visible":true,
+         "visible":false,
          "width":25,
          "x":0,
          "y":0
@@ -136,7 +136,7 @@
         {
          "columns":9,
          "firstgid":1,
-         "image":"..\/..\/assets\/Floor 1\/Floors\/f1spritesheet.png",
+         "image":"..\/..\/..\/..\/..\/380 Final Project\/assets\/Floor 1\/Floors\/f1spritesheet.png",
          "imageheight":288,
          "imagewidth":288,
          "margin":0,
@@ -186,7 +186,7 @@
         {
          "columns":4,
          "firstgid":82,
-         "image":"..\/..\/assets\/Floor 1\/Floors\/objspritesheet.png",
+         "image":"..\/..\/..\/..\/..\/380 Final Project\/assets\/Floor 1\/Floors\/objspritesheet.png",
          "imageheight":160,
          "imagewidth":128,
          "margin":0,

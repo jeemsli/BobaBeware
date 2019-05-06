@@ -10,5 +10,6 @@ TopDownGame.game.state.add('MainMenu', TopDownGame.MainMenu);
 TopDownGame.game.state.add('Levels', TopDownGame.Levels);
 TopDownGame.game.state.add('Controls', TopDownGame.Controls);
 TopDownGame.game.state.add('About', TopDownGame.About);
+TopDownGame.game.state.add('Death', TopDownGame.Death);
  
 TopDownGame.game.state.start('Boot');

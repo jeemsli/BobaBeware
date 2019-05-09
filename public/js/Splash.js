@@ -31,14 +31,14 @@ function moveToXY(displayObject, x, y, speed) {
 
 TopDownGame.Splash.prototype = {
     create: function(game) {
-        logo = game.add.sprite(game.world.centerX,game.world.centerY-112,'logo');
+        logo = game.add.sprite(320,320-112,'logo');
         logo.scale.setTo(1.5,1.5);
         logo.anchor.setTo(0.5,0.5);
 
         // splash = new Phaser.Filter(game, null, game.cache.getShader('background'));
 
         var style = {font: "40px ThinkNothing", fill: "#eeeeee"};
-        text = this.game.add.text(this.game.world.centerX,this.game.world.centerY+128,"Click to begin...", style);
+        text = this.game.add.text(320,320+128,"Click to begin...", style);
         text.anchor.setTo(0.5,0.5);
         game.add.tween(text).from( { y: -200 }, 1000, Phaser.Easing.Linear.Out, true);
 

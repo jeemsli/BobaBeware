@@ -8,15 +8,15 @@ var levelsText;
 
 TopDownGame.Levels.prototype = {
     create: function(game) {
-        levelsText = game.add.sprite(game.world.centerX+192,game.world.centerY-224,'levelsText');
+        levelsText = game.add.sprite(320+192,320-224,'levelsText');
         levelsText.anchor.setTo(0.5,0.5);
 
-        this.createButton(game,"levelsBack",game.world.centerX-224,game.world.centerY-224,100,75,
+        this.createButton(game,"levelsBack",320-224,320-224,100,75,
             function(){
                 this.state.start('MainMenu');
             });
 
-        this.createButton(game,"level1",game.world.centerX-192,game.world.centerY-96,200,125,
+        this.createButton(game,"level1",320-192,320-96,200,125,
             function(){
                 this.state.start('Game');
             });

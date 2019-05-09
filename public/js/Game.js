@@ -69,7 +69,7 @@ class Enemy {
       this.counter = false;
       this.visible = true;
 
-      setInterval(function() {
+      this.interval = setInterval(function() {
         //this.baseBehavior();
         this.think();
       }.bind(this), 5);
@@ -541,6 +541,111 @@ function findMap(room, maps) {
   }
 }
 
+class Cutscene {
+  constructor(name, text, sprite, game, canMove, next) {
+    this.text = text;
+    this.textRender = null;
+    this.sprite = sprite;
+    this.spriteCutscene = null;
+    this.game = game;
+    this.canMove = canMove;
+    this.name = name;
+    this.interval = null;
+    this.active = false;
+    this.kill = false;
+    this.next = next;
+    this.textBuffer = text.split('');
+    this.space = null;
+  }
+
+  startCutscene() {
+    this.space = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+    this.space.onDown.add(function() {
+      this.skipCutscene();
+    }.bind(this));
+    this.spriteCutscene = this.game.add.sprite(40, 400, 'cutscene');
+    this.spriteCutscene.fixedToCamera = true;
+    this.sprite = this.game.add.sprite(80, 435, this.sprite);
+    this.sprite.fixedToCamera = true;
+    this.sprite.scale.x = 0.9;
+    this.sprite.scale.y = 0.9;
+    this.textRender = this.game.add.text(220, 450, "", {
+      font: '20px ZCOOLKuaiLe',
+      fill: '#000000',
+      fontWeight: 'bold'
+    });
+    this.textRender.text = this.name + ": ";
+    this.textRender.fixedToCamera = true;
+    this.counter = 0;
+    this.wordBoundary = 0;
+    this.interval = setInterval(function() {
+      var oldB = this.wordBoundary;
+      if(this.textBuffer.length != 0) {
+        if(this.textBuffer[0] == ' ') {
+          this.wordBoundary = this.counter;
+        }
+        if(this.counter >= 28 && this.wordBoundary == this.counter) {
+          this.textRender.text = this.textRender.text.slice(0, oldB + this.name.length + 3) + "\n" + this.textRender.text.slice(oldB + this.name.length + 3);
+          this.counter = 0;
+        }
+        this.textRender.text += this.textBuffer.shift();
+        this.counter++;
+      } else {
+        clearInterval(this.interval);
+      }
+    }.bind(this), 75);
+    this.active = true;
+  }
+
+  addNewline() {
+    var counter = 0;
+    var wb = 0;
+    for(var i = 0; i < this.text.length; i++) {
+      var ob = wb;
+      if(this.text[i] == ' ') {
+        wb = counter;
+      }
+      if(counter >= 28 && wb == counter) {
+        this.text = this.text.slice(0, ob + 1) + "\n" + this.text.slice(ob + 1);
+        counter = 0;
+      }
+      counter++;
+    }
+  }
+
+  skipCutscene() {
+    if(this.active) {
+      if(this.textBuffer.length != 0) {
+        clearInterval(this.interval);
+        this.addNewline();
+        this.textRender.text = this.name + ": " + this.text;
+        this.textBuffer = [];
+      } else {
+        this.killCutscene();
+      }
+    }
+  }
+
+  killCutscene() {
+    clearInterval(this.interval);
+    this.kill = true;
+    this.textRender.destroy();
+    this.sprite.destroy();
+    this.spriteCutscene.destroy();
+    this.active = false;
+    this.game.input.keyboard.removeKey(Phaser.Keyboard.SPACEBAR);
+    if(this.next) {
+      this.next.startCutscene();
+    }
+  }
+
+  bringToTop() {
+    this.game.world.bringToTop(this.spriteCutscene);
+    this.game.world.bringToTop(this.sprite);
+    this.game.world.bringToTop(this.textRender);
+  }
+}
+
 function getValidDoors(room, maps) {
   var currentDoors = [];
   var map = findMap(room, maps);
@@ -682,19 +787,55 @@ function getTile(x_coords, y_coords, tiles) {
   return null;
 }
 
-function drawGraphics(graphics, game, rooms, currentRoom) {
+function drawLabel1(label, game) {
+  if(label) {
+    label.destroy();
+  }
+  var s = game.add.text(515, 15, "Minimap", {
+    font: '17pxZCOOLKuaiLe',
+    fill: '#f7c53d',
+    fontWeight: 'bold',
+    stroke: '#423f38',
+    strokeThickness: '4'
+  });
+  s.fixedToCamera = true;
+  return s;
+}
+
+function drawLabel2(label, game) {
+  if(label) {
+    label.destroy();
+  }
+  var t = game.add.text(488, 126, "Basement I", {
+    font: '20px ZCOOLKuaiLe',
+    fill: '#f7c53d',
+    stroke: '#423f38',
+    strokeThickness: '8'
+  });
+  t.fixedToCamera = true;
+  return t;
+}
+
+function drawGraphics(graphics, game, rooms, currentRoom, time) {
   if(graphics) {
     graphics.kill();
   }
-  var graphics = game.add.graphics();
+  var graphics = game.add.graphics(560, 80);
+  var xOff = currentRoom.x * 16;
+  var yOff = currentRoom.y * 16;
+  graphics.beginFill(0x5c6068, 0.65);
+  graphics.lineStyle(4, 0x414347, 0.75);
+  graphics.drawRect(-43, -43, 83, 83);
   for(var i = 0; i < rooms.length; i++) {
     if(rooms[i].x == currentRoom.x && rooms[i].y == currentRoom.y) {
       // DRAW GREEN
+      graphics.lineStyle(2.5, 0x39bf42, 0.75);
       graphics.beginFill(0x41f44d, 0.65);
-      graphics.drawRect((rooms[i].x + 5) * 16, (rooms[i].y + 5) * 16, 16, 16);
-    } else {
+      graphics.drawRect((rooms[i].x) * 16 - xOff - 8, (rooms[i].y) * 16 - yOff - 8, 12, 12);
+    } else if (rooms[i].x >= currentRoom.x - 2 && rooms[i].x <= currentRoom.x + 2 && rooms[i].y >= currentRoom.y - 2 && rooms[i].y <= currentRoom.y + 2){
+      graphics.lineStyle(2.5, 0x3b86b5, 0.75)
       graphics.beginFill(0x42b0f4, 0.65);
-      graphics.drawRect((rooms[i].x + 5) * 16, (rooms[i].y + 5) * 16, 16, 16);
+      graphics.drawRect((rooms[i].x) * 16 - xOff - 8, (rooms[i].y) * 16 - yOff - 8, 12, 12);
     }
   }
   return graphics;
@@ -722,8 +863,9 @@ TopDownGame.Game.prototype = {
     this.rightRooms = [];
     this.deadEnds = [];
     this.numRooms = 37;
+    this.timeLeft = 300;
     this.rooms = [new Room(null, null, null, null, '2', 0, 0)];
-    this.graphics = drawGraphics(this.graphics, this.game, this.rooms, this.currentRoom);
+    this.graphics = drawGraphics(this.graphics, this.game, this.rooms, this.currentRoom, this.timeLeft);
     this.graphics.fixedToCamera = true;
 
     // SET UP ALL MAPS
@@ -758,13 +900,17 @@ TopDownGame.Game.prototype = {
 
     // SET STARTING ROOM
     this.map = this.mapList[1];
+    this.swapList = [];
+    this.currentSwapList = [];
+    this.aboveList = [];
+    this.currentAboveList = [];
 
     // TEST
-    // this.music = this.game.add.audio('music');
-    // this.game.sound.setDecodedCallback(this.music, function() {
-    //   this.music.loopFull(0.5);
-    //   this.music.volume = 0.5;
-    // }.bind(this), this);
+    this.music = this.game.add.audio('music');
+    this.game.sound.setDecodedCallback(this.music, function() {
+      this.music.loopFull(0.5);
+      this.music.volume = 0.15;
+    }.bind(this), this);
     // SET UP DOORS
 
     //LOAD PATHFINDING TILES AND NODES
@@ -772,7 +918,8 @@ TopDownGame.Game.prototype = {
       //LOAD PATHFINDING NODES
       var nodes = [];
       var tiles = [];
-      var newObjArr = []
+      var newObjArr = [];
+      var swapArr = [];
       //the first parameter is the tileset name as specified in Tiled, the second is the key to the asset
       this.mapList[i].addTilesetImage('floor1tiles', 'gameTiles');
       this.mapList[i].addTilesetImage('objects', 'objectTiles');
@@ -800,6 +947,23 @@ TopDownGame.Game.prototype = {
         });
       });
       this.objs.push(newObjArr);
+      Array.prototype.forEach.call(this.mapList[i].layers[3].data, row => {
+        Array.prototype.forEach.call(row, tile => {
+          if(tile.index != -1) {
+            swapArr.push(tile);
+          }
+        });
+      });
+      var aboveArr = [];
+      Array.prototype.forEach.call(this.mapList[i].layers[4].data, row => {
+        Array.prototype.forEach.call(row, tile => {
+          if(tile.index != -1) {
+            aboveArr.push(tile);
+          }
+        })
+      });
+      this.swapList.push(swapArr);
+      this.aboveList.push(aboveArr);
       var tempArr = newObjArr.map(obj => JSON.stringify(obj));
       Array.prototype.forEach.call(this.mapList[i].layers[1].data, row => {
         var newArr = [];
@@ -859,15 +1023,18 @@ TopDownGame.Game.prototype = {
     //resizes the game world to match the layer dimensions
     this.backgroundlayer.resizeWorld();
 
-    //create player
-    this.player = this.game.add.sprite(400, 300, 'player');
-    this.staminaBar = this.game.add.sprite(40, 580, 'barIn');
-    this.staminaBarOut = this.game.add.sprite(40, 580, 'barOut');
+    //create player and UI
+    this.player = this.game.add.sprite(368, 320, 'player');
+    this.ladderBottom = this.game.add.sprite(384, 320, 'ladderBottom');
+    this.ladderTop = this.game.add.sprite(384, 288, 'ladderTop');
+    this.staminaBar = this.game.add.sprite(58, 560, 'barIn');
+    this.staminaBarOut = this.game.add.sprite(60, 560, 'barOut');
     this.staminaBar.fixedToCamera = true;
     this.staminaBarOut.fixedToCamera = true;
-    this.staminaBar.scale.y = 0.5;
-    this.staminaBarOut.scale.y = 0.5;
     this.game.physics.arcade.enable(this.player);
+    this.game.physics.arcade.enable(this.ladderBottom);
+    this.ladderBottom.body.immovable = true;
+    this.ladderBottom.body.moves = false;
     this.currentRoomIndex = this.rooms.indexOf(this.currentRoom);
     this.stamina = 1000;
     this.regen = true;
@@ -888,6 +1055,15 @@ TopDownGame.Game.prototype = {
     //move player with cursor keys
     this.cursors = this.game.input.keyboard.createCursorKeys();
     this.playerSpeed = 100;
+    
+    var c2 = new Cutscene('James', "I'm super weak.", 'playerPortrait', this.game, false, null);
+    this.rootCutscene = new Cutscene('James', "Hey, I'm actually inside our game!", 'playerPortrait', this.game, false, c2);
+    // CUTSCENE RENDER
+    this.rootCutscene.startCutscene();
+    this.tt = null;
+
+    // LOAD AUDIO
+    this.walkSound = this.game.add.audio('recording');
 
     //LOAD ANIMATIONS
     this.player.animations.add('top', [40,41,42,43,44,45,46,47], 8, true);
@@ -922,10 +1098,6 @@ TopDownGame.Game.prototype = {
     this.t.onDown.add(function() {
       this.toggle = !this.toggle;
       if(!this.toggle) {
-        if(this.graphics && this.graphics.alive) {
-          this.graphics.kill();
-          this.graphics = null;
-        }
         if(this.enemies) {
           Array.prototype.forEach.call(this.enemies, enemy => {
             if(enemy.pathGraphics) {
@@ -941,8 +1113,14 @@ TopDownGame.Game.prototype = {
       }
     }.bind(this));
 
+    // DRAW INITIAL UI
+    this.graphics = drawGraphics(this.graphics, this.game, this.rooms, this.currentRoom, this.timeLeft);
+    this.graphics.fixedToCamera = true;
+    this.label1 = drawLabel1(this.label1, this.game);
+    this.label2 = drawLabel2(this.label2, this.game);
+
     // MAIN PLAYER LOOP
-    setInterval(function() {
+    this.playerLoop = setInterval(function() {
       // PLAYER ENTER DOOR
       var roomsIndex = this.rooms.length;
       for(var i = 0; i < this.currentDoors.length; i++) {
@@ -973,7 +1151,7 @@ TopDownGame.Game.prototype = {
                 if(counter == 0) {
                   //FIND A RANDOM ROOM AND LINK TO IT
                   // DETERMINE IF WE NEED A DEAD END
-                  if ((this.currentRoom.y > 10 || this.currentRoom.y < -10) || Math.random(0, 10) < Math.pow(1.4, Math.abs(this.currentRoom.y))) {
+                  if ((this.currentRoom.y > 4 || this.currentRoom.y < -4) || Math.random(0, 10) >  Math.pow(1.7, Math.abs(this.currentRoom.y))) {
                     //GENERATE DEAD END
                     var deadendlist = [];
                     for(var x = 0; x < this.deadEnds.length; x++) {
@@ -1032,7 +1210,7 @@ TopDownGame.Game.prototype = {
                 if(counter == 0) {
                   //FIND A RANDOM ROOM AND LINK TO IT
                   // DETERMINE IF WE NEED A DEAD END
-                  if ((this.currentRoom.y > 10 || this.currentRoom.y < -10) || Math.random(0, 10) < Math.pow(1.4, Math.abs(this.currentRoom.y))) {
+                  if ((this.currentRoom.y > 4 || this.currentRoom.y < -4) || Math.random(0, 10) >  Math.pow(1.7, Math.abs(this.currentRoom.y))) {
                     //GENERATE DEAD END
                     var deadendlist = [];
                     for(var x = 0; x < this.deadEnds.length; x++) {
@@ -1091,7 +1269,7 @@ TopDownGame.Game.prototype = {
                 if(counter == 0) {
                   //FIND A RANDOM ROOM AND LINK TO IT
                   // DETERMINE IF WE NEED A DEAD END
-                  if ((this.currentRoom.x > 10 || this.currentRoom.x < -10) || Math.random(0, 10) < Math.pow(1.4, Math.abs(this.currentRoom.x))) {
+                  if ((this.currentRoom.x > 4 || this.currentRoom.x < -4) || Math.random(0, 10) >  Math.pow(1.7, Math.abs(this.currentRoom.x))) {
                     //GENERATE DEAD END
                     var deadendlist = [];
                     for(var x = 0; x < this.deadEnds.length; x++) {
@@ -1150,7 +1328,7 @@ TopDownGame.Game.prototype = {
                 if(counter == 0) {
                   //FIND A RANDOM ROOM AND LINK TO IT
                   // DETERMINE IF WE NEED A DEAD END
-                  if ((this.currentRoom.x > 10 || this.currentRoom.x < -10) || Math.random(0, 10) < Math.pow(1.4, Math.abs(this.currentRoom.x))) {
+                  if ((this.currentRoom.x > 4 || this.currentRoom.x < -4) || Math.random(0, 10) > Math.pow(1.7, Math.abs(this.currentRoom.x))) {
                     //GENERATE DEAD END
                     var deadendlist = [];
                     for(var x = 0; x < this.deadEnds.length; x++) {
@@ -1298,8 +1476,11 @@ TopDownGame.Game.prototype = {
               this.enemies.push(bot);
             }
 
-
             this.game.world.bringToTop(this.player);
+            if(this.currentRoom.x == 0 && this.currentRoom.y == 0) {
+              this.game.world.bringToTop(this.ladderBottom);
+              this.game.world.bringToTop(this.ladderTop);
+            }
             for(var i = 0; i < this.enemies.length; i++) {
               if(this.enemies[i].roomX == this.currentRoom.x && this.enemies[i].roomY == this.currentRoom.y) {
                 this.enemies[i].setVisible(true);
@@ -1308,15 +1489,24 @@ TopDownGame.Game.prototype = {
                 this.enemies[i].setVisible(false);
               }
             }
-            this.game.world.bringToTop(this.aboveObjectLayer);
-            this.game.world.bringToTop(this.aboveLayer);
+            //this.game.world.bringToTop(this.aboveObjectLayer);
+            //this.game.world.bringToTop(this.aboveLayer);
             this.game.world.bringToTop(this.staminaBar);
             this.game.world.bringToTop(this.staminaBarOut);
-            if(this.toggle) {
-              this.graphics = drawGraphics(this.graphics, this.game, this.rooms, this.currentRoom);
-              this.graphics.fixedToCamera = true;
+            var temp = this.rootCutscene;
+            while(temp) {
+              if(temp.active) {
+                temp.bringToTop();
+                break;
+              }
+              temp = temp.next;
             }
             this.locked = false;
+            this.game.world.bringToTop(this.tt);
+            this.graphics = drawGraphics(this.graphics, this.game, this.rooms, this.currentRoom, this.timeLeft);
+            this.graphics.fixedToCamera = true;
+            this.label1 = drawLabel1(this.label1, this.game);
+            this.label2 = drawLabel2(this.label2, this.game);
 
             this.currentRoomIndex = this.rooms.indexOf(this.currentRoom);
           } else {
@@ -1402,18 +1592,93 @@ TopDownGame.Game.prototype = {
         }
       });
 
-      this.enemies.sort(enemy => enemy.sprite.y);
+      // REORDER PLAYER, ENEMIES, AND ABOVEOBJECT TILES BASED ON Y VALUES
+      var reorder = [this.player];
+      if(this.currentRoom.x == 0 && this.currentRoom.y == 0) {
+        reorder.push(this.ladderTop);
+      }
       for(var i = 0; i < this.enemies.length; i++) {
         if(this.enemies[i].visible) {
-          if(this.enemies[i].sprite.y < this.player.y && !this.enemies[i].swapped) {
-            this.game.world.swap(this.player, this.enemies[i].sprite);
-            this.enemies[i].swapped = true;
-          } else if (this.enemies[i].sprite.y >= this.player.y && this.enemies[i].swapped) {
-            this.game.world.swap(this.player, this.enemies[i].sprite);
-            this.enemies[i].swapped = false;
-          }
+          reorder.push(this.enemies[i].sprite);
         }
       }
+      var newSwapList = [];
+      for(var i = 0; i < this.currentSwapList.length; i++) {
+        this.currentSwapList[i].destroy();
+      }
+      var newAboveList = [];
+      for(var i = 0; i < this.currentAboveList.length; i++) {
+        this.currentAboveList[i].destroy();
+      }
+      this.currentSwapList = [];
+      this.currentAboveList = [];
+      this.map.layers = this.map.layers.slice(0,5);
+      var prevIndex = 0;
+      for(var i = 0; i < this.swapList[this.mapList.indexOf(this.map)].length; i++) {
+        prevIndex = i;
+        newSwapList.push(this.map.createBlankLayer(i.toString(), 25, 25, 32, 32));
+        var tileToPlace = this.swapList[this.mapList.indexOf(this.map)][i];
+        this.map.putTile(tileToPlace, tileToPlace.x, tileToPlace.y, newSwapList[i]);
+        reorder.push({y: (this.swapList[this.mapList.indexOf(this.map)][i].y * 32), layer: newSwapList[i]});
+      }
+      for(var i = 0; i < this.aboveList[this.mapList.indexOf(this.map)].length; i++) {
+        newAboveList.push(this.map.createBlankLayer((i + prevIndex + 1).toString(), 25, 25, 32, 32));
+        var tileToPlace = this.aboveList[this.mapList.indexOf(this.map)][i];
+        this.map.putTile(tileToPlace, tileToPlace.x, tileToPlace.y, newAboveList[i]);
+        reorder.push({y: (this.aboveList[this.mapList.indexOf(this.map)][i].y * 32), layer: newAboveList[i]});
+      }
+      this.currentAboveList = newAboveList;
+      this.currentSwapList = newSwapList;
+
+      reorder.sort(function(a, b) {
+        return (a.y - b.y);
+      });
+      for(var i = 0; i < reorder.length; i++) {
+        if(reorder[i].layer) {
+          this.game.world.bringToTop(reorder[i].layer);
+        } else {
+          this.game.world.bringToTop(reorder[i]);
+        }
+      }
+
+      this.game.world.bringToTop(this.staminaBar);
+      this.game.world.bringToTop(this.staminaBarOut);
+      this.game.world.bringToTop(this.graphics);
+      this.game.world.bringToTop(this.label1);
+      this.game.world.bringToTop(this.label2);
+      var tempC = this.rootCutscene;
+      while(tempC && !tempC.active) {
+        tempC = tempC.next;
+      }
+      if(tempC) {
+        tempC.bringToTop();
+      }
+      this.game.world.bringToTop(this.tt);
+      
+      // this.enemies.sort(enemy => enemy.sprite.y);
+      // for(var i = 0; i < this.enemies.length; i++) {
+      //   if(this.enemies[i].visible) {
+      //     if(this.enemies[i].sprite.y < this.player.y && !this.enemies[i].swapped) {
+      //       this.game.world.swap(this.player, this.enemies[i].sprite);
+      //       this.enemies[i].swapped = true;
+      //     } else if (this.enemies[i].sprite.y >= this.player.y && this.enemies[i].swapped) {
+      //       this.game.world.swap(this.player, this.enemies[i].sprite);
+      //       this.enemies[i].swapped = false;
+      //     }
+      //   }
+      // }
+
+      // var objList = this.objs[this.mapList.indexOf(this.map)];
+      // var objSwap = this.objsSwapped[this.mapList.indexOf(this.map)];
+      // for(var i = 0; i < objList.length; i++) {
+      //   if(objList[i].y < this.player.y && !objSwap[i].swapped) {
+      //     this.game.world.swap(this.player, objSwap[i].tile);
+      //     objSwap[i].swapped = true;
+      //   } else if (objList[i].y >= this.player.y && objSwap[i].swapped) {
+      //     this.game.world.swap(this.player, objSwap[i].tile);
+      //     objSwap[i].swapped = false;
+      //   }
+      // }
 
       //DEBUG TEXT
       if(this.toggle) {
@@ -1435,8 +1700,8 @@ TopDownGame.Game.prototype = {
       }
 
       Array.prototype.forEach.call(this.enemies, enemy => {
-        if(enemy.sprite.x - 16 <= this.player.x && enemy.sprite.x + 16 >= this.player.x && enemy.sprite.y - 16 <= this.player.y && enemy.sprite.y + 16 >= this.player.y) {
-          this.lose = true;
+        if(enemy.sprite.x - 16 <= this.player.x && enemy.sprite.x + 16 >= this.player.x && enemy.sprite.y - 16 <= this.player.y && enemy.sprite.y + 16 >= this.player.y && this.currentRoom.x == enemy.roomX && this.currentRoom.y == enemy.roomY) {
+          this.loadLevel('MainMenu');
         }
       });
 
@@ -1447,14 +1712,14 @@ TopDownGame.Game.prototype = {
         this.regen = false;
         this.staminaTimer = setTimeout(function() {
           this.regen = true;
-        }.bind(this), 2000);
+        }.bind(this), 1500);
         if(this.stamina != 0) {
           this.stamina--;
           if(this.stamina == 0) {
             clearTimeout(this.staminaTimer);
             this.staminaTimer = setTimeout(function() {
               this.regen = true;
-            }.bind(this), 5000);
+            }.bind(this), 4000);
           }
         }
       }
@@ -1462,27 +1727,69 @@ TopDownGame.Game.prototype = {
       if(this.regen && this.stamina != 1000) {
         this.stamina++;
       }
-      
-      if(this.stamina >= 650) {
-        this.staminaBar.frame = 0;
-      } else if (this.stamina >= 300) {
-        this.staminaBar.frame = 2;
+
+      //Math.pow(3, -(1 - (this.stamina/1000)));
+      this.staminaBar.anchor.setTo(-0.125 * (1 - (this.stamina / 1000)), -0.085 * (1 - (this.stamina / 1000)));
+      this.staminaBar.scale.setTo(Math.pow(0.33, 1 - (this.stamina / 1000)), Math.pow(0.85, 1 - (this.stamina / 1000)));
+
+      // SOUND
+      if(this.player.body.velocity.x != 0 || this.player.body.velocity.y != 0) {
+        if(!this.walkSound.isPlaying) {
+          this.walkSound.stop();
+          this.walkSound.play();
+        }
       } else {
-        this.staminaBar.frame = 1;
+        if(this.walkSound.isPlaying) {
+          this.walkSound.pause();
+        }
       }
-      this.staminaBar.scale.x = this.stamina/1000;
     }.bind(this), 5);
+
+    // TIMER
+    var mm = Math.floor(this.timeLeft / 60);
+    var sc = Math.floor(this.timeLeft % 60).toString();
+    if(sc.length == 1) {
+      sc = "0" + sc;
+    }
+    if(this.tt) {
+      this.tt.alpha = 0;
+      this.tt.destroy();
+    }
+    this.tt = this.game.add.text(545, 150, "0" + mm + ":" + sc, {
+      font: '18px ZCOOLKuaiLe',
+      fill: '#f7c53d',
+      stroke: '#423f38',
+      strokeThickness: '5'
+    });
+    this.tt.fixedToCamera = true;
+    this.timer = setInterval(function() {
+      this.timeLeft--;
+      if(this.timeLeft <= 0) {
+        this.loadLevel('MainMenu');
+      }
+      // TIMER
+      var mm = Math.floor(this.timeLeft / 60);
+      var sc = Math.floor(this.timeLeft % 60).toString();
+      if(sc.length == 1) {
+        sc = "0" + sc;
+      }
+      this.tt.text = "0" + mm + ":" + sc;
+    }.bind(this), 1000);   
   },
-  start: function() {
-    this.game.start('MainMenu');
+  loadLevel(level) {
+    clearInterval(this.playerLoop);
+    clearInterval(this.timer);
+    this.music.destroy();
+    Array.prototype.forEach.call(this.enemies, enemy => {
+      clearInterval(enemy.interval);
+    });
+    this.game.state.start(level, true, false);
   },
   update: function() {
-    if(this.lose) {
-      console.log("YOU LOSE");
-    }
     //collision
     this.game.physics.arcade.collide(this.player, this.wallLayer);
     this.game.physics.arcade.collide(this.player, this.objectLayer);
+    this.game.physics.arcade.collide(this.player, this.ladderBottom);
     // for(var i = 0; i < this.enemies.length; i++) {
     //   if(this.enemies[i].roomX == this.currentRoom.x && this.enemies[i].roomY == this.currentRoom.y) {
     //     this.game.physics.arcade.collide(this.player, this.enemies[i].sprite);
@@ -1500,7 +1807,6 @@ TopDownGame.Game.prototype = {
       this.game.sound.context.resume();
     }
     //player movement
-    
     this.player.body.velocity.x = 0;
 
     if(this.cursors.up.isDown && this.cursors.left.isDown) {

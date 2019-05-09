@@ -5,7 +5,7 @@ TopDownGame.Preload = function(){};
  
 TopDownGame.Preload.prototype = {
   preload: function() { 
-    this.preloadBar = this.add.sprite(this.game.world.centerX, this.game.world.centerY, 'companyLogo');
+    this.preloadBar = this.add.sprite(320, 320, 'companyLogo');
     this.preloadBar.anchor.setTo(0.5);
     this.load.setPreloadSprite(this.preloadBar);
 
@@ -26,8 +26,10 @@ TopDownGame.Preload.prototype = {
     this.load.spritesheet('aboutBack','assets/About/aboutBack.png',56,48,2);
     this.load.image('aboutScreen','assets/About/aboutScreen.png');
     this.load.image('aboutText','assets/About/aboutText.png');
-    this.load.image('barOut', 'assets/UI/barOut.png');
-    this.load.spritesheet('barIn', 'assets/UI/barSpriteSheet.png', 160, 64, 3);
+    this.load.image('barOut', 'assets/UI/barOut2.png');
+    this.load.image('barIn', 'assets/UI/barIn2.png');
+    this.load.image('ladderBottom', 'assets/UI/ladderBottom.png');
+    this.load.image('ladderTop', 'assets/UI/ladderTop.png');
 
     this.load.tilemap('1', '../maps/Floor 1/1.json', null, Phaser.Tilemap.TILED_JSON);
     this.load.tilemap('2', '../maps/Floor 1/2.json', null, Phaser.Tilemap.TILED_JSON);
@@ -69,8 +71,12 @@ TopDownGame.Preload.prototype = {
     this.load.image('gameTiles', 'assets/Floor 1/Floors/f1spritesheet.png');
     this.load.image('objectTiles', 'assets/Floor 1/Floors/objspritesheet.png');
     this.load.spritesheet('player', 'assets/PlayerSheet/playerspritesheet.png', 64, 64, 72);
+    this.load.image('playerPortrait', 'assets/PlayerSheet/player_portrait.png');
     this.load.spritesheet('abg', 'assets/Enemies/ABG/AbgSpriteSheet1.png', 64, 64, 72);
     this.game.load.audio('music', 'assets/audio/music.mp3');
+    this.load.image('cutscene', 'assets/UI/cutscene.png');
+    this.game.add.text(0,0,"", {font: '20px ZCOOLKuaiLe'});
+    this.game.load.audio('recording', 'assets/audio/Recording (18).m4a');
   },
   create: function() {
     this.state.start('Splash');

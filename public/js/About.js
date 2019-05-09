@@ -10,14 +10,14 @@ var aboutText;
 TopDownGame.About.prototype = {
     create: function(game) {
 
-        aboutScreen = game.add.sprite(game.world.centerX,game.world.centerY+64,'aboutScreen');
+        aboutScreen = game.add.sprite(320,320+64,'aboutScreen');
         aboutScreen.scale.setTo(0.5,0.5);
         aboutScreen.anchor.setTo(0.5,0.5);
 
-        aboutText = game.add.sprite(game.world.centerX+208,game.world.centerY-224,'aboutText');
+        aboutText = game.add.sprite(320+208,320-224,'aboutText');
         aboutText.anchor.setTo(0.5,0.5);
 
-        this.createButton(game,"aboutBack",game.world.centerX-224,game.world.centerY-224,100,75,
+        this.createButton(game,"aboutBack",320-224,320-224,100,75,
             function(){
                 this.state.start('MainMenu');
             });

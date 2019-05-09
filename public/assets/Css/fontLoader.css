@@ -2,3 +2,8 @@
 	font-family: "ThinkNothing";
 	src: url("../Fonts/ThinkNothing.otf");
 }
+
+@font-face {
+	font-family: "ZCOOLKuaiLe";
+	src: url('../Fonts/ZCOOLKuaiLe-Regular.ttf');
+}

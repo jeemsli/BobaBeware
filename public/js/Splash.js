@@ -47,7 +47,7 @@ TopDownGame.Splash.prototype = {
 
     update: function(game) {
         if(this.game.input.activePointer.justPressed()) {
-            this.game.state.start('MainMenu');
+             this.game.state.start('MainMenu');
           }
 
         var offset = moveToXY(game.input.activePointer, text.x, text.y, 8);

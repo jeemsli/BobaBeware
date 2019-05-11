@@ -1,42 +1,55 @@
 var TopDownGame = TopDownGame || {};
 
 class NPC {
-  constructor(sprite, roomX, roomY, rootCutscene) {
+  constructor(sprite, roomX, roomY, rootCutscene, cutsceneParams) {
     this.sprite = sprite;
     this.roomX = roomX;
     this.roomY = roomY;
     this.rootCutscene = rootCutscene;
     this.originalFrame = null;
+    this.cutsceneParams = cutsceneParams;
+    this.interactFrame = null;
   }
 
   setOriginalFrame() {
     this.sprite.frame = this.originalFrame ? this.originalFrame : this.sprite.frame;
+    this.resetCutscene();
+  }
+
+  resetCutscene() {
+    this.rootCutscene = new Cutscene(this.cutsceneParams[0], this.cutsceneParams[1], this.cutsceneParams[2], this.cutsceneParams[3], this.cutsceneParams[4], this.cutsceneParams[5], this.cutsceneParams[6]);
   }
 
   interact(player, direction) {
-    this.originalFrame = this.sprite.frame;
-    var pX = Math.floor(player.x / 32);
-    var pY = Math.floor(player.y / 32);
-    var x = Math.floor(this.sprite.x / 32);
-    var y = Math.floor(this.sprite.y / 32);
-    if(x + 1 == pX && y == pY && direction == 'right') {
-      this.rootCutscene.startCutscene();
-      this.sprite.frame = 3;
-      return this.rootCutscene;
-    } else if (x - 1 == pX && y == pY && direction == 'left') {
-      this.rootCutscene.startCutscene();
-      this.sprite.frame = 1;
-      return this.rootCutscene;
-    } else if (x == pX && y + 1 == pY && direction == 'top') {
-      this.rootCutscene.startCutscene();
-      this.sprite.frame = 0;
-      return this.rootCutscene;
-    } else if (x == pX && y - 1 == pY && direction == 'bottom') {
-      this.rootCutscene.startCutscene();
-      this.sprite.frame = 2;
-      return this.rootCutscene;
-    } else {
-      return null;
+    if(!paused) {
+      this.originalFrame = this.sprite.frame;
+      var pX = Math.floor(player.x / 32);
+      var pY = Math.floor(player.y / 32);
+      var x = Math.floor(this.sprite.x / 32);
+      var y = Math.floor(this.sprite.y / 32);
+      if(x + 1 == pX && y == pY && direction == 'left') {
+        this.sprite.frame = 1;
+        this.interactFrame = 1;
+        this.rootCutscene.startCutscene();
+        return this.rootCutscene;
+      } else if (x - 1 == pX && y == pY && direction == 'right') {
+        this.sprite.frame = 3;
+        this.interactFrame = 3;
+        this.rootCutscene.startCutscene();
+        return this.rootCutscene;
+      } else if (x == pX && y + 1 == pY && direction == 'top') {
+        this.sprite.frame = 0;
+        this.interactFrame = 0;
+        this.rootCutscene.startCutscene();
+        return this.rootCutscene;
+      } else if (x == pX && y - 1 == pY && direction == 'bottom') {
+        this.sprite.frame = 2;
+        this.interactFrame = 2;
+        this.rootCutscene.startCutscene();
+        return this.rootCutscene;
+      } else {
+        return null;
+      }
     }
   }
 }
@@ -214,11 +227,64 @@ TopDownGame.Overworld.prototype = {
     
     // CREATE NPCs
     this.npcs = [];
-    var jing = new NPC(this.game.add.sprite(368, 528, 'npc1'), 0, 0, new Cutscene('Jing', 'BAPANADA', 'jingPortrait', this.game, false, null, ));
-    var rachel = new NPC(this.game.add.sprite(592, 384, 'npc2'), 1, 1, new Cutscene('Rachel', 'Lorem Ipsum', 'rachelPortrait', this.game, false, null));
+    var jcs8 = new Cutscene('James', "Sure thing! I'll see you around then.", 'playerPortrait', this.game, false, null);
+    var jcs7 = new Cutscene('Jing', "Let's see... Well we aren't that busy, so feel free to introduce yourself to the others.", 'jingPortrait', this.game, false, jcs8);
+    var jcs6 = new Cutscene('James', 'Awesome! What should I do first?', 'playerPortrait', this.game, false, jcs7);
+    var jcs5 = new Cutscene('Jing', 'Great! Starting today you will be working with me at the front.', 'jingPortrait', this.game, false, jcs6);
+    var jcs4 = new Cutscene('Jing', 'Ok you die now.', 'jingPortrait', this.game, false, null, this.loadLevel.bind(this), 'MainMenu');
+    var jcs3 = new Prompt('Arrow keys to select, space to confirm.', [{text: 'Who\'s James?', next: jcs4},{text: 'That\'s me!', next: jcs5}], false, this.game, null);
+    var jcs2 = new Cutscene('Jing', 'Yup! By any chance are you James, our new hire?', 'jingPortrait', this.game, false, jcs3);
+    var jcs1 = new Cutscene('James', 'By any chance, are you Ms. Li?', 'playerPortrait', this.game, false, jcs2);
+    var jcs_root = new Cutscene('Jing', "Hi! Welcome to Mckenna's Tea House. May I ask what you are ordering today sir?", 'jingPortrait', this.game, false, jcs1);
+    var jing = new NPC(this.game.add.sprite(368, 528, 'npc1'), 0, 0, jcs_root, ['Jing','The others are in the back. Say hi to them for me will you!','jingPortrait',this.game, false, null]);
+    var rcs8 = new Cutscene('Rachel', "Well anyways~ The crowds out there can get a bit rowdy so feel free to ask me for help.", 'rachelPortrait', this.game, false, null);
+    var rcs7 = new Cutscene('Rachel', "Ok...", 'rachelPortrait', this.game, false, rcs8);
+    var rcs6 = new Cutscene('Rachel', "I think you and I will get along perfectly.", 'rachelPortrait', this.game, false, rcs8);
+    var rcs5 = new Cutscene('Rachel', "Disgusti... I mean to each his own I suppose~", 'rachelPortrait', this.game, false, rcs8);
+    var rcs4 = new Prompt('ABGs huh...', [{text:'I <3 ABGs.', next: rcs5}, {text:'Ew no.', next:rcs6},{text:'YEET', next:rcs7}], false, this.game, null);
+    var rcs3 = new Cutscene('Rachel', 'By the way~ What do you think of ABGs?', 'rachelPortrait', this.game, false, rcs4);
+    var rcs2 = new Cutscene('Rachel', "The name's Rachel~ I'm usually managing stock but I've got cleaning duty today.", 'rachelPortrait', this.game, false, rcs3);
+    var rcs1 = new Cutscene('James', "Hi. And you are?", 'playerPortrait', this.game, false, rcs2);
+    var rcs_root = new Cutscene('Rachel', 'Hey there~ You must be James.', 'rachelPortrait', this.game, false, rcs1);
+    var rachel = new NPC(this.game.add.sprite(592, 384, 'npc2'), 1, 1, rcs_root, ['Rachel', "Sorry I'm busy right now~ We can talk later~", 'rachelPortrait', this.game, false, null]);
+    var racs9 = new Cutscene('Ralph', "Anyways, if you need me to talk to Jing you let me know first alright.", 'ralphPortrait', this.game, false, null);
+    var racs8 = new Cutscene('Ralph', "Listen... just don't do anything stupid and we're good, okay?", 'ralphPortrait', this.game, false, racs9);
+    var racs7 = new Cutscene('Ralph', "Don't do what I say, and...", 'ralphPortrait', this.game, false, racs8);
+    var racs6 = new Cutscene('Ralph', "Do what I say, and I'll put in a good word for you.", 'ralphPortrait', this.game, false, racs7);
+    var racs5 = new Cutscene('Ralph', "Now listen here, I'm the boss around these parts.", 'ralphPortrait', this.game, false, racs6);
+    var racs4 = new Cutscene('Ralph', "Yea I'll just ignore what you said.", 'ralphPortrait', this.game, false, racs5, function(){nick.sprite.frame = 1; ralph.sprite.frame = ralph.interactFrame}.bind(this));
+    var racs3 = new Cutscene('Nick', "Come on man, go easy on the little guy.", 'nickPortrait', this.game, false, racs4, function(){ralph.sprite.frame = 1;}.bind(this));
+    var racs2 = new Cutscene('Ralph', "Now introductions aside, I want you to know about a few things here.", 'ralphPortrait', this.game, false, racs3, function(){nick.sprite.frame = 3}.bind(this));
+    var racs1 = new Cutscene('Ralph', "As the most senior employee, I manage the others with the exception of the owner Ms. Li.", 'ralphPortrait', this.game, false, racs2);
+    var racs_root = new Cutscene('Ralph', "The name's Ralph, but Jing probably told you about me.", 'ralphPortrait', this.game, false, racs1);
+    var ralph = new NPC(this.game.add.sprite(496, 280, 'npc4'), 1, -1, racs_root, ['Ralph', "Listen, don't get in my way. I'm trying to impress Jing.", 'ralphPortrait', this.game, false, null]);
+    var ncs12 = new Cutscene('Nick', "Now then, if you need anything from the stock, come see me. Just don't tell Rachel.", 'nickPortrait', this.game, false, null);
+    var ncs11 = new Cutscene('Nick', "Yikes.", 'nickPortrait', this.game, false, ncs12);
+    var ncs10 = new Cutscene('Nick', "Now that's what I like to hear!", 'nickPortrait', this.game, false, ncs12);
+    var ncs9 = new Prompt("I'd say...", [{text:"I can't get enough!", next:ncs10},{text:'I go to Starbucks.',next:ncs11}], false, this.game, null);
+    var ncs8 = new Cutscene('Nick', "Got a question for you, how much do you like bubble tea?", 'nickPortrait', this.game, false, ncs9);
+    var ncs7 = new Cutscene('Nick', 'Alright then. Nice to meet you too Jay.', 'nickPortrait', this.game, false, ncs8);
+    var ncs6 = new Cutscene('James', 'Nice to meet you. Feel free to call me James, or Jay.', 'playerPortrait', this.game, false, ncs7);
+    var ncs5 = new Cutscene('Nick', "Sorry man, that was my bad. As you might've heard the name's Nick.", 'nickPortrait', this.game, false, ncs6);
+    var ncs4 = new Cutscene('James', "Nah man, it's fine. My nickname used to be Jay in highschool so I'm used to it.", 'playerPortrait', this.game, false, ncs5, function(){ralph.sprite.frame = 2}.bind(this));
+    var ncs3 = new Cutscene('Ralph', "Excuse my friend Nick, he doesn't go out much.", 'ralphPortrait', this.game, false, ncs4);
+    var ncs2 = new Cutscene('Ralph', 'You idiot.', 'ralphPortrait', this.game, false, ncs3, function(){ralph.sprite.frame = nick.interactFrame}.bind(this));
+    var ncs1 = new Cutscene('Ralph', "The guy's name is James.", 'ralphPortrait', this.game, false, ncs2);
+    var ncs_root = new Cutscene('Nick', "Hey, you must be Jay!", 'nickPortrait', this.game, false, ncs1, function(){ralph.sprite.frame = 1}.bind(this));
+    var nick = new NPC(this.game.add.sprite(528, 280, 'npc3'), 1, -1, ncs_root, ['Nick', "If Jing asks, I wasn't slacking off.", "nickPortrait", this.game, false, null]);
     jing.sprite.frame = 2;
     rachel.sprite.frame = 3;
-    this.npcs.push(jing, rachel);
+    ralph.sprite.frame = 2;
+    nick.sprite.frame = 1;
+    jcs8.callback = jing.setOriginalFrame.bind(jing);
+    jing.cutsceneParams.push(jing.setOriginalFrame.bind(jing));
+    rcs8.callback = rachel.setOriginalFrame.bind(rachel);
+    rachel.cutsceneParams.push(rachel.setOriginalFrame.bind(rachel));
+    racs9.callback = ralph.setOriginalFrame.bind(ralph);
+    ralph.cutsceneParams.push(ralph.setOriginalFrame.bind(ralph));
+    ncs12.callback = nick.setOriginalFrame.bind(nick);
+    nick.cutsceneParams.push(nick.setOriginalFrame.bind(nick));
+    this.npcs.push(jing, rachel, nick, ralph);
 
     //the first parameter is the tileset name as specified in Tiled, the second is the key to the asset
     this.map.addTilesetImage('floor1tiles', 'gameTiles');
@@ -316,7 +382,12 @@ TopDownGame.Overworld.prototype = {
     this.space = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
     this.space.onDown.add(function() {
       for(var i = 0; i < this.npcs.length; i++) {
-        this.npcs[i].interact(this.player);
+        var cs = this.npcs[i].interact(this.player, this.direction);
+        if(cs) {
+          this.player.animations.stop();
+          this.rootCutscene = cs;
+          break;
+        }
       }
     }.bind(this));
 
@@ -879,16 +950,17 @@ TopDownGame.Overworld.prototype = {
         tempC.bringToTop();
       }
     }.bind(this), 5);   
+
+    this.direction = 'bottom';
   },
   loadLevel(level) {
     clearInterval(this.playerLoop);
     clearInterval(this.timer);
-    this.music.destroy();
+    //this.music.destroy();
     Array.prototype.forEach.call(this.enemies, enemy => {
       clearInterval(enemy.interval);
     });
     this.game.state.start(level, true, false);
-    this.direction = 'bottom';
   },
   update: function() {
     //collision
@@ -916,123 +988,125 @@ TopDownGame.Overworld.prototype = {
     //player movement
     this.player.body.velocity.x = 0;
 
-    if(this.cursors.up.isDown && this.cursors.left.isDown) {
-      if(this.shift.isDown) {
-        this.player.animations.play('topleftrun');
-        this.player.body.velocity.y = -(this.playerSpeed * 2);
-        this.player.body.velocity.x = -(this.playerSpeed * 2);
-      } else {
-        this.player.animations.play('topleft');
-        this.player.body.velocity.y = -(this.playerSpeed);
-        this.player.body.velocity.x = -(this.playerSpeed);
-      }
-      this.direction = 'topleft';
-    } else if (this.cursors.up.isDown && this.cursors.right.isDown) {
-      if(this.shift.isDown) {
-        this.player.animations.play('toprightrun');
-        this.player.body.velocity.y = -(this.playerSpeed * 2);
-        this.player.body.velocity.x = this.playerSpeed * 2;
-      } else {
-        this.player.animations.play('topright');
-        this.player.body.velocity.y = -(this.playerSpeed);
-        this.player.body.velocity.x = this.playerSpeed;
-      }
-      this.direction = 'topright';
-    } else if (this.cursors.up.isDown) {
+    if(!paused) {
+      if(this.cursors.up.isDown && this.cursors.left.isDown) {
         if(this.shift.isDown) {
-          this.player.animations.play('toprun');
+          this.player.animations.play('topleftrun');
           this.player.body.velocity.y = -(this.playerSpeed * 2);
-          this.player.body.velocity.x = 0;
+          this.player.body.velocity.x = -(this.playerSpeed * 2);
         } else {
-          this.player.animations.play('top');
+          this.player.animations.play('topleft');
           this.player.body.velocity.y = -(this.playerSpeed);
-          this.player.body.velocity.x = 0;
-        }
-        this.direction = 'top'
-    } else if (this.cursors.down.isDown && this.cursors.left.isDown) {
-        if(this.shift.isDown) {
-          this.player.animations.play('bottomleftrun');
-          this.player.body.velocity.y = this.playerSpeed * 2;
-          this.player.body.velocity.x = -(this.playerSpeed * 2);
-        } else {
-          this.player.animations.play('bottomleft');
-          this.player.body.velocity.y = this.playerSpeed;
           this.player.body.velocity.x = -(this.playerSpeed);
         }
-        this.direction = 'bottomleft';
-    } else if (this.cursors.down.isDown && this.cursors.right.isDown) {
+        this.direction = 'topleft';
+      } else if (this.cursors.up.isDown && this.cursors.right.isDown) {
         if(this.shift.isDown) {
-          this.player.animations.play('bottomrightrun');
-          this.player.body.velocity.y = this.playerSpeed * 2;
+          this.player.animations.play('toprightrun');
+          this.player.body.velocity.y = -(this.playerSpeed * 2);
           this.player.body.velocity.x = this.playerSpeed * 2;
         } else {
-          this.player.animations.play('bottomright');
-          this.player.body.velocity.y = this.playerSpeed;
+          this.player.animations.play('topright');
+          this.player.body.velocity.y = -(this.playerSpeed);
           this.player.body.velocity.x = this.playerSpeed;
         }
-        this.direction = 'bottomright';
-    } else if (this.cursors.down.isDown) {
-        if(this.shift.isDown) {
-          this.player.animations.play('bottomrun');
-          this.player.body.velocity.y = this.playerSpeed * 2;
-          this.player.body.velocity.x = 0;
-        } else {
-          this.player.animations.play('bottom');
-          this.player.body.velocity.y = this.playerSpeed;
-          this.player.body.velocity.x = 0;
+        this.direction = 'topright';
+      } else if (this.cursors.up.isDown) {
+          if(this.shift.isDown) {
+            this.player.animations.play('toprun');
+            this.player.body.velocity.y = -(this.playerSpeed * 2);
+            this.player.body.velocity.x = 0;
+          } else {
+            this.player.animations.play('top');
+            this.player.body.velocity.y = -(this.playerSpeed);
+            this.player.body.velocity.x = 0;
+          }
+          this.direction = 'top'
+      } else if (this.cursors.down.isDown && this.cursors.left.isDown) {
+          if(this.shift.isDown) {
+            this.player.animations.play('bottomleftrun');
+            this.player.body.velocity.y = this.playerSpeed * 2;
+            this.player.body.velocity.x = -(this.playerSpeed * 2);
+          } else {
+            this.player.animations.play('bottomleft');
+            this.player.body.velocity.y = this.playerSpeed;
+            this.player.body.velocity.x = -(this.playerSpeed);
+          }
+          this.direction = 'bottomleft';
+      } else if (this.cursors.down.isDown && this.cursors.right.isDown) {
+          if(this.shift.isDown) {
+            this.player.animations.play('bottomrightrun');
+            this.player.body.velocity.y = this.playerSpeed * 2;
+            this.player.body.velocity.x = this.playerSpeed * 2;
+          } else {
+            this.player.animations.play('bottomright');
+            this.player.body.velocity.y = this.playerSpeed;
+            this.player.body.velocity.x = this.playerSpeed;
+          }
+          this.direction = 'bottomright';
+      } else if (this.cursors.down.isDown) {
+          if(this.shift.isDown) {
+            this.player.animations.play('bottomrun');
+            this.player.body.velocity.y = this.playerSpeed * 2;
+            this.player.body.velocity.x = 0;
+          } else {
+            this.player.animations.play('bottom');
+            this.player.body.velocity.y = this.playerSpeed;
+            this.player.body.velocity.x = 0;
+          }
+          this.direction = 'bottom';
+      } else if (this.cursors.right.isDown) {
+          if(this.shift.isDown) {
+            this.player.animations.play('rightrun');
+            this.player.body.velocity.y = 0;
+            this.player.body.velocity.x = this.playerSpeed * 2;
+          } else {
+            this.player.animations.play('right');
+            this.player.body.velocity.y = 0;
+            this.player.body.velocity.x = this.playerSpeed;
+          }
+          this.direction = 'right';
+      } else if (this.cursors.left.isDown) {
+          if(this.shift.isDown) {
+            this.player.animations.play('leftrun');
+            this.player.body.velocity.y = 0;
+            this.player.body.velocity.x = -(this.playerSpeed * 2);
+          } else {
+            this.player.animations.play('left');
+            this.player.body.velocity.y = 0;
+            this.player.body.velocity.x = -(this.playerSpeed);
+          }
+          this.direction = 'left';
+      } else {
+        switch(this.direction) {
+          case 'bottom':
+            this.player.frame = 0;
+            break;
+          case 'bottomleft':
+            this.player.frame = 16;
+            break;
+          case 'bottomright':
+            this.player.frame = 64;
+            break;
+          case 'top':
+            this.player.frame = 40;
+            break;
+          case 'topleft':
+            this.player.frame = 32;
+            break;
+          case 'topright':
+            this.player.frame = 48;
+            break;
+          case 'left':
+            this.player.frame = 24;
+            break;
+          case 'right':
+            this.player.frame = 56;
+            break;
         }
-        this.direction = 'bottom';
-    } else if (this.cursors.right.isDown) {
-        if(this.shift.isDown) {
-          this.player.animations.play('rightrun');
-          this.player.body.velocity.y = 0;
-          this.player.body.velocity.x = this.playerSpeed * 2;
-        } else {
-          this.player.animations.play('right');
-          this.player.body.velocity.y = 0;
-          this.player.body.velocity.x = this.playerSpeed;
-        }
-        this.direction = 'right';
-    } else if (this.cursors.left.isDown) {
-        if(this.shift.isDown) {
-          this.player.animations.play('leftrun');
-          this.player.body.velocity.y = 0;
-          this.player.body.velocity.x = -(this.playerSpeed * 2);
-        } else {
-          this.player.animations.play('left');
-          this.player.body.velocity.y = 0;
-          this.player.body.velocity.x = -(this.playerSpeed);
-        }
-        this.direction = 'left';
-    } else {
-      switch(this.direction) {
-        case 'bottom':
-          this.player.frame = 0;
-          break;
-        case 'bottomleft':
-          this.player.frame = 16;
-          break;
-        case 'bottomright':
-          this.player.frame = 64;
-          break;
-        case 'top':
-          this.player.frame = 40;
-          break;
-        case 'topleft':
-          this.player.frame = 32;
-          break;
-        case 'topright':
-          this.player.frame = 48;
-          break;
-        case 'left':
-          this.player.frame = 24;
-          break;
-        case 'right':
-          this.player.frame = 56;
-          break;
+        this.player.body.velocity.y = 0;
+        this.player.body.velocity.x = 0;
       }
-      this.player.body.velocity.y = 0;
-      this.player.body.velocity.x = 0;
     }
   },
 };

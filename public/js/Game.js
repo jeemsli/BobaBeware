@@ -596,7 +596,11 @@ class Prompt {
         this.displayPrompts();
         // DISPLAY PROMPTS AND SELECTION
       } else {
-        this.next = this.choice.next;
+        if(this.choice) {
+          this.next = this.choice.next;
+        } else {
+          this.next = this.choices[0].next;
+        }
         this.killPrompt();
       }
     }
@@ -625,8 +629,9 @@ class Prompt {
   }
 
   displayPrompts() {
+    var space = 560 / (this.choices.length);
     for(var i = 0; i < this.choices.length; i++) {
-      var prompt = this.game.add.text(100 + (i * (this.choices[i - 1 > 0? i - 1 : 0].text.length * 20)), 485, this.choices[i].text, {
+      var prompt = this.game.add.text(100 + (space * i), 490, this.choices[i].text, {
         font: '17px ZCOOLKuaiLe',
         fill: '#000000'
       });
@@ -681,8 +686,10 @@ class Prompt {
 class Cutscene {
   constructor(name, text, sprite, game, canMove, next, callback, param) {
     this.text = text;
+    this.oldText = text;
     this.textRender = null;
-    this.sprite = sprite;
+    this.spriteName = sprite;
+    this.sprite = null;
     this.spriteCutscene = null;
     this.game = game;
     this.canMove = canMove;
@@ -693,7 +700,7 @@ class Cutscene {
     this.active = false;
     this.kill = false;
     this.next = next;
-    this.textBuffer = text.split('');
+    this.textBuffer = null;
     this.space = null;
   }
 
@@ -705,18 +712,21 @@ class Cutscene {
     this.space.onDown.add(this.skipCutscene.bind(this));
     this.spriteCutscene = this.game.add.sprite(40, 400, 'cutscene');
     this.spriteCutscene.fixedToCamera = true;
-    this.sprite = this.game.add.sprite(80, 435, this.sprite);
+    this.sprite = this.game.add.sprite(80, 435, this.spriteName);
     this.sprite.fixedToCamera = true;
     this.sprite.scale.x = 0.9;
     this.sprite.scale.y = 0.9;
-    this.textRender = this.game.add.text(220, 450, "", {
+    this.textRender = this.game.add.text(220, 445, "", {
       font: '20px ZCOOLKuaiLe',
       fill: '#000000',
       fontWeight: 'bold'
     });
     this.textRender.text = this.name + ": ";
     this.textRender.fixedToCamera = true;
+    this.text = this.oldText;
+    this.textBuffer = this.text.split('');
     this.counter = 0;
+    this.counter2 = 0;
     this.wordBoundary = 0;
     this.interval = setInterval(function() {
       var oldB = this.wordBoundary;
@@ -724,13 +734,17 @@ class Cutscene {
         if(this.textBuffer[0] == ' ') {
           this.wordBoundary = this.counter;
         }
-        if(this.counter >= 28 && this.wordBoundary == this.counter) {
-          this.textRender.text = this.textRender.text.slice(0, oldB + this.name.length + 3) + "\n" + this.textRender.text.slice(oldB + this.name.length + 3);
+        if(this.counter >= 28) {
+          this.textRender.text = this.textRender.text.slice(0, this.counter2 + oldB + this.name.length + 3) + "\n" + this.textRender.text.slice(this.counter2 + oldB + this.name.length + 3).trim();
+          this.counter2 = this.counter;
           this.counter = 0;
         }
         this.textRender.text += this.textBuffer.shift();
         this.counter++;
       } else {
+        if(this.counter >= 28) {
+          this.textRender.text = this.textRender.text.slice(0, this.counter2 + this.wordBoundary + this.name.length + 3) + "\n" + this.textRender.text.slice(this.counter2 + this.wordBoundary + this.name.length + 3).trim();
+        }
         clearInterval(this.interval);
       }
     }.bind(this), 75);
@@ -739,6 +753,7 @@ class Cutscene {
 
   addNewline() {
     var counter = 0;
+    var counter2 = 0;
     var wb = 0;
     for(var i = 0; i < this.text.length; i++) {
       var ob = wb;
@@ -746,10 +761,14 @@ class Cutscene {
         wb = counter;
       }
       if(counter >= 28 && wb == counter) {
-        this.text = this.text.slice(0, ob + 1) + "\n" + this.text.slice(ob + 1);
+        this.text = this.text.slice(0, counter2 + ob + 1) + "\n" + this.text.slice(counter2 + ob + 1).trim();
+        counter2 = counter;
         counter = 0;
       }
       counter++;
+    }
+    if(counter >= 28) {
+      this.text = this.text.slice(0, counter2 + wb + 1) + "\n" + this.text.slice(counter2 + wb + 1).trim();
     }
   }
 
@@ -776,16 +795,16 @@ class Cutscene {
     this.space.onDown.remove(this.skipCutscene.bind(this));
     // this.game.input.keyboard.removeKey(Phaser.Keyboard.SPACEBAR);
     // this.cursors = this.game.input.keyboard.createCursorKeys();
+    if(this.callback) {
+      if(this.param) {
+        this.callback(this.param);
+      } else {
+        this.callback();
+      }
+    }
     if(this.next) {
       this.next.startCutscene();
     } else {
-      if(this.callback) {
-        if(this.param) {
-          this.callback(param);
-        } else {
-          this.callback();
-        }
-      }
       paused = false;
     }
   }

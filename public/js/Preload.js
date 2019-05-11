@@ -82,9 +82,13 @@ TopDownGame.Preload.prototype = {
     this.load.spritesheet('player', 'assets/PlayerSheet/playerspritesheet.png', 64, 64, 72);
     this.load.spritesheet('npc1', 'assets/Overworld/jingSpriteSheet2.png', 64, 64, 4);
     this.load.spritesheet('npc2', 'assets/Overworld/rachelSpriteSheet2.png', 64, 64, 4);
+    this.load.spritesheet('npc3', 'assets/Overworld/nickSpriteSheet2.png', 64, 64, 4);
+    this.load.spritesheet('npc4', 'assets/Overworld/ralphSpriteSheet2.png', 64, 64, 4);
     this.load.image('playerPortrait', 'assets/PlayerSheet/player_portrait.png');
     this.load.image('jingPortrait', 'assets/UI/jing.png');
     this.load.image('rachelPortrait', 'assets/UI/rachel.png');
+    this.load.image('nickPortrait', 'assets/UI/nick.png');
+    this.load.image('ralphPortrait', 'assets/UI/ralph.png');
     this.load.spritesheet('abg', 'assets/Enemies/ABG/AbgSpriteSheet1.png', 64, 64, 72);
     this.game.load.audio('music', 'assets/audio/music.mp3');
     this.load.image('cutscene', 'assets/UI/cutscene.png');

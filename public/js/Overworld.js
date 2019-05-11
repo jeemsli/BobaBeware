@@ -1,17 +1,44 @@
 var TopDownGame = TopDownGame || {};
 
-class Interactable {
-  constructor() {
-    
-  }
-}
-
-class NPC extends Interactable{
-  constructor(sprite) {
+class NPC {
+  constructor(sprite, roomX, roomY, rootCutscene) {
     this.sprite = sprite;
+    this.roomX = roomX;
+    this.roomY = roomY;
+    this.rootCutscene = rootCutscene;
+    this.originalFrame = null;
   }
 
-  interact(player)
+  setOriginalFrame() {
+    this.sprite.frame = this.originalFrame ? this.originalFrame : this.sprite.frame;
+  }
+
+  interact(player, direction) {
+    this.originalFrame = this.sprite.frame;
+    var pX = Math.floor(player.x / 32);
+    var pY = Math.floor(player.y / 32);
+    var x = Math.floor(this.sprite.x / 32);
+    var y = Math.floor(this.sprite.y / 32);
+    if(x + 1 == pX && y == pY && direction == 'right') {
+      this.rootCutscene.startCutscene();
+      this.sprite.frame = 3;
+      return this.rootCutscene;
+    } else if (x - 1 == pX && y == pY && direction == 'left') {
+      this.rootCutscene.startCutscene();
+      this.sprite.frame = 1;
+      return this.rootCutscene;
+    } else if (x == pX && y + 1 == pY && direction == 'top') {
+      this.rootCutscene.startCutscene();
+      this.sprite.frame = 0;
+      return this.rootCutscene;
+    } else if (x == pX && y - 1 == pY && direction == 'bottom') {
+      this.rootCutscene.startCutscene();
+      this.sprite.frame = 2;
+      return this.rootCutscene;
+    } else {
+      return null;
+    }
+  }
 }
 
 //title screen
@@ -184,6 +211,15 @@ TopDownGame.Overworld.prototype = {
       });
     }.bind(this));
 
+    
+    // CREATE NPCs
+    this.npcs = [];
+    var jing = new NPC(this.game.add.sprite(368, 528, 'npc1'), 0, 0, new Cutscene('Jing', 'BAPANADA', 'jingPortrait', this.game, false, null, ));
+    var rachel = new NPC(this.game.add.sprite(592, 384, 'npc2'), 1, 1, new Cutscene('Rachel', 'Lorem Ipsum', 'rachelPortrait', this.game, false, null));
+    jing.sprite.frame = 2;
+    rachel.sprite.frame = 3;
+    this.npcs.push(jing, rachel);
+
     //the first parameter is the tileset name as specified in Tiled, the second is the key to the asset
     this.map.addTilesetImage('floor1tiles', 'gameTiles');
     this.map.addTilesetImage('objects', 'objectTiles');
@@ -209,8 +245,18 @@ TopDownGame.Overworld.prototype = {
 
     //create player and UI
     this.player = this.game.add.sprite(368, 320, 'player');
+    this.game.world.bringToTop(this.npcs[0].sprite);
     this.game.physics.arcade.enable(this.player);
     this.currentRoomIndex = this.rooms.indexOf(this.currentRoom);
+
+    for(var i = 0; i < this.npcs.length; i++) {
+      this.game.physics.arcade.enable(this.npcs[i].sprite);
+      this.npcs[i].sprite.body.immovable = true;
+      this.npcs[i].sprite.body.moves = false;
+      if(i != 0) {
+        this.npcs[i].sprite.body.enable = false;
+      }
+    }
     
     //create enemy
     this.enemies = [];
@@ -254,14 +300,25 @@ TopDownGame.Overworld.prototype = {
     this.player.animations.add('bottomrightrun', [64,65,66,67,68,69,70,71], 16, true);
     this.player.animations.add('rightrun', [56,57,58,59], 16, true);
     this.player.animations.add('toprightrun', [48,49,50,51,52,53,54,55], 16, true);
-    this.player.animations.play('idle');
+    this.player.frame = 0;
     this.player.body.setSize(24,16,20,48);
+    for(var i = 0; i < this.npcs.length; i++) {
+      this.npcs[i].sprite.body.setSize(24, 16, 20, 48);
+    }
     this.shift = this.game.input.keyboard.addKey(Phaser.Keyboard.SHIFT);
     this.graphics = this.game.add.graphics();
 
     //GENERATE MAP
     console.log(this.map);
     this.lose = false;
+
+    // INTERACT
+    this.space = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+    this.space.onDown.add(function() {
+      for(var i = 0; i < this.npcs.length; i++) {
+        this.npcs[i].interact(this.player);
+      }
+    }.bind(this));
 
     // DEBUG TOGGLE
     this.toggle = false;
@@ -647,6 +704,14 @@ TopDownGame.Overworld.prototype = {
               this.enemies.push(bot);
             }
 
+            for(var i = 0; i < this.npcs.length; i++) {
+              if(this.npcs[i].roomX == this.currentRoom.x && this.npcs[i].roomY == this.currentRoom.y) {
+                this.npcs[i].sprite.body.enable = true;
+                this.game.world.bringToTop(this.npcs[i].sprite);
+              } else {
+                this.npcs[i].sprite.body.enable = false;
+              }
+            }
             this.game.world.bringToTop(this.player);
             for(var i = 0; i < this.enemies.length; i++) {
               if(this.enemies[i].roomX == this.currentRoom.x && this.enemies[i].roomY == this.currentRoom.y) {
@@ -759,7 +824,12 @@ TopDownGame.Overworld.prototype = {
           reorder.push(this.enemies[i].sprite);
         }
       }
-      if(this.currentRoom.tileMap != 'f1' && this.currentRoom.tileMap != 'f4') {
+      for(var i = 0; i < this.npcs.length; i++) {
+        if(this.currentRoom.x == this.npcs[i].roomX && this.currentRoom.y == this.npcs[i].roomY) {
+          reorder.push(this.npcs[i].sprite);
+        }
+      }
+      if(true) {
         var newSwapList = [];
         for(var i = 0; i < this.currentSwapList.length; i++) {
           this.currentSwapList[i].destroy();
@@ -818,11 +888,15 @@ TopDownGame.Overworld.prototype = {
       clearInterval(enemy.interval);
     });
     this.game.state.start(level, true, false);
+    this.direction = 'bottom';
   },
   update: function() {
     //collision
     this.game.physics.arcade.collide(this.player, this.wallLayer);
     this.game.physics.arcade.collide(this.player, this.objectLayer);
+    for(var i = 0; i < this.npcs.length; i++) {
+      this.game.physics.arcade.collide(this.player, this.npcs[i].sprite);
+    }
     // for(var i = 0; i < this.enemies.length; i++) {
     //   if(this.enemies[i].roomX == this.currentRoom.x && this.enemies[i].roomY == this.currentRoom.y) {
     //     this.game.physics.arcade.collide(this.player, this.enemies[i].sprite);
@@ -852,7 +926,7 @@ TopDownGame.Overworld.prototype = {
         this.player.body.velocity.y = -(this.playerSpeed);
         this.player.body.velocity.x = -(this.playerSpeed);
       }
-
+      this.direction = 'topleft';
     } else if (this.cursors.up.isDown && this.cursors.right.isDown) {
       if(this.shift.isDown) {
         this.player.animations.play('toprightrun');
@@ -863,6 +937,7 @@ TopDownGame.Overworld.prototype = {
         this.player.body.velocity.y = -(this.playerSpeed);
         this.player.body.velocity.x = this.playerSpeed;
       }
+      this.direction = 'topright';
     } else if (this.cursors.up.isDown) {
         if(this.shift.isDown) {
           this.player.animations.play('toprun');
@@ -873,6 +948,7 @@ TopDownGame.Overworld.prototype = {
           this.player.body.velocity.y = -(this.playerSpeed);
           this.player.body.velocity.x = 0;
         }
+        this.direction = 'top'
     } else if (this.cursors.down.isDown && this.cursors.left.isDown) {
         if(this.shift.isDown) {
           this.player.animations.play('bottomleftrun');
@@ -883,6 +959,7 @@ TopDownGame.Overworld.prototype = {
           this.player.body.velocity.y = this.playerSpeed;
           this.player.body.velocity.x = -(this.playerSpeed);
         }
+        this.direction = 'bottomleft';
     } else if (this.cursors.down.isDown && this.cursors.right.isDown) {
         if(this.shift.isDown) {
           this.player.animations.play('bottomrightrun');
@@ -893,7 +970,7 @@ TopDownGame.Overworld.prototype = {
           this.player.body.velocity.y = this.playerSpeed;
           this.player.body.velocity.x = this.playerSpeed;
         }
-
+        this.direction = 'bottomright';
     } else if (this.cursors.down.isDown) {
         if(this.shift.isDown) {
           this.player.animations.play('bottomrun');
@@ -904,7 +981,7 @@ TopDownGame.Overworld.prototype = {
           this.player.body.velocity.y = this.playerSpeed;
           this.player.body.velocity.x = 0;
         }
-
+        this.direction = 'bottom';
     } else if (this.cursors.right.isDown) {
         if(this.shift.isDown) {
           this.player.animations.play('rightrun');
@@ -915,7 +992,7 @@ TopDownGame.Overworld.prototype = {
           this.player.body.velocity.y = 0;
           this.player.body.velocity.x = this.playerSpeed;
         }
-
+        this.direction = 'right';
     } else if (this.cursors.left.isDown) {
         if(this.shift.isDown) {
           this.player.animations.play('leftrun');
@@ -926,8 +1003,34 @@ TopDownGame.Overworld.prototype = {
           this.player.body.velocity.y = 0;
           this.player.body.velocity.x = -(this.playerSpeed);
         }
+        this.direction = 'left';
     } else {
-      this.player.animations.play('idle');
+      switch(this.direction) {
+        case 'bottom':
+          this.player.frame = 0;
+          break;
+        case 'bottomleft':
+          this.player.frame = 16;
+          break;
+        case 'bottomright':
+          this.player.frame = 64;
+          break;
+        case 'top':
+          this.player.frame = 40;
+          break;
+        case 'topleft':
+          this.player.frame = 32;
+          break;
+        case 'topright':
+          this.player.frame = 48;
+          break;
+        case 'left':
+          this.player.frame = 24;
+          break;
+        case 'right':
+          this.player.frame = 56;
+          break;
+      }
       this.player.body.velocity.y = 0;
       this.player.body.velocity.x = 0;
     }

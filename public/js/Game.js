@@ -679,7 +679,7 @@ class Prompt {
 }
 
 class Cutscene {
-  constructor(name, text, sprite, game, canMove, next) {
+  constructor(name, text, sprite, game, canMove, next, callback, param) {
     this.text = text;
     this.textRender = null;
     this.sprite = sprite;
@@ -688,6 +688,8 @@ class Cutscene {
     this.canMove = canMove;
     this.name = name;
     this.interval = null;
+    this.callback = callback;
+    this.param = param;
     this.active = false;
     this.kill = false;
     this.next = next;
@@ -777,6 +779,13 @@ class Cutscene {
     if(this.next) {
       this.next.startCutscene();
     } else {
+      if(this.callback) {
+        if(this.param) {
+          this.callback(param);
+        } else {
+          this.callback();
+        }
+      }
       paused = false;
     }
   }
@@ -1227,7 +1236,7 @@ TopDownGame.Game.prototype = {
     this.player.animations.add('bottomrightrun', [64,65,66,67,68,69,70,71], 16, true);
     this.player.animations.add('rightrun', [56,57,58,59], 16, true);
     this.player.animations.add('toprightrun', [48,49,50,51,52,53,54,55], 16, true);
-    this.player.animations.play('idle');
+    this.player.frame = 0;
     this.player.body.setSize(24,16,20,48);
     this.shift = this.game.input.keyboard.addKey(Phaser.Keyboard.SHIFT);
     this.graphics = this.game.add.graphics();
@@ -1943,6 +1952,7 @@ TopDownGame.Game.prototype = {
         this.tt.text = "0" + mm + ":" + sc;
       }
     }.bind(this), 1000);   
+    this.direction = 'bottom';
   },
   loadLevel(level) {
     clearInterval(this.playerLoop);
@@ -1991,7 +2001,7 @@ TopDownGame.Game.prototype = {
           this.player.body.velocity.y = -(this.playerSpeed);
           this.player.body.velocity.x = -(this.playerSpeed);
         }
-
+        this.direction = 'topleft';
       } else if (this.cursors.up.isDown && this.cursors.right.isDown) {
         if(this.shift.isDown && this.stamina != 0) {
           this.player.animations.play('toprightrun');
@@ -2002,6 +2012,7 @@ TopDownGame.Game.prototype = {
           this.player.body.velocity.y = -(this.playerSpeed);
           this.player.body.velocity.x = this.playerSpeed;
         }
+        this.direction = 'topright';
       } else if (this.cursors.up.isDown) {
           if(this.shift.isDown && this.stamina != 0) {
             this.player.animations.play('toprun');
@@ -2012,6 +2023,7 @@ TopDownGame.Game.prototype = {
             this.player.body.velocity.y = -(this.playerSpeed);
             this.player.body.velocity.x = 0;
           }
+          this.direction = 'top';
       } else if (this.cursors.down.isDown && this.cursors.left.isDown) {
           if(this.shift.isDown && this.stamina != 0) {
             this.player.animations.play('bottomleftrun');
@@ -2022,6 +2034,7 @@ TopDownGame.Game.prototype = {
             this.player.body.velocity.y = this.playerSpeed;
             this.player.body.velocity.x = -(this.playerSpeed);
           }
+            this.direction = 'bottomleft';
       } else if (this.cursors.down.isDown && this.cursors.right.isDown) {
           if(this.shift.isDown && this.stamina != 0) {
             this.player.animations.play('bottomrightrun');
@@ -2032,7 +2045,7 @@ TopDownGame.Game.prototype = {
             this.player.body.velocity.y = this.playerSpeed;
             this.player.body.velocity.x = this.playerSpeed;
           }
-
+          this.direction = 'bottomright';
       } else if (this.cursors.down.isDown) {
           if(this.shift.isDown && this.stamina != 0) {
             this.player.animations.play('bottomrun');
@@ -2043,7 +2056,7 @@ TopDownGame.Game.prototype = {
             this.player.body.velocity.y = this.playerSpeed;
             this.player.body.velocity.x = 0;
           }
-
+          this.direction = 'bottom';
       } else if (this.cursors.right.isDown) {
           if(this.shift.isDown && this.stamina != 0) {
             this.player.animations.play('rightrun');
@@ -2054,7 +2067,7 @@ TopDownGame.Game.prototype = {
             this.player.body.velocity.y = 0;
             this.player.body.velocity.x = this.playerSpeed;
           }
-
+          this.direction = 'right';
       } else if (this.cursors.left.isDown) {
           if(this.shift.isDown && this.stamina != 0) {
             this.player.animations.play('leftrun');
@@ -2065,8 +2078,34 @@ TopDownGame.Game.prototype = {
             this.player.body.velocity.y = 0;
             this.player.body.velocity.x = -(this.playerSpeed);
           }
+          this.direction = 'left';
       } else {
-        this.player.animations.play('idle');
+        switch(this.direction) {
+          case 'bottom':
+            this.player.frame = 0;
+            break;
+          case 'bottomleft':
+            this.player.frame = 16;
+            break;
+          case 'bottomright':
+            this.player.frame = 64;
+            break;
+          case 'top':
+            this.player.frame = 40;
+            break;
+          case 'topleft':
+            this.player.frame = 32;
+            break;
+          case 'topright':
+            this.player.frame = 48;
+            break;
+          case 'left':
+            this.player.frame = 24;
+            break;
+          case 'right':
+            this.player.frame = 56;
+            break;
+        }
         this.player.body.velocity.y = 0;
         this.player.body.velocity.x = 0;
       }

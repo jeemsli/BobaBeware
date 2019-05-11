@@ -26,6 +26,11 @@ TopDownGame.Preload.prototype = {
     this.load.spritesheet('aboutBack','assets/About/aboutBack.png',56,48,2);
     this.load.image('aboutScreen','assets/About/aboutScreen.png');
     this.load.image('aboutText','assets/About/aboutText.png');
+
+    this.load.image('victory','/assets/Victory/victory.png');
+
+    this.load.image('gameOver','/assets/GameOver/gameover.png');
+
     this.load.image('barOut', 'assets/UI/barOut2.png');
     this.load.image('barIn', 'assets/UI/barIn2.png');
     this.load.image('ladderBottom', 'assets/UI/ladderBottom.png');

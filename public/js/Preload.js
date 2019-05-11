@@ -35,6 +35,7 @@ TopDownGame.Preload.prototype = {
     this.load.image('barIn', 'assets/UI/barIn2.png');
     this.load.image('ladderBottom', 'assets/UI/ladderBottom.png');
     this.load.image('ladderTop', 'assets/UI/ladderTop.png');
+    this.load.image('prompt', 'assets/UI/prompt.png');
 
     this.load.tilemap('1', '../maps/Floor 1/1.json', null, Phaser.Tilemap.TILED_JSON);
     this.load.tilemap('2', '../maps/Floor 1/2.json', null, Phaser.Tilemap.TILED_JSON);
@@ -75,8 +76,20 @@ TopDownGame.Preload.prototype = {
     this.load.tilemap('37', '../maps/Floor 1/37.json', null, Phaser.Tilemap.TILED_JSON);
     this.load.image('gameTiles', 'assets/Floor 1/Floors/f1spritesheet.png');
     this.load.image('objectTiles', 'assets/Floor 1/Floors/objspritesheet.png');
+    this.load.image('gameTiles2', 'assets/Overworld/overworldSpriteSheet.png');
+    this.load.image('objectTiles2', 'assets/Overworld/backSpriteSheet.png');
+    this.load.image('gameTiles3', 'assets/Floor 2/f2spritesheet.png');
+    this.load.image('objectTiles3', 'assets/Floor 2/objspritesheet.png');
+    this.load.tilemap('f1', '../maps/Overworld/overworld1.json', null, Phaser.Tilemap.TILED_JSON);
+    this.load.tilemap('f2', '../maps/Overworld/overworld2.json', null, Phaser.Tilemap.TILED_JSON);
+    this.load.tilemap('f3', '../maps/Overworld/overworld3.json', null, Phaser.Tilemap.TILED_JSON);
+    this.load.tilemap('f4', '../maps/Overworld/overworld4.json', null, Phaser.Tilemap.TILED_JSON);
     this.load.spritesheet('player', 'assets/PlayerSheet/playerspritesheet.png', 64, 64, 72);
+    this.load.spritesheet('npc1', 'assets/Overworld/jingSpriteSheet2.png', 64, 64, 4);
+    this.load.spritesheet('npc2', 'assets/Overworld/rachelSpriteSheet2.png', 64, 64, 4);
     this.load.image('playerPortrait', 'assets/PlayerSheet/player_portrait.png');
+    this.load.image('jingPortrait', 'assets/UI/jing.png');
+    this.load.image('rachelPortrait', 'assets/UI/rachel.png');
     this.load.spritesheet('abg', 'assets/Enemies/ABG/AbgSpriteSheet1.png', 64, 64, 72);
     this.game.load.audio('music', 'assets/audio/music.mp3');
     this.load.image('cutscene', 'assets/UI/cutscene.png');

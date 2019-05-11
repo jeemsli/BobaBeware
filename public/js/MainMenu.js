@@ -21,7 +21,7 @@ TopDownGame.MainMenu.prototype = {
 
         play = this.createButton(game,"play",centerX,centerY-64,250,75,
             function(){
-                this.state.start('Game', true, false);
+                this.state.start('Overworld', true, false);
             });
 
         levelselection = this.createButton(game,"levels",centerX,centerY+32,250,75,

@@ -1,4 +1,5 @@
 var TopDownGame = TopDownGame || {};
+var paused = false;
 
 class Room {
 
@@ -21,8 +22,9 @@ let BotState = {
 
 class Enemy {
 
-    constructor(sprite, speed, roomX, roomY, nodes, tiles, objects, player, currentRoom) {
+    constructor(sprite, speed, roomX, roomY, nodes, tiles, objects, player, currentRoom, game) {
       this.player = player;
+      this.game = game;
       this.currentRoom = currentRoom;
       this.sprite = sprite;
       this.spritePosition = {
@@ -71,7 +73,9 @@ class Enemy {
 
       this.interval = setInterval(function() {
         //this.baseBehavior();
-        this.think();
+        if(!paused) {
+          this.think();
+        }
       }.bind(this), 5);
     }
 
@@ -541,8 +545,141 @@ function findMap(room, maps) {
   }
 }
 
+class Prompt {
+  constructor(text, choices, canMove, game, next) {
+    this.choices = choices;
+    this.canMove = canMove;
+    this.game = game;
+    this.active = false;
+    this.space = null;
+    this.left = null;
+    this.right = null;
+    this.text = text;
+    this.next = next;
+    this.promptRender = [];
+    this.textBuffer = this.text.split('');
+  }
+
+  startCutscene() {
+    if(!this.canMove) {
+      paused = true;
+    }
+    this.active = true;
+    this.space = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+    this.space.onDown.add(this.skipPrompt.bind(this));
+    this.spritePrompt = this.game.add.sprite(40, 400, 'prompt');
+    this.spritePrompt.fixedToCamera = true;
+    this.textRender = this.game.add.text(100, 460, "", {
+      font: '20px ZCOOLKuaiLe',
+      fill: '#000000',
+      fontWeight: 'bold'
+    });
+    this.textRender.fixedToCamera = true;
+    this.interval = setInterval(function() {
+      if(this.textBuffer.length != 0) {
+        this.textRender.text += this.textBuffer.shift();
+      } else {
+        clearInterval(this.interval);
+        this.choice = this.choices[0];
+        this.displayPrompts();
+      }
+    }.bind(this), 75);
+  }
+
+  skipPrompt() {
+    if(this.active) {
+      if(this.textBuffer.length != 0) {
+        clearInterval(this.interval);
+        this.choice = this.choices[0];
+        this.textRender.text = this.text;
+        this.textBuffer = [];
+        this.displayPrompts();
+        // DISPLAY PROMPTS AND SELECTION
+      } else {
+        this.next = this.choice.next;
+        this.killPrompt();
+      }
+    }
+  }
+
+  goLeft() {
+    this.promptRender[this.choices.indexOf(this.choice)].fontWeight = 400;
+    if(this.choices.indexOf(this.choice) == 0) {
+      this.choice = this.choices[this.choices.length - 1];
+      this.promptRender[this.promptRender.length - 1].fontWeight = 1000;
+    } else {
+      this.choice = this.choices[this.choices.indexOf(this.choice) - 1];
+      this.promptRender[this.choices.indexOf(this.choice)].fontWeight = 1000;
+    }
+  }
+
+  goRight() {
+    this.promptRender[this.choices.indexOf(this.choice)].fontWeight = 400;
+    if (this.choices.indexOf(this.choice) == this.choices.length - 1){
+      this.choice = this.choices[0];
+      this.promptRender[0].fontWeight = 1000;
+    } else {
+      this.choice = this.choices[this.choices.indexOf(this.choice) + 1];
+      this.promptRender[this.choices.indexOf(this.choice)].fontWeight = 1000;
+    }
+  }
+
+  displayPrompts() {
+    for(var i = 0; i < this.choices.length; i++) {
+      var prompt = this.game.add.text(100 + (i * (this.choices[i - 1 > 0? i - 1 : 0].text.length * 20)), 485, this.choices[i].text, {
+        font: '17px ZCOOLKuaiLe',
+        fill: '#000000'
+      });
+      prompt.fixedToCamera = true;
+      this.promptRender.push(prompt);
+    }
+    this.promptRender[0].fontWeight = 1000;
+    this.left = this.game.input.keyboard.addKey(Phaser.Keyboard.LEFT);
+    this.left.onDown.add(this.goLeft.bind(this));
+    this.right = this.game.input.keyboard.addKey(Phaser.Keyboard.RIGHT);
+    this.right.onDown.add(this.goRight.bind(this));
+  }
+
+  killPrompt() {
+    clearInterval(this.interval);
+    this.textRender.destroy();
+    this.spritePrompt.destroy();
+    for(var i = 0; i < this.promptRender.length; i++) {
+      this.promptRender[i].destroy();
+    }
+    this.active = false;
+    this.left.onDown.remove(this.goLeft);
+    this.right.onDown.remove(this.goRight);
+    this.space.onDown.remove(this.skipPrompt);
+    // this.game.input.keyboard.removeKey(Phaser.Keyboard.SPACEBAR);
+    // this.game.input.keyboard.removeKey(Phaser.Keyboard.LEFT);
+    // this.game.input.keyboard.removeKey(Phaser.Keyboard.RIGHT);
+    // this.cursors = this.game.input.keyboard.createCursorKeys();
+    if(this.choice.callback) {
+      if(this.choice.params) {
+        this.choice.callback(this.choice.params[0]);
+      } else {
+        this.choice.callback();
+      }
+    }
+    if(this.choice.next) {
+      this.choice.next.startCutscene();
+    } else {
+      paused = false;
+    }
+  }
+
+  bringToTop() {
+    this.game.world.bringToTop(this.spritePrompt);
+    this.game.world.bringToTop(this.textRender);
+    for(var i = 0; i < this.promptRender.length; i++) {
+      this.game.world.bringToTop(this.promptRender[i]);
+    }
+  }
+}
+
 class Cutscene {
-  constructor(name, text, sprite, game, canMove, next) {
+  constructor(name, text, sprite, game, canMove, next, callback, param) {
     this.text = text;
     this.textRender = null;
     this.sprite = sprite;
@@ -551,6 +688,8 @@ class Cutscene {
     this.canMove = canMove;
     this.name = name;
     this.interval = null;
+    this.callback = callback;
+    this.param = param;
     this.active = false;
     this.kill = false;
     this.next = next;
@@ -559,10 +698,11 @@ class Cutscene {
   }
 
   startCutscene() {
+    if(!this.canMove) {
+      paused = true;
+    }
     this.space = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
-    this.space.onDown.add(function() {
-      this.skipCutscene();
-    }.bind(this));
+    this.space.onDown.add(this.skipCutscene.bind(this));
     this.spriteCutscene = this.game.add.sprite(40, 400, 'cutscene');
     this.spriteCutscene.fixedToCamera = true;
     this.sprite = this.game.add.sprite(80, 435, this.sprite);
@@ -633,9 +773,20 @@ class Cutscene {
     this.sprite.destroy();
     this.spriteCutscene.destroy();
     this.active = false;
-    this.game.input.keyboard.removeKey(Phaser.Keyboard.SPACEBAR);
+    this.space.onDown.remove(this.skipCutscene.bind(this));
+    // this.game.input.keyboard.removeKey(Phaser.Keyboard.SPACEBAR);
+    // this.cursors = this.game.input.keyboard.createCursorKeys();
     if(this.next) {
       this.next.startCutscene();
+    } else {
+      if(this.callback) {
+        if(this.param) {
+          this.callback(param);
+        } else {
+          this.callback();
+        }
+      }
+      paused = false;
     }
   }
 
@@ -854,6 +1005,7 @@ TopDownGame.Game.prototype = {
     this.nodeList = [];
     this.objs = [];
     this.graphics = this.game.add.graphics();
+    this.proximity = false;
     // ROOMS THAT ARE CHOSEN IF YOU WENT THROUGH A DOOR IN
     // SOME DIRECTION, ex: choose a down door, go into an
     // up room.
@@ -1055,8 +1207,9 @@ TopDownGame.Game.prototype = {
     //move player with cursor keys
     this.cursors = this.game.input.keyboard.createCursorKeys();
     this.playerSpeed = 100;
-    
-    var c2 = new Cutscene('James', "I'm super weak.", 'playerPortrait', this.game, false, null);
+    var c3 = new Cutscene('James', "You picked yes!", 'playerPortrait', this.game, false, null);
+    var p1 = new Prompt('Yes or no?', [{text: 'Yes', next: c3}, {text: 'No', next: null}], false, this.game, null);
+    var c2 = new Cutscene('James', "I'm super weak.", 'playerPortrait', this.game, false, p1);
     this.rootCutscene = new Cutscene('James', "Hey, I'm actually inside our game!", 'playerPortrait', this.game, false, c2);
     // CUTSCENE RENDER
     this.rootCutscene.startCutscene();
@@ -1083,7 +1236,7 @@ TopDownGame.Game.prototype = {
     this.player.animations.add('bottomrightrun', [64,65,66,67,68,69,70,71], 16, true);
     this.player.animations.add('rightrun', [56,57,58,59], 16, true);
     this.player.animations.add('toprightrun', [48,49,50,51,52,53,54,55], 16, true);
-    this.player.animations.play('idle');
+    this.player.frame = 0;
     this.player.body.setSize(24,16,20,48);
     this.shift = this.game.input.keyboard.addKey(Phaser.Keyboard.SHIFT);
     this.graphics = this.game.add.graphics();
@@ -1151,7 +1304,7 @@ TopDownGame.Game.prototype = {
                 if(counter == 0) {
                   //FIND A RANDOM ROOM AND LINK TO IT
                   // DETERMINE IF WE NEED A DEAD END
-                  if ((this.currentRoom.y > 4 || this.currentRoom.y < -4) || Math.random(0, 10) >  Math.pow(1.7, Math.abs(this.currentRoom.y))) {
+                  if ((this.currentRoom.y > 3 || this.currentRoom.y < -3) || Math.random(0, 10) >  Math.pow(1.7, Math.abs(this.currentRoom.y))) {
                     //GENERATE DEAD END
                     var deadendlist = [];
                     for(var x = 0; x < this.deadEnds.length; x++) {
@@ -1210,7 +1363,7 @@ TopDownGame.Game.prototype = {
                 if(counter == 0) {
                   //FIND A RANDOM ROOM AND LINK TO IT
                   // DETERMINE IF WE NEED A DEAD END
-                  if ((this.currentRoom.y > 4 || this.currentRoom.y < -4) || Math.random(0, 10) >  Math.pow(1.7, Math.abs(this.currentRoom.y))) {
+                  if ((this.currentRoom.y > 3 || this.currentRoom.y < -3) || Math.random(0, 10) >  Math.pow(1.7, Math.abs(this.currentRoom.y))) {
                     //GENERATE DEAD END
                     var deadendlist = [];
                     for(var x = 0; x < this.deadEnds.length; x++) {
@@ -1269,7 +1422,7 @@ TopDownGame.Game.prototype = {
                 if(counter == 0) {
                   //FIND A RANDOM ROOM AND LINK TO IT
                   // DETERMINE IF WE NEED A DEAD END
-                  if ((this.currentRoom.x > 4 || this.currentRoom.x < -4) || Math.random(0, 10) >  Math.pow(1.7, Math.abs(this.currentRoom.x))) {
+                  if ((this.currentRoom.x > 3 || this.currentRoom.x < -3) || Math.random(0, 10) >  Math.pow(1.7, Math.abs(this.currentRoom.x))) {
                     //GENERATE DEAD END
                     var deadendlist = [];
                     for(var x = 0; x < this.deadEnds.length; x++) {
@@ -1328,7 +1481,7 @@ TopDownGame.Game.prototype = {
                 if(counter == 0) {
                   //FIND A RANDOM ROOM AND LINK TO IT
                   // DETERMINE IF WE NEED A DEAD END
-                  if ((this.currentRoom.x > 4 || this.currentRoom.x < -4) || Math.random(0, 10) > Math.pow(1.7, Math.abs(this.currentRoom.x))) {
+                  if ((this.currentRoom.x > 3 || this.currentRoom.x < -3) || Math.random(0, 10) > Math.pow(1.7, Math.abs(this.currentRoom.x))) {
                     //GENERATE DEAD END
                     var deadendlist = [];
                     for(var x = 0; x < this.deadEnds.length; x++) {
@@ -1428,7 +1581,7 @@ TopDownGame.Game.prototype = {
             this.backgroundlayer.resizeWorld();
 
             // DETERMINE IF WE SPAWN ENEMIES, WE ONLY SPAWN THEM
-            if(roomsIndex != this.rooms.length && Math.random() < 0.2 - (this.enemies.length / 25)) {
+            if(roomsIndex != this.rooms.length && Math.random() < 0.2 - (this.enemies.length / 50)) {
               // PLACE SUCH THAT CURRENT PATH CAN GO TO DOOR!
               var tiles = this.tileList[this.mapList.indexOf(this.map)];
               var possibleTiles = [];
@@ -1466,20 +1619,26 @@ TopDownGame.Game.prototype = {
               }
               this.pathGraphics = null;
               this.pathGraphics = drawPathGraphics(this.pathGraphics, this.game, possibleTiles);
-              var tile = possibleTiles[Math.floor(Math.random()*possibleTiles.length)];
               
-              var enemy = this.game.add.sprite((tile.x * 32) - 16, (tile.y * 32) - 48, 'abg');
-              this.game.physics.arcade.enable(enemy);
-              var bot = new Enemy(enemy, 60, this.currentRoom.x, this.currentRoom.y, this.nodeList[this.mapList.indexOf(this.map)], this.tileList[this.mapList.indexOf(this.map)], this.objs[this.mapList.indexOf(this.map)], this.player, this.currentRoom)
-              bot.addBehavior(BotState.IDLE, new IdleBehavior(bot));
-              bot.addBehavior(BotState.ENRAGED, new EnrageBehavior(bot));
-              this.enemies.push(bot);
+              var spawnNumber = [1,1,1,1,1,2,2,3][Math.floor(Math.random() * 8)];
+              for(var i = 0; i < spawnNumber; i++) {
+                var tile = possibleTiles[Math.floor(Math.random()*possibleTiles.length)];
+                var enemy = this.game.add.sprite((tile.x * 32) - 16, (tile.y * 32) - 48, 'abg');
+                this.game.physics.arcade.enable(enemy);
+                var bot = new Enemy(enemy, 60, this.currentRoom.x, this.currentRoom.y, this.nodeList[this.mapList.indexOf(this.map)], this.tileList[this.mapList.indexOf(this.map)], this.objs[this.mapList.indexOf(this.map)], this.player, this.currentRoom, this.game);
+                bot.addBehavior(BotState.IDLE, new IdleBehavior(bot));
+                bot.addBehavior(BotState.ENRAGED, new EnrageBehavior(bot));
+                this.enemies.push(bot);
+              }
             }
 
             this.game.world.bringToTop(this.player);
             if(this.currentRoom.x == 0 && this.currentRoom.y == 0) {
+              this.ladderBottom.body.enable = true;
               this.game.world.bringToTop(this.ladderBottom);
               this.game.world.bringToTop(this.ladderTop);
+            } else {
+              this.ladderBottom.body.enable = false;
             }
             for(var i = 0; i < this.enemies.length; i++) {
               if(this.enemies[i].roomX == this.currentRoom.x && this.enemies[i].roomY == this.currentRoom.y) {
@@ -1679,6 +1838,23 @@ TopDownGame.Game.prototype = {
       //     objSwap[i].swapped = false;
       //   }
       // }
+ 
+      //CHECK LADDER
+      if(this.currentRoom.x == 0 && this.currentRoom.y == 0
+        && this.player.x > this.ladderBottom.x - 32
+        && this.player.x < this.ladderBottom.x
+        && this.player.y > this.ladderBottom.y - 32
+        && this.player.y < this.ladderBottom.y - 8) {
+          if(!this.proximity) {
+            this.rootCutscene = new Prompt("Leave this floor?", 
+            [{text: "Yes", next: null, callback: this.loadLevel.bind(this), params: ['MainMenu']}, {text: "No", next: null}]
+            , false, this.game, null, this.cursors);
+            this.proximity = true;
+            this.rootCutscene.startCutscene();
+          }
+        } else {
+          this.proximity = false;
+        }
 
       //DEBUG TEXT
       if(this.toggle) {
@@ -1735,12 +1911,11 @@ TopDownGame.Game.prototype = {
       // SOUND
       if(this.player.body.velocity.x != 0 || this.player.body.velocity.y != 0) {
         if(!this.walkSound.isPlaying) {
-          this.walkSound.stop();
           this.walkSound.play();
         }
       } else {
         if(this.walkSound.isPlaying) {
-          this.walkSound.pause();
+          this.walkSound.stop();
         }
       }
     }.bind(this), 5);
@@ -1763,18 +1938,21 @@ TopDownGame.Game.prototype = {
     });
     this.tt.fixedToCamera = true;
     this.timer = setInterval(function() {
-      this.timeLeft--;
-      if(this.timeLeft <= 0) {
-        this.loadLevel('MainMenu');
+      if(!paused) {
+        this.timeLeft--;
+        if(this.timeLeft <= 0) {
+          this.loadLevel('MainMenu');
+        }
+        // TIMER
+        var mm = Math.floor(this.timeLeft / 60);
+        var sc = Math.floor(this.timeLeft % 60).toString();
+        if(sc.length == 1) {
+          sc = "0" + sc;
+        }
+        this.tt.text = "0" + mm + ":" + sc;
       }
-      // TIMER
-      var mm = Math.floor(this.timeLeft / 60);
-      var sc = Math.floor(this.timeLeft % 60).toString();
-      if(sc.length == 1) {
-        sc = "0" + sc;
-      }
-      this.tt.text = "0" + mm + ":" + sc;
     }.bind(this), 1000);   
+    this.direction = 'bottom';
   },
   loadLevel(level) {
     clearInterval(this.playerLoop);
@@ -1784,6 +1962,9 @@ TopDownGame.Game.prototype = {
       clearInterval(enemy.interval);
     });
     this.game.state.start(level, true, false);
+  },
+  setProximity(p) {
+    this.proximity = p;
   },
   update: function() {
     //collision
@@ -1809,94 +1990,128 @@ TopDownGame.Game.prototype = {
     //player movement
     this.player.body.velocity.x = 0;
 
-    if(this.cursors.up.isDown && this.cursors.left.isDown) {
-      if(this.shift.isDown && this.stamina != 0) {
-        this.player.animations.play('topleftrun');
-        this.player.body.velocity.y = -(this.playerSpeed * 2);
-        this.player.body.velocity.x = -(this.playerSpeed * 2);
-      } else {
-        this.player.animations.play('topleft');
-        this.player.body.velocity.y = -(this.playerSpeed);
-        this.player.body.velocity.x = -(this.playerSpeed);
-      }
-
-    } else if (this.cursors.up.isDown && this.cursors.right.isDown) {
-      if(this.shift.isDown && this.stamina != 0) {
-        this.player.animations.play('toprightrun');
-        this.player.body.velocity.y = -(this.playerSpeed * 2);
-        this.player.body.velocity.x = this.playerSpeed * 2;
-      } else {
-        this.player.animations.play('topright');
-        this.player.body.velocity.y = -(this.playerSpeed);
-        this.player.body.velocity.x = this.playerSpeed;
-      }
-    } else if (this.cursors.up.isDown) {
+    if(!paused) {
+      if(this.cursors.up.isDown && this.cursors.left.isDown) {
         if(this.shift.isDown && this.stamina != 0) {
-          this.player.animations.play('toprun');
+          this.player.animations.play('topleftrun');
           this.player.body.velocity.y = -(this.playerSpeed * 2);
-          this.player.body.velocity.x = 0;
+          this.player.body.velocity.x = -(this.playerSpeed * 2);
         } else {
-          this.player.animations.play('top');
+          this.player.animations.play('topleft');
           this.player.body.velocity.y = -(this.playerSpeed);
-          this.player.body.velocity.x = 0;
-        }
-    } else if (this.cursors.down.isDown && this.cursors.left.isDown) {
-        if(this.shift.isDown && this.stamina != 0) {
-          this.player.animations.play('bottomleftrun');
-          this.player.body.velocity.y = this.playerSpeed * 2;
-          this.player.body.velocity.x = -(this.playerSpeed * 2);
-        } else {
-          this.player.animations.play('bottomleft');
-          this.player.body.velocity.y = this.playerSpeed;
           this.player.body.velocity.x = -(this.playerSpeed);
         }
-    } else if (this.cursors.down.isDown && this.cursors.right.isDown) {
+        this.direction = 'topleft';
+      } else if (this.cursors.up.isDown && this.cursors.right.isDown) {
         if(this.shift.isDown && this.stamina != 0) {
-          this.player.animations.play('bottomrightrun');
-          this.player.body.velocity.y = this.playerSpeed * 2;
+          this.player.animations.play('toprightrun');
+          this.player.body.velocity.y = -(this.playerSpeed * 2);
           this.player.body.velocity.x = this.playerSpeed * 2;
         } else {
-          this.player.animations.play('bottomright');
-          this.player.body.velocity.y = this.playerSpeed;
+          this.player.animations.play('topright');
+          this.player.body.velocity.y = -(this.playerSpeed);
           this.player.body.velocity.x = this.playerSpeed;
         }
-
-    } else if (this.cursors.down.isDown) {
-        if(this.shift.isDown && this.stamina != 0) {
-          this.player.animations.play('bottomrun');
-          this.player.body.velocity.y = this.playerSpeed * 2;
-          this.player.body.velocity.x = 0;
-        } else {
-          this.player.animations.play('bottom');
-          this.player.body.velocity.y = this.playerSpeed;
-          this.player.body.velocity.x = 0;
+        this.direction = 'topright';
+      } else if (this.cursors.up.isDown) {
+          if(this.shift.isDown && this.stamina != 0) {
+            this.player.animations.play('toprun');
+            this.player.body.velocity.y = -(this.playerSpeed * 2);
+            this.player.body.velocity.x = 0;
+          } else {
+            this.player.animations.play('top');
+            this.player.body.velocity.y = -(this.playerSpeed);
+            this.player.body.velocity.x = 0;
+          }
+          this.direction = 'top';
+      } else if (this.cursors.down.isDown && this.cursors.left.isDown) {
+          if(this.shift.isDown && this.stamina != 0) {
+            this.player.animations.play('bottomleftrun');
+            this.player.body.velocity.y = this.playerSpeed * 2;
+            this.player.body.velocity.x = -(this.playerSpeed * 2);
+          } else {
+            this.player.animations.play('bottomleft');
+            this.player.body.velocity.y = this.playerSpeed;
+            this.player.body.velocity.x = -(this.playerSpeed);
+          }
+            this.direction = 'bottomleft';
+      } else if (this.cursors.down.isDown && this.cursors.right.isDown) {
+          if(this.shift.isDown && this.stamina != 0) {
+            this.player.animations.play('bottomrightrun');
+            this.player.body.velocity.y = this.playerSpeed * 2;
+            this.player.body.velocity.x = this.playerSpeed * 2;
+          } else {
+            this.player.animations.play('bottomright');
+            this.player.body.velocity.y = this.playerSpeed;
+            this.player.body.velocity.x = this.playerSpeed;
+          }
+          this.direction = 'bottomright';
+      } else if (this.cursors.down.isDown) {
+          if(this.shift.isDown && this.stamina != 0) {
+            this.player.animations.play('bottomrun');
+            this.player.body.velocity.y = this.playerSpeed * 2;
+            this.player.body.velocity.x = 0;
+          } else {
+            this.player.animations.play('bottom');
+            this.player.body.velocity.y = this.playerSpeed;
+            this.player.body.velocity.x = 0;
+          }
+          this.direction = 'bottom';
+      } else if (this.cursors.right.isDown) {
+          if(this.shift.isDown && this.stamina != 0) {
+            this.player.animations.play('rightrun');
+            this.player.body.velocity.y = 0;
+            this.player.body.velocity.x = this.playerSpeed * 2;
+          } else {
+            this.player.animations.play('right');
+            this.player.body.velocity.y = 0;
+            this.player.body.velocity.x = this.playerSpeed;
+          }
+          this.direction = 'right';
+      } else if (this.cursors.left.isDown) {
+          if(this.shift.isDown && this.stamina != 0) {
+            this.player.animations.play('leftrun');
+            this.player.body.velocity.y = 0;
+            this.player.body.velocity.x = -(this.playerSpeed * 2);
+          } else {
+            this.player.animations.play('left');
+            this.player.body.velocity.y = 0;
+            this.player.body.velocity.x = -(this.playerSpeed);
+          }
+          this.direction = 'left';
+      } else {
+        switch(this.direction) {
+          case 'bottom':
+            this.player.frame = 0;
+            break;
+          case 'bottomleft':
+            this.player.frame = 16;
+            break;
+          case 'bottomright':
+            this.player.frame = 64;
+            break;
+          case 'top':
+            this.player.frame = 40;
+            break;
+          case 'topleft':
+            this.player.frame = 32;
+            break;
+          case 'topright':
+            this.player.frame = 48;
+            break;
+          case 'left':
+            this.player.frame = 24;
+            break;
+          case 'right':
+            this.player.frame = 56;
+            break;
         }
-
-    } else if (this.cursors.right.isDown) {
-        if(this.shift.isDown && this.stamina != 0) {
-          this.player.animations.play('rightrun');
-          this.player.body.velocity.y = 0;
-          this.player.body.velocity.x = this.playerSpeed * 2;
-        } else {
-          this.player.animations.play('right');
-          this.player.body.velocity.y = 0;
-          this.player.body.velocity.x = this.playerSpeed;
-        }
-
-    } else if (this.cursors.left.isDown) {
-        if(this.shift.isDown && this.stamina != 0) {
-          this.player.animations.play('leftrun');
-          this.player.body.velocity.y = 0;
-          this.player.body.velocity.x = -(this.playerSpeed * 2);
-        } else {
-          this.player.animations.play('left');
-          this.player.body.velocity.y = 0;
-          this.player.body.velocity.x = -(this.playerSpeed);
-        }
+        this.player.body.velocity.y = 0;
+        this.player.body.velocity.x = 0;
+      }
     } else {
-      this.player.animations.play('idle');
-      this.player.body.velocity.y = 0;
-      this.player.body.velocity.x = 0;
+      this.player.animations.stop();
+      this.player.frame = 0;
     }
   },
 };

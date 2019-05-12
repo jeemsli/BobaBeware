@@ -1,5 +1,16 @@
 var TopDownGame = TopDownGame || {};
 
+let FLAGS = {
+  //PLAYER INTRODUCTIONS
+  flag_one: 0,
+  flag_two: 0,
+  flag_three: 0,
+  //FINISHED INTRODUCTIONS
+  flag_four: 0,
+  flag_five: 0,
+  OVERWORLD_STATE: 0
+};
+
 class NPC {
   constructor(sprite, roomX, roomY, rootCutscene, cutsceneParams) {
     this.sprite = sprite;
@@ -67,12 +78,18 @@ TopDownGame.Overworld.prototype = {
     r2.roomUp = r3;
     var r4 = new Room(r2, null, null, null, 'f4', 1, 1);
     r2.roomDown = r4;
+    var r5 = new Room(null, null, r2, null, 'f5', 2, 0);
+    r2.roomRight = r5;
     this.currentDoors = [];
     this.mapList = [];
     this.tileList = [];
     this.nodeList = [];
     this.objs = [];
     this.graphics = this.game.add.graphics();
+    this.graphics.beginFill(0x000000);
+    this.graphics.drawRect(0, 0, 800, 800);
+    this.graphics.endFill();
+    this.graphics.alpha = 0;
     // ROOMS THAT ARE CHOSEN IF YOU WENT THROUGH A DOOR IN
     // SOME DIRECTION, ex: choose a down door, go into an
     // up room.
@@ -81,8 +98,8 @@ TopDownGame.Overworld.prototype = {
     this.leftRooms = [];
     this.rightRooms = [];
     this.deadEnds = [];
-    this.numRooms = 4;
-    this.rooms = [this.currentRoom, r2, r3, r4];
+    this.numRooms = 5;
+    this.rooms = [this.currentRoom, r2, r3, r4, r5];
 
     // SET UP ALL MAPS
     for(var i = 0; i < this.numRooms; i++) {
@@ -143,6 +160,7 @@ TopDownGame.Overworld.prototype = {
       this.mapList[i].addTilesetImage('backSpriteSheet', 'objectTiles2');
       this.mapList[i].addTilesetImage('f2objs', 'objectTiles3');
       this.mapList[i].addTilesetImage('f2tiles', 'gameTiles3');
+      this.mapList[i].addTilesetImage('mainSpriteSheet', 'gameTiles4');
 
       //create layer
       this.backgroundlayer = this.mapList[i].createLayer('backgroundLayer');
@@ -224,10 +242,12 @@ TopDownGame.Overworld.prototype = {
       });
     }.bind(this));
 
+    this.proximity2 = [false, false, false, false, false, false];
+
     
     // CREATE NPCs
     this.npcs = [];
-    var jcs8 = new Cutscene('James', "Sure thing! I'll see you around then.", 'playerPortrait', this.game, false, null);
+    var jcs8 = new Cutscene('James', "Sure thing! I'll see you after I introduce myself to everyone.", 'playerPortrait', this.game, false, null);
     var jcs7 = new Cutscene('Jing', "Let's see... Well we aren't that busy, so feel free to introduce yourself to the others.", 'jingPortrait', this.game, false, jcs8);
     var jcs6 = new Cutscene('James', 'Awesome! What should I do first?', 'playerPortrait', this.game, false, jcs7);
     var jcs5 = new Cutscene('Jing', 'Great! Starting today you will be working with me at the front.', 'jingPortrait', this.game, false, jcs6);
@@ -236,7 +256,7 @@ TopDownGame.Overworld.prototype = {
     var jcs2 = new Cutscene('Jing', 'Yup! By any chance are you James, our new hire?', 'jingPortrait', this.game, false, jcs3);
     var jcs1 = new Cutscene('James', 'By any chance, are you Ms. Li?', 'playerPortrait', this.game, false, jcs2);
     var jcs_root = new Cutscene('Jing', "Hi! Welcome to Mckenna's Tea House. May I ask what you are ordering today sir?", 'jingPortrait', this.game, false, jcs1);
-    var jing = new NPC(this.game.add.sprite(368, 528, 'npc1'), 0, 0, jcs_root, ['Jing','The others are in the back. Say hi to them for me will you!','jingPortrait',this.game, false, null]);
+    var jing = new NPC(this.game.add.sprite(240, 524, 'npc1'), 0, 0, jcs_root, ['Jing','The others are in the back. Say hi to them for me will you!','jingPortrait',this.game, false, null]);
     var rcs8 = new Cutscene('Rachel', "Well anyways~ The crowds out there can get a bit rowdy so feel free to ask me for help.", 'rachelPortrait', this.game, false, null);
     var rcs7 = new Cutscene('Rachel', "Ok...", 'rachelPortrait', this.game, false, rcs8);
     var rcs6 = new Cutscene('Rachel', "I think you and I will get along perfectly.", 'rachelPortrait', this.game, false, rcs8);
@@ -272,19 +292,95 @@ TopDownGame.Overworld.prototype = {
     var ncs1 = new Cutscene('Ralph', "The guy's name is James.", 'ralphPortrait', this.game, false, ncs2);
     var ncs_root = new Cutscene('Nick', "Hey, you must be Jay!", 'nickPortrait', this.game, false, ncs1, function(){ralph.sprite.frame = 1}.bind(this));
     var nick = new NPC(this.game.add.sprite(528, 280, 'npc3'), 1, -1, ncs_root, ['Nick', "If Jing asks, I wasn't slacking off.", "nickPortrait", this.game, false, null]);
+    var csl3 = new Cutscene('Jing', "I've kept the stock room blocked off, so meet me there.", 'jingPortrait', this.game, false, null);
+    var csl2 = new Cutscene('Jing', "There's a very important ingredient that we need from stock before rush hour.", 'jingPortrait', this.game, false, csl3);
+    var csl1 = new Cutscene('Jing', "Great! Now that we're all acquainted, I want you to fetch something for me.", 'jingPortrait', this.game, false, csl2);
+    var csl_root = new Cutscene('James', "Hi! I've introduced myself to the others.", 'playerPortrait', this.game, false, csl1);
+    var unlock_root = new Cutscene('Jing', "Here, I'll move this out of the way.", 'jingPortrait', this.game, false, null);
+
+    // INTRO SETUP
     jing.sprite.frame = 2;
     rachel.sprite.frame = 3;
     ralph.sprite.frame = 2;
     nick.sprite.frame = 1;
-    jcs8.callback = jing.setOriginalFrame.bind(jing);
+    jcs8.callback = function() {
+      jing.setOriginalFrame(); 
+      var tweenA = this.game.add.tween(this.graphics).to({alpha: 1}, 1000, "Quart.easeOut");
+      var tweenB = this.game.add.tween(this.graphics).to({alpha: 0}, 1000, "Quart.easeOut");
+      tweenA.chain(tweenB);
+      tweenA.start();
+      setTimeout(function() {
+        jing.sprite.x = 368;
+      }.bind(this), 1000);
+    }.bind(this);
+    csl3.callback = function() {
+      jing.sprite.frame = 1;
+      var tweenA = this.game.add.tween(this.graphics).to({alpha: 1}, 1000, "Quart.easeOut");
+      var tweenB = this.game.add.tween(this.graphics).to({alpha: 0}, 1000, "Quart.easeOut");
+      tweenA.chain(tweenB);
+      tweenA.start();
+      setTimeout(function() {
+        jing.roomX = 1;
+        jing.sprite.x = 624;
+        jing.sprite.y = 538;
+        jing.sprite.visible = false;
+        jing.rootCutscene = unlock_root;
+      }.bind(this), 1000);
+    }.bind(this);
+    unlock_root.callback = function() {
+      var tweenA = this.game.add.tween(this.graphics).to({alpha: 1}, 1000, "Quart.easeOut");
+      var tweenB = this.game.add.tween(this.graphics).to({alpha: 0}, 1000, "Quart.easeOut");
+      jing.cutsceneParams = ['Jing', "We're counting on you.", 'jingPortrait', this.game, false, null, jing.setOriginalFrame.bind(jing)];
+      jing.resetCutscene();
+      tweenA.chain(tweenB);
+      tweenA.start();
+      setTimeout(function() {
+        jing.sprite.x = 624;
+        jing.sprite.y = 506;
+        jing.sprite.frame = 0;
+        FLAGS.flag_four = 1;
+        this.barrel.destroy();
+      }.bind(this), 1000);
+    }.bind(this);
     jing.cutsceneParams.push(jing.setOriginalFrame.bind(jing));
-    rcs8.callback = rachel.setOriginalFrame.bind(rachel);
+    rcs8.callback = function() {
+      rachel.setOriginalFrame();
+      FLAGS.flag_one = 1;
+      if(FLAGS.flag_two && FLAGS.flag_three) {
+        jing.rootCutscene = csl_root;
+      }
+    }.bind(this);
     rachel.cutsceneParams.push(rachel.setOriginalFrame.bind(rachel));
-    racs9.callback = ralph.setOriginalFrame.bind(ralph);
+    racs9.callback = function() {
+      ralph.setOriginalFrame();
+      FLAGS.flag_two = 1;
+      if(FLAGS.flag_one && FLAGS.flag_three) {
+        jing.rootCutscene = csl_root;
+      }
+    }.bind(this);
     ralph.cutsceneParams.push(ralph.setOriginalFrame.bind(ralph));
-    ncs12.callback = nick.setOriginalFrame.bind(nick);
+    ncs12.callback = function() {
+      nick.setOriginalFrame();
+      FLAGS.flag_three = 1;
+      if(FLAGS.flag_two && FLAGS.flag_one) {
+        jing.rootCutscene = csl_root;
+      }
+    }.bind(this);
     nick.cutsceneParams.push(nick.setOriginalFrame.bind(nick));
     this.npcs.push(jing, rachel, nick, ralph);
+    this.barrel = this.game.add.sprite(672, 576, 'barrel');
+    this.game.physics.arcade.enable(this.barrel);
+    this.barrel.body.immovable = true;
+    this.barrel.body.moves = false;
+    this.hatches = [];
+    for(var i = 0; i < 6; i++) {
+      if(i <= FLAGS.OVERWORLD_STATE) {
+        this.hatches.push(this.game.add.sprite(224 + (i * 96), 256, 'openShaft'));
+      } else {
+        this.hatches.push(this.game.add.sprite(224 + (i * 96), 256, 'closedShaft'));
+      }
+    }
+    this.barrel.destroy();
 
     //the first parameter is the tileset name as specified in Tiled, the second is the key to the asset
     this.map.addTilesetImage('floor1tiles', 'gameTiles');
@@ -293,6 +389,7 @@ TopDownGame.Overworld.prototype = {
     this.map.addTilesetImage('backSpriteSheet', 'objectTiles2');
     this.map.addTilesetImage('f2objs', 'objectTiles3');
     this.map.addTilesetImage('f2tiles', 'gameTiles3');
+    this.map.addTilesetImage('mainSpriteSheet', 'gameTiles4');
 
     //create layer
     this.backgroundlayer = this.map.createLayer('backgroundLayer');
@@ -372,7 +469,6 @@ TopDownGame.Overworld.prototype = {
       this.npcs[i].sprite.body.setSize(24, 16, 20, 48);
     }
     this.shift = this.game.input.keyboard.addKey(Phaser.Keyboard.SHIFT);
-    this.graphics = this.game.add.graphics();
 
     //GENERATE MAP
     console.log(this.map);
@@ -710,6 +806,7 @@ TopDownGame.Overworld.prototype = {
             this.map.addTilesetImage('backSpriteSheet', 'objectTiles2');
             this.map.addTilesetImage('f2objs', 'objectTiles3');
             this.map.addTilesetImage('f2tiles', 'gameTiles3');
+            this.map.addTilesetImage('mainSpriteSheet', 'gameTiles4');
 
             //create layer
             this.backgroundlayer = this.map.createLayer('backgroundLayer');
@@ -778,6 +875,7 @@ TopDownGame.Overworld.prototype = {
             for(var i = 0; i < this.npcs.length; i++) {
               if(this.npcs[i].roomX == this.currentRoom.x && this.npcs[i].roomY == this.currentRoom.y) {
                 this.npcs[i].sprite.body.enable = true;
+                this.npcs[i].sprite.visible = true;
                 this.game.world.bringToTop(this.npcs[i].sprite);
               } else {
                 this.npcs[i].sprite.body.enable = false;
@@ -790,6 +888,20 @@ TopDownGame.Overworld.prototype = {
                 this.game.world.bringToTop(this.enemies[i].sprite);
               } else {
                 this.enemies[i].setVisible(false);
+              }
+            }
+
+            if(this.barrel.alive) {
+              if(this.currentRoom.x == 1 && this.currentRoom.y == 0) {
+                this.barrel.body.enable = true;
+                this.game.world.bringToTop(this.barrel);
+              } else {
+                this.barrel.body.enable = false;
+              }
+            }
+            if(this.currentRoom.x == 2 && this.currentRoom.y == 0) {
+              for(var i = 0; i < this.hatches.length; i++) {
+                this.game.world.bringToTop(this.hatches[i]);
               }
             }
             //this.game.world.bringToTop(this.aboveObjectLayer);
@@ -888,6 +1000,25 @@ TopDownGame.Overworld.prototype = {
         }
       });
 
+      // HATCH ENTER
+      if(this.currentRoom.x == 2 && this.currentRoom.y == 0 && !paused) {
+        for(var i = 0; i < this.hatches.length; i++) {
+          var hx = Math.floor(this.hatches[i].x / 32);
+          var hy = Math.floor(this.hatches[i].y / 32);
+          var px = Math.floor(this.player.x / 32) + 1;
+          var py = Math.floor(this.player.y / 32) + 2;
+          if(hx == px && hy == py) {
+            if(!this.proximity2[i]) {
+              this.rootCutscene = new Prompt('Do you want to head to Basement I?', [{text:'Yes', next: null, callback: this.loadLevel.bind(this), params: ['Game']}, {text: 'No', next: null}], false, this.game, null);
+              this.proximity2[i] = true;
+              this.rootCutscene.startCutscene();
+            }
+          } else {
+            this.proximity2[i] = false;
+          }
+        }
+      }
+
       // REORDER PLAYER, ENEMIES, AND ABOVEOBJECT TILES BASED ON Y VALUES
       var reorder = [this.player];
       for(var i = 0; i < this.enemies.length; i++) {
@@ -900,7 +1031,7 @@ TopDownGame.Overworld.prototype = {
           reorder.push(this.npcs[i].sprite);
         }
       }
-      if(true) {
+      if(this.currentRoom.tileMap != 'f1') {
         var newSwapList = [];
         for(var i = 0; i < this.currentSwapList.length; i++) {
           this.currentSwapList[i].destroy();
@@ -949,6 +1080,7 @@ TopDownGame.Overworld.prototype = {
       if(tempC) {
         tempC.bringToTop();
       }
+      this.game.world.bringToTop(this.graphics);
     }.bind(this), 5);   
 
     this.direction = 'bottom';
@@ -966,6 +1098,9 @@ TopDownGame.Overworld.prototype = {
     //collision
     this.game.physics.arcade.collide(this.player, this.wallLayer);
     this.game.physics.arcade.collide(this.player, this.objectLayer);
+    if(this.barrel.alive) {
+      this.game.physics.arcade.collide(this.player, this.barrel);
+    }
     for(var i = 0; i < this.npcs.length; i++) {
       this.game.physics.arcade.collide(this.player, this.npcs[i].sprite);
     }
@@ -1107,6 +1242,35 @@ TopDownGame.Overworld.prototype = {
         this.player.body.velocity.y = 0;
         this.player.body.velocity.x = 0;
       }
+    } else {
+      switch(this.direction) {
+        case 'bottom':
+          this.player.frame = 0;
+          break;
+        case 'bottomleft':
+          this.player.frame = 16;
+          break;
+        case 'bottomright':
+          this.player.frame = 64;
+          break;
+        case 'top':
+          this.player.frame = 40;
+          break;
+        case 'topleft':
+          this.player.frame = 32;
+          break;
+        case 'topright':
+          this.player.frame = 48;
+          break;
+        case 'left':
+          this.player.frame = 24;
+          break;
+        case 'right':
+          this.player.frame = 56;
+          break;
+      }
+      this.player.body.velocity.y = 0;
+      this.player.body.velocity.x = 0;
     }
   },
 };

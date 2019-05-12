@@ -38,6 +38,9 @@
  <tileset firstgid="174" name="f2tiles" tilewidth="32" tileheight="32" tilecount="56" columns="8">
   <image source="../../assets/Floor 2/f2spritesheet.png" width="256" height="224"/>
  </tileset>
+ <tileset firstgid="230" name="mainSpriteSheet" tilewidth="32" tileheight="32" tilecount="16" columns="4">
+  <image source="../../assets/Overworld/mainSpriteSheet.png" width="128" height="128"/>
+ </tileset>
  <layer id="1" name="backgroundLayer" width="25" height="25">
   <data encoding="csv">
 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,

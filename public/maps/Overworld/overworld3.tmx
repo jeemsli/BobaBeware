@@ -41,6 +41,9 @@
    </properties>
   </tile>
  </tileset>
+ <tileset firstgid="286" name="mainSpriteSheet" tilewidth="32" tileheight="32" tilecount="16" columns="4">
+  <image source="../../assets/Overworld/mainSpriteSheet.png" width="128" height="128"/>
+ </tileset>
  <layer id="1" name="backgroundLayer" width="25" height="25">
   <data encoding="csv">
 57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,

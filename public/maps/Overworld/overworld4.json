@@ -8,7 +8,7 @@
          "name":"backgroundLayer",
          "opacity":1,
          "type":"tilelayer",
-         "visible":false,
+         "visible":true,
          "width":25,
          "x":0,
          "y":0
@@ -222,6 +222,19 @@
          "name":"objects",
          "spacing":0,
          "tilecount":20,
+         "tileheight":32,
+         "tilewidth":32
+        }, 
+        {
+         "columns":4,
+         "firstgid":286,
+         "image":"..\/..\/assets\/Overworld\/mainSpriteSheet.png",
+         "imageheight":128,
+         "imagewidth":128,
+         "margin":0,
+         "name":"mainSpriteSheet",
+         "spacing":0,
+         "tilecount":16,
          "tileheight":32,
          "tilewidth":32
         }],

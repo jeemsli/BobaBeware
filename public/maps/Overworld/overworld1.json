@@ -211,6 +211,19 @@
          "tilecount":56,
          "tileheight":32,
          "tilewidth":32
+        }, 
+        {
+         "columns":4,
+         "firstgid":230,
+         "image":"..\/..\/assets\/Overworld\/mainSpriteSheet.png",
+         "imageheight":128,
+         "imagewidth":128,
+         "margin":0,
+         "name":"mainSpriteSheet",
+         "spacing":0,
+         "tilecount":16,
+         "tileheight":32,
+         "tilewidth":32
         }],
  "tilewidth":32,
  "type":"map",

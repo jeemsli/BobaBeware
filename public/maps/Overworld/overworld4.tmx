@@ -41,7 +41,10 @@
  <tileset firstgid="266" name="objects" tilewidth="32" tileheight="32" tilecount="20" columns="4">
   <image source="../../assets/Floor 1/Floors/objspritesheet.png" width="128" height="160"/>
  </tileset>
- <layer id="1" name="backgroundLayer" width="25" height="25" visible="0">
+ <tileset firstgid="286" name="mainSpriteSheet" tilewidth="32" tileheight="32" tilecount="16" columns="4">
+  <image source="../../assets/Overworld/mainSpriteSheet.png" width="128" height="128"/>
+ </tileset>
+ <layer id="1" name="backgroundLayer" width="25" height="25">
   <data encoding="csv">
 113,113,113,113,113,113,113,113,113,113,113,113,113,113,113,113,113,113,113,113,113,113,113,113,113,
 113,113,113,113,113,113,113,113,113,113,113,113,113,113,113,113,113,113,113,113,113,113,113,113,113,

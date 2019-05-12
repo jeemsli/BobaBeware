@@ -99,6 +99,9 @@ TopDownGame.Preload.prototype = {
     this.load.image('cutscene', 'assets/UI/cutscene.png');
     this.game.add.text(0,0,"", {font: '20px ZCOOLKuaiLe'});
     this.game.load.audio('recording', 'assets/audio/Recording (18).m4a');
+
+    this.game.load.audio('victory','assets/audio/Victory.wav');
+    this.game.load.audio('gameover','assets/audio/GameOver.wav');
   },
   create: function() {
     this.state.start('Splash');

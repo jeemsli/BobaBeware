@@ -6,12 +6,16 @@ TopDownGame.Victory = function(game) {
 
 var victory;
 var text;
+var music;
 
 TopDownGame.Victory.prototype = {
     create: function(game) {
         victory = game.add.sprite(320,320-142,'victory');
         victory.scale.setTo(1.5,1.5);
         victory.anchor.setTo(0.5,0.5);
+
+        music = game.add.audio('victory');
+        music.loopFull(0.2);
 
         var style = {font: "40px ThinkNothing", fill: "#eeeeee"};
         text = this.game.add.text(320,320+160,"Press space to continue...", style);
@@ -20,6 +24,7 @@ TopDownGame.Victory.prototype = {
 
         this.space = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
         this.space.onDown.add(function() {
+            music.destroy();
             this.state.start('MainMenu');
         }.bind(this));
     },

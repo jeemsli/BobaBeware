@@ -6,12 +6,16 @@ TopDownGame.GameOver = function(game) {
 
 var gameOver;
 var text;
+var music;
 
 TopDownGame.GameOver.prototype = {
     create: function(game) {
         gameOver = game.add.sprite(320,320-112,'gameOver');
         gameOver.scale.setTo(1.5,1.5);
         gameOver.anchor.setTo(0.5,0.5);
+
+        music = game.add.audio('gameover');
+        music.loopFull(0.2);
 
         var style = {font: "40px ThinkNothing", fill: "#eeeeee"};
         text = this.game.add.text(320,320+160,"Press space to continue...", style);
@@ -20,6 +24,7 @@ TopDownGame.GameOver.prototype = {
 
         this.space = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
         this.space.onDown.add(function() {
+            music.destroy();
             this.state.start('MainMenu');
         }.bind(this));
     },

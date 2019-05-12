@@ -104,6 +104,9 @@ TopDownGame.Preload.prototype = {
     this.load.image('openShaft', 'assets/Overworld/openShaft.png');
     this.load.image('closedShaft', 'assets/Overworld/closedShaft.png');
     this.load.image('barrel', 'assets/Overworld/barrel.png');
+
+    this.game.load.audio('victory','assets/audio/Victory.wav');
+    this.game.load.audio('gameover','assets/audio/GameOver.wav');
   },
   create: function() {
     this.state.start('Splash');

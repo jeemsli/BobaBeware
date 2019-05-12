@@ -8,6 +8,7 @@ let FLAGS = {
   //FINISHED INTRODUCTIONS
   flag_four: 0,
   flag_five: 0,
+  tutorial_one: 0,
   OVERWORLD_STATE: 0
 };
 

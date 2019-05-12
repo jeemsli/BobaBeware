@@ -1226,12 +1226,13 @@ TopDownGame.Game.prototype = {
     //move player with cursor keys
     this.cursors = this.game.input.keyboard.createCursorKeys();
     this.playerSpeed = 100;
-    var c3 = new Cutscene('James', "You picked yes!", 'playerPortrait', this.game, false, null);
-    var p1 = new Prompt('Yes or no?', [{text: 'Yes', next: c3}, {text: 'No', next: null}], false, this.game, null);
-    var c2 = new Cutscene('James', "I'm super weak.", 'playerPortrait', this.game, false, p1);
-    this.rootCutscene = new Cutscene('James', "Hey, I'm actually inside our game!", 'playerPortrait', this.game, false, c2);
-    // CUTSCENE RENDER
-    this.rootCutscene.startCutscene();
+    if(!FLAGS.tutorial_one) {
+      var c3 = new Cutscene('James', "You picked yes!", 'playerPortrait', this.game, false, null);
+      var c2 = new Cutscene('James', "I'm super weak.", 'playerPortrait', this.game, false, p1);
+      this.rootCutscene = new Cutscene('Jing', "Hey, I'm actually inside our game!", 'playerPortrait', this.game, false, c2);
+      // CUTSCENE RENDER
+      this.rootCutscene.startCutscene();
+    }
     this.tt = null;
 
     // LOAD AUDIO

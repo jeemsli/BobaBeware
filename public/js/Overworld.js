@@ -1048,9 +1048,12 @@ TopDownGame.Overworld.prototype = {
               }
             }
             if(this.currentRoom.x == 2 && this.currentRoom.y == 0) {
+              this.music.volume = 0;
               for(var i = 0; i < this.hatches.length; i++) {
                 this.game.world.bringToTop(this.hatches[i]);
               }
+            } else {
+              this.music.volume = 0.2;
             }
             //this.game.world.bringToTop(this.aboveObjectLayer);
             //this.game.world.bringToTop(this.aboveLayer);

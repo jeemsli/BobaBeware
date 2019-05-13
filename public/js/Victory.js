@@ -25,7 +25,7 @@ TopDownGame.Victory.prototype = {
         this.space = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
         this.space.onDown.add(function() {
             music.destroy();
-            this.state.start('MainMenu');
+            this.state.start('Overworld');
         }.bind(this));
     },
 

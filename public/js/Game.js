@@ -547,6 +547,7 @@ function findMap(room, maps) {
 
 class Prompt {
   constructor(text, choices, canMove, game, next) {
+    this.old 
     this.choices = choices;
     this.canMove = canMove;
     this.game = game;
@@ -1039,6 +1040,11 @@ TopDownGame.Game.prototype = {
     this.graphics = drawGraphics(this.graphics, this.game, this.rooms, this.currentRoom, this.timeLeft);
     this.graphics.fixedToCamera = true;
 
+    this.sgraphics = this.game.add.graphics();
+    this.sgraphics.beginFill(0x000000);
+    this.sgraphics.drawRect(0, 0, 800, 800);
+    this.sgraphics.endFill();
+
     // SET UP ALL MAPS
     for(var i = 0; i < this.numRooms; i++) {
       var map = this.game.add.tilemap((i+1).toString());
@@ -1227,9 +1233,21 @@ TopDownGame.Game.prototype = {
     this.cursors = this.game.input.keyboard.createCursorKeys();
     this.playerSpeed = 100;
     if(!FLAGS.tutorial_one) {
-      var c3 = new Cutscene('James', "You picked yes!", 'playerPortrait', this.game, false, null);
-      var c2 = new Cutscene('James', "I'm super weak.", 'playerPortrait', this.game, false, p1);
-      this.rootCutscene = new Cutscene('Jing', "Hey, I'm actually inside our game!", 'playerPortrait', this.game, false, c2);
+      // DISABLE SPAWNING MAIN FRUIT
+      var c14 = new Cutscene('James', "Good luck.", 'playerPortrait', this.game, false, null);
+      var c13 = new Cutscene('James', "You will die, but you might come back stronger.", 'playerPortrait', this.game, false, c14);
+      var c12 = new Cutscene('James', "If you collect the special ingredient, you must return to beat the level.", 'playerPortrait', this.game, false, c13);
+      var c11 = new Cutscene('James', "Returning in time is better than death. You can always retry the level.", 'playerPortrait', this.game, false, c12);
+      var c10 = new Cutscene('James', "Beware of enemies who chase you down. One hit is death.", 'playerPortrait', this.game, false, c11);
+      var c9 = new Cutscene('James', "All dungeons are randomly generated and vary in size.", 'playerPortrait', this.game, false, c10);
+      var c8 = new Cutscene('James', "The goal of the game is to collect the special ingredient for each floor.", 'playerPortrait', this.game, false, c9);
+      var c7 = new Cutscene('James', "To use an item, use the number hotkey it corresponds with.", 'playerPortrait', this.game, false, c8);
+      var c6 = new Cutscene('James', "You can collect items which is indicated by your inventory on the bottom.", 'playerPortrait', this.game, false, c7);
+      var c5 = new Cutscene('James', "Time left is shown underneath the minimap on the upper right corner.", 'playerPortrait', this.game, false, c6);
+      var c4 = new Cutscene('James', "You must return to the ladder before time runs out. (Interact with it using space)", 'playerPortrait', this.game, false, c5);
+      var c3 = new Cutscene('James', "Running uses stamina which is indicated on the lower left corner.", 'playerPortrait', this.game, false, c4);
+      var c2 = new Cutscene('James', "Use the arrow keys to move. Hold shift to run.", 'playerPortrait', this.game, false, c3);
+      this.rootCutscene = new Prompt('Do you require a tutorial?', [{text:'Yes', next: c2},{text:'No', next: null}], false, this.game, null);
       // CUTSCENE RENDER
       this.rootCutscene.startCutscene();
     }
@@ -1291,6 +1309,10 @@ TopDownGame.Game.prototype = {
     this.graphics.fixedToCamera = true;
     this.label1 = drawLabel1(this.label1, this.game);
     this.label2 = drawLabel2(this.label2, this.game);
+
+    // TRANSITION IN
+    var tweenA = this.game.add.tween(this.sgraphics).to({alpha: 0}, 4000, "Quart.easeOut", 200);
+    tweenA.start();
 
     // MAIN PLAYER LOOP
     this.playerLoop = setInterval(function() {
@@ -1825,6 +1847,8 @@ TopDownGame.Game.prototype = {
       this.game.world.bringToTop(this.graphics);
       this.game.world.bringToTop(this.label1);
       this.game.world.bringToTop(this.label2);
+      this.game.world.bringToTop(this.tt);
+      this.game.world.bringToTop(this.sgraphics);
       var tempC = this.rootCutscene;
       while(tempC && !tempC.active) {
         tempC = tempC.next;
@@ -1832,7 +1856,6 @@ TopDownGame.Game.prototype = {
       if(tempC) {
         tempC.bringToTop();
       }
-      this.game.world.bringToTop(this.tt);
       
       // this.enemies.sort(enemy => enemy.sprite.y);
       // for(var i = 0; i < this.enemies.length; i++) {
@@ -1867,7 +1890,9 @@ TopDownGame.Game.prototype = {
         && this.player.y < this.ladderBottom.y - 8) {
           if(!this.proximity) {
             this.rootCutscene = new Prompt("Leave this floor?", 
-            [{text: "Yes", next: null, callback: this.loadLevel.bind(this), params: ['MainMenu']}, {text: "No", next: null}]
+            [{text: "Yes", next: null, callback: function() {
+              this.loadLevel('Overworld');
+            }.bind(this)}, {text: "No", next: null}]
             , false, this.game, null, this.cursors);
             this.proximity = true;
             this.rootCutscene.startCutscene();
@@ -1975,13 +2000,33 @@ TopDownGame.Game.prototype = {
     this.direction = 'bottom';
   },
   loadLevel(level) {
-    clearInterval(this.playerLoop);
-    clearInterval(this.timer);
-    this.music.destroy();
-    Array.prototype.forEach.call(this.enemies, enemy => {
-      clearInterval(enemy.interval);
-    });
-    this.game.state.start(level, true, false);
+    if(!FLAGS.tutorial_one) {
+      paused = true;
+      FLAGS.tutorial_one = 1;
+      var tweenA = this.game.add.tween(this.sgraphics).to({alpha: 1}, 500, "Quart.easeOut");
+      tweenA.start();
+      this.rootCutscene = new Cutscene('James', "I'm getting the hell out of here!", 'playerPortrait', this.game, false, null, function() {
+        clearInterval(this.playerLoop);
+        clearInterval(this.timer);
+        this.music.destroy();
+        Array.prototype.forEach.call(this.enemies, enemy => {
+          clearInterval(enemy.interval);
+        });
+        paused = false;
+        this.game.state.start(level, true, false);
+      }.bind(this));
+      setTimeout(function() {
+        this.rootCutscene.startCutscene();
+      }.bind(this), 750);
+    } else {
+      clearInterval(this.playerLoop);
+      clearInterval(this.timer);
+      this.music.destroy();
+      Array.prototype.forEach.call(this.enemies, enemy => {
+        clearInterval(enemy.interval);
+      });
+      this.game.state.start(level, true, false);
+    }
   },
   setProximity(p) {
     this.proximity = p;

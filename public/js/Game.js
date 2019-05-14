@@ -30,7 +30,12 @@ class Stats {
     this.stamina = stamina;
     this.maxStamina = stamina;
     this.time = time;
+    this.timeLeft = time;
     this.size = size;
+    this.sizeTier = 1;
+    this.timeTier = 1;
+    this.speedTier = 1;
+    this.staminaTier = 1;
   }
 }
 
@@ -98,6 +103,7 @@ class Inventory {
       stats.speed = this.originalSpeed;
     }
     stats.stamina = stats.maxStamina;
+    stats.timeLeft = stats.time;
   }
 
   removeItem(type, amt) {
@@ -125,7 +131,7 @@ class Inventory {
   }
 }
 
-var stats = new Stats(100, 1000, 300, 10);
+var stats = new Stats(100, 1000, 120, 10);
 var inventory = new Inventory();
 
 class Room {
@@ -1145,6 +1151,7 @@ TopDownGame.Game = function(){};
 TopDownGame.Game.prototype = {
   create: function() {
     // LOAD UP MAPPING FOR REALTIME DYNAMIC MAP GENERATION
+    this.prevInventory = Object.assign({}, inventory.items);
     this.currentRoom = new Room(null, null, null, null, '2', 0, 0);
     this.currentDoors = [];
     this.mapList = [];
@@ -1161,10 +1168,10 @@ TopDownGame.Game.prototype = {
     this.leftRooms = [];
     this.rightRooms = [];
     this.deadEnds = [];
-    this.numRooms = 37;
+    this.numRooms = 20;
     this.timeLeft = 300;
     this.rooms = [new Room(null, null, null, null, '2', 0, 0)];
-    this.graphics = drawGraphics(this.graphics, this.game, this.rooms, this.currentRoom, this.timeLeft);
+    this.graphics = drawGraphics(this.graphics, this.game, this.rooms, this.currentRoom, stats.timeLeft);
     this.graphics.fixedToCamera = true;
 
     this.sgraphics = this.game.add.graphics();
@@ -1211,7 +1218,7 @@ TopDownGame.Game.prototype = {
     this.currentAboveList = [];
 
     // TEST
-    this.music = this.game.add.audio('music');
+    this.music = this.game.add.audio('musicBasement');
     this.game.sound.setDecodedCallback(this.music, function() {
       this.music.loopFull(0.5);
       this.music.volume = 0.15;
@@ -1498,7 +1505,7 @@ TopDownGame.Game.prototype = {
     }.bind(this));
 
     // DRAW INITIAL UI
-    this.graphics = drawGraphics(this.graphics, this.game, this.rooms, this.currentRoom, this.timeLeft);
+    this.graphics = drawGraphics(this.graphics, this.game, this.rooms, this.currentRoom, stats.time);
     this.graphics.fixedToCamera = true;
     this.label1 = drawLabel1(this.label1, this.game);
     this.label2 = drawLabel2(this.label2, this.game);
@@ -1539,7 +1546,7 @@ TopDownGame.Game.prototype = {
                 if(counter == 0) {
                   //FIND A RANDOM ROOM AND LINK TO IT
                   // DETERMINE IF WE NEED A DEAD END
-                  if ((this.currentRoom.y > 3 || this.currentRoom.y < -3) || Math.random(0, 10) >  Math.pow(1.7, Math.abs(this.currentRoom.y))) {
+                  if ((this.currentRoom.y > 3 || this.currentRoom.y < -3) || Math.random() * 10 < Math.pow(1.9, Math.abs(this.currentRoom.y))) {
                     //GENERATE DEAD END
                     var deadendlist = [];
                     for(var x = 0; x < this.deadEnds.length; x++) {
@@ -1598,7 +1605,7 @@ TopDownGame.Game.prototype = {
                 if(counter == 0) {
                   //FIND A RANDOM ROOM AND LINK TO IT
                   // DETERMINE IF WE NEED A DEAD END
-                  if ((this.currentRoom.y > 3 || this.currentRoom.y < -3) || Math.random(0, 10) >  Math.pow(1.7, Math.abs(this.currentRoom.y))) {
+                  if ((this.currentRoom.y > 3 || this.currentRoom.y < -3) || Math.random() * 10 < Math.pow(1.9, Math.abs(this.currentRoom.y))) {
                     //GENERATE DEAD END
                     var deadendlist = [];
                     for(var x = 0; x < this.deadEnds.length; x++) {
@@ -1657,7 +1664,7 @@ TopDownGame.Game.prototype = {
                 if(counter == 0) {
                   //FIND A RANDOM ROOM AND LINK TO IT
                   // DETERMINE IF WE NEED A DEAD END
-                  if ((this.currentRoom.x > 3 || this.currentRoom.x < -3) || Math.random(0, 10) >  Math.pow(1.7, Math.abs(this.currentRoom.x))) {
+                  if ((this.currentRoom.x > 3 || this.currentRoom.x < -3) || Math.random() * 10 < Math.pow(1.9, Math.abs(this.currentRoom.x))) {
                     //GENERATE DEAD END
                     var deadendlist = [];
                     for(var x = 0; x < this.deadEnds.length; x++) {
@@ -1716,7 +1723,7 @@ TopDownGame.Game.prototype = {
                 if(counter == 0) {
                   //FIND A RANDOM ROOM AND LINK TO IT
                   // DETERMINE IF WE NEED A DEAD END
-                  if ((this.currentRoom.x > 3 || this.currentRoom.x < -3) || Math.random(0, 10) > Math.pow(1.7, Math.abs(this.currentRoom.x))) {
+                  if ((this.currentRoom.x > 3 || this.currentRoom.x < -3) || Math.random() * 10 < Math.pow(1.9, Math.abs(this.currentRoom.x))) {
                     //GENERATE DEAD END
                     var deadendlist = [];
                     for(var x = 0; x < this.deadEnds.length; x++) {
@@ -1953,7 +1960,7 @@ TopDownGame.Game.prototype = {
             }
             this.locked = false;
             this.game.world.bringToTop(this.tt);
-            this.graphics = drawGraphics(this.graphics, this.game, this.rooms, this.currentRoom, this.timeLeft);
+            this.graphics = drawGraphics(this.graphics, this.game, this.rooms, this.currentRoom, stats.timeLeft);
             this.graphics.fixedToCamera = true;
             this.label1 = drawLabel1(this.label1, this.game);
             this.label2 = drawLabel2(this.label2, this.game);
@@ -2177,7 +2184,8 @@ TopDownGame.Game.prototype = {
 
       Array.prototype.forEach.call(this.enemies, enemy => {
         if(enemy.sprite.x - 16 <= this.player.x && enemy.sprite.x + 16 >= this.player.x && enemy.sprite.y - 16 <= this.player.y && enemy.sprite.y + 16 >= this.player.y && this.currentRoom.x == enemy.roomX && this.currentRoom.y == enemy.roomY) {
-          this.loadLevel('Overworld');
+          inventory.items = this.prevInventory;
+          this.loadLevel('Gameover');
         }
       });
 
@@ -2220,8 +2228,8 @@ TopDownGame.Game.prototype = {
     }.bind(this), 5);
 
     // TIMER
-    var mm = Math.floor(this.timeLeft / 60);
-    var sc = Math.floor(this.timeLeft % 60).toString();
+    var mm = Math.floor(stats.timeLeft / 60);
+    var sc = Math.floor(stats.timeLeft % 60).toString();
     if(sc.length == 1) {
       sc = "0" + sc;
     }
@@ -2238,13 +2246,14 @@ TopDownGame.Game.prototype = {
     this.tt.fixedToCamera = true;
     this.timer = setInterval(function() {
       if(!paused) {
-        this.timeLeft--;
-        if(this.timeLeft <= 0) {
-          this.loadLevel('MainMenu');
+        stats.timeLeft--;
+        if(stats.timeLeft <= 0) {
+          inventory.items = this.prevInventory;
+          this.loadLevel('Gameover');
         }
         // TIMER
-        var mm = Math.floor(this.timeLeft / 60);
-        var sc = Math.floor(this.timeLeft % 60).toString();
+        var mm = Math.floor(stats.timeLeft / 60);
+        var sc = Math.floor(stats.timeLeft % 60).toString();
         if(sc.length == 1) {
           sc = "0" + sc;
         }

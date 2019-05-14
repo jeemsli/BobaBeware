@@ -106,6 +106,7 @@ TopDownGame.Preload.prototype = {
     this.load.image('ralphPortrait', 'assets/UI/ralph.png');
     this.load.spritesheet('abg', 'assets/Enemies/ABG/AbgSpriteSheet1.png', 64, 64, 72);
     this.game.load.audio('music', 'assets/audio/overworld.wav');
+    this.game.load.audio('musicBasement', 'assets/audio/Basement.wav');
     this.load.image('cutscene', 'assets/UI/cutscene.png');
     this.game.add.text(0,0,"", {font: '20px ZCOOLKuaiLe'});
     this.game.load.audio('recording', 'assets/audio/Recording (18).m4a');

@@ -8,7 +8,7 @@ let FLAGS = {
   //FINISHED INTRODUCTIONS
   flag_four: 0,
   flag_five: 0,
-  tutorial_one: 0,
+  tutorial_one: 2,
   OVERWORLD_STATE: 0
   //TUTORIAL ONE, Player cannot get the fruit on the first go
   
@@ -148,6 +148,10 @@ TopDownGame.Overworld.prototype = {
       this.music.loopFull(0.5);
       this.music.volume = 0.2;
     }.bind(this), this);
+
+    if(this.currentRoom.x == 2 && this.currentRoom.y == 0) {
+      this.music.volume = 0;
+    }
     // SET UP DOORS
 
     //LOAD PATHFINDING TILES AND NODES
@@ -447,6 +451,7 @@ TopDownGame.Overworld.prototype = {
       this.npcs.push(jing, rachel, nick, ralph);
     } else if (FLAGS.tutorial_one == 2) {
       // START ACTUAL GAME
+      this.barrel.destroy();
       var j14 = new Cutscene('Jing', "If you have any other questions, please ask us.", 'jingPortrait', this.game, false, null, function() {
         var tweenA = this.game.add.tween(this.graphics).to({alpha: 1}, 1000, "Quart.easeOut");
         var tweenB = this.game.add.tween(this.graphics).to({alpha: 0}, 1000, "Quart.easeOut");
@@ -457,14 +462,18 @@ TopDownGame.Overworld.prototype = {
           nick.roomX = 1;
           nick.roomY = 1;
           nick.sprite.x = 528;
-          nick.sprite.y = 408;
+          nick.sprite.y = 312;
+          nick.sprite.visible = false;
           nick.sprite.frame = 1;
-          ralph.sprite.x = 304;
+          ralph.sprite.x = 400;
           ralph.sprite.y = 524;
-          jing.sprite.x = 240;
+          ralph.sprite.frame = 2;
+          jing.sprite.x = 336;
           jing.sprite.y = 524;
+          jing.sprite.frame = 2;
           rachel.roomX = 1;
           rachel.roomY = -1;
+          rachel.sprite.visible = false;
           rachel.sprite.x = 496;
           rachel.sprite.y = 312;
           rachel.sprite.frame = 0;
@@ -485,41 +494,301 @@ TopDownGame.Overworld.prototype = {
       var j2 = new Cutscene('James', "Funny. What in the hell was down there?", 'playerPortrait', this.game, false, j3);
       var j1 = new Cutscene('Nick', "Sleep well Jay?", 'nickPortrait', this.game, false, j2);
       var jing = new NPC(this.game.add.sprite(400, 336, 'npc1'), 0, 0, j1, function() {
-        var jj10 = new Cutscene('Jing', "All we can do is try our hardest to survive until the promised day.", 'jingPortrait', this.game, false, null);
+        var jj10 = new Cutscene('Jing', "All we can do is try our hardest to survive until the promised day.", 'jingPortrait', this.game, false, null, jing.setOriginalFrame.bind(jing));
         var jj9 = new Cutscene('James', "That doesn't sound reassuring.", 'playerPortrait', this.game, false, jj10);
         var jj8 = new Cutscene('Jing', "Unfortunately, no one that I know has been freed from this curse.", 'jingPortrait', this.game, false, jj9);
         var jj7 = new Cutscene('Jing', "Rachel has been here before I was. She never talks about her past.", 'jingPortrait', this.game, false, jj8);
         var jj6 = new Cutscene('Jing', "As far as I know, Nick and Ralph have been here for at least 30.", 'jingPortrait', this.game, false, jj7);
         var jj5 = new Cutscene('James', "That long? What about everyone else?", 'playerPortrait', this.game, false, jj6);
         var jj4 = new Cutscene('Jing', "I'm not exactly sure. 60 years, 70?", 'jingPortrait', this.game, false, jj5);
+        var jjup = null;
         var jj3 = new Cutscene('James', "How long have you been here for?", 'playerPortrait', this.game, false, jj4);
-        var jj2 = null; //UPGRADE TIMER
+        var jj2 = new Prompt('It costs ' + (stats.sizeTier * 3) + ' Sticky Bobas to upgrade.', [
+          {text:"Let's do it.", next: jjup, callback: function() {
+            if(inventory.items.stickyBoba >= (stats.sizeTier * 3)) {
+              jing.setOriginalFrame();
+              inventory.removeItem('stickyBoba', (stats.sizeTier * 3));
+              stats.size += 5;
+              stats.sizeTier++;
+              jj2.choice.next = new Cutscene('Jing', "Your inventory space is now " + stats.size + ".", 'jingPortrait', this.game, false, null);
+            } else {
+              jing.setOriginalFrame();
+              jj2.choice.next = new Cutscene('Jing', "Sorry, you don't have enough sticky bobas.", 'jingPortrait', this.game, false, null);
+            }
+          }.bind(this)},
+          {text:"Nevermind.", next: null, callback: jing.setOriginalFrame.bind(jing)}
+        ], false, this.game, null);
         var jj1 = new Prompt('What should I ask her?', [
-          {text: "Upgrade Timer", next: jj2},
-          {text: "Talk", next: jj3},
-          {text: 'Cancel', next: null}
-        ])
+          {text: "Upgrade Inventory", next: jj2},
+          {text: "    Talk", next: jj3},
+          {text: 'Cancel', next: null, callback: jing.setOriginalFrame.bind(jing)}
+        ], false, this.game, null);
         jing.rootCutscene = new Cutscene('Jing', "How goes the hunt for the ultimate boba ingredient?", 'jingPortrait', this.game, false, jj1);
       }.bind(this));
       this.rootCutscene = jing.rootCutscene;
       this.rootCutscene.startCutscene();
-      var rachel = new NPC(this.game.add.sprite(432, 336, 'npc2'), 0, 0, null, null);
-      var ralph = new NPC(this.game.add.sprite(432, 304, 'npc3'), 0, 0, null, null);
-      var nick = new NPC(this.game.add.sprite(432, 368, 'npc4'), 0, 0, null, null);
+      var rachel = new NPC(this.game.add.sprite(432, 336, 'npc2'), 0, 0, null, function() {
+        var jj13 = new Cutscene('James', "Thanks! That was really helpful.", 'playerPortrait', this.game, false, null, rachel.setOriginalFrame.bind(rachel));
+        var jj12 = new Cutscene('Rachel', "And that's it~ I hope I was helpful.", 'rachelPortrait', this.game, false, jj13);
+        var jj11 = new Cutscene('Rachel', "And finally, ice is optimal when used in a pinch.", 'rachelPortrait', this.game, false, jj12);
+        var jj10 = new Cutscene('Rachel', "Jelly is best used when trying to make it back in time.", 'rachelPortrait', this.game, false, jj11);
+        var jj9 = new Cutscene('Rachel', "Eyelashes are good against an enemy you need to get by.", 'rachelPortrait', this.game, false, jj10);
+        var jj8 = new Cutscene('Rachel', "Sticky Boba is good against being chased by multiple enemies.", 'rachelPortrait', this.game, false, jj9);
+        var jj7 = new Cutscene('Rachel', "If that's the case, come see me if you forget~", 'rachelPortrait', this.game, false, null, rachel.setOriginalFrame.bind(rachel));
+        var jj6 = new Cutscene('Rachel', "I see. Well I'll give you a quick rundown~", 'rachelPortrait', this.game, false, jj8);
+        var jj5 = new Prompt('Do I know what my items do?', [
+          {text:'Yep I sure do.', next: jj7},
+          {text:'I have no idea.', next: jj6}
+        ], false, this.game, null);
+        var jj4 = new Cutscene('Rachel', "Hmmm. Do you know what your items do?", 'rachelPortrait', this.game, false, jj5);
+        var jjup = null;
+        var jj3 = new Cutscene('James', "Got any tips?", 'playerPortrait', this.game, false, jj4);
+        var jj2 = new Prompt('It costs ' + (stats.speedTier * 3) + ' Jelly to upgrade.', [
+          {text:"Let's do it.", next: jjup, callback: function() {
+            if(inventory.items.jelly >= (stats.speedTier * 3)) {
+              stats.speedTier++;
+              rachel.setOriginalFrame();
+              inventory.removeItem('jelly', (stats.speedTier * 3));
+              stats.speed += 15;
+              jj2.choice.next = new Cutscene('Rachel', "Your speed is now " + stats.speed + ".", 'rachelPortrait', this.game, false, null);
+            } else {
+              rachel.setOriginalFrame();
+              jj2.choice.next = new Cutscene('Rachel', "Sorry, you don't have enough jelly.", 'rachelPortrait', this.game, false, null);
+            }
+          }.bind(this)},
+          {text:"Nevermind.", next: null, callback: rachel.setOriginalFrame.bind(rachel)}
+        ], false, this.game, null);
+        var r1 = new Prompt('What should I ask her?', [
+          {text: "Upgrade Speed", next: jj2},
+          {text: "Talk", next: jj3},
+          {text: 'Cancel', next: null, callback: rachel.setOriginalFrame.bind(rachel)}
+        ], false, this.game, null);
+        rachel.rootCutscene = new Cutscene('Rachel', "The basement is dark and full of ABGs~", 'rachelPortrait', this.game, false, r1);
+      }.bind(this));
+      rachel.setOriginalFrame();
+      var ralph = new NPC(this.game.add.sprite(432, 304, 'npc3'), 0, 0, null, function() {
+        var jj11 = new Cutscene('Ralph', "But that's just a rumor. I doubt it's true.", 'ralphPortrait', this.game, false, null, ralph.setOriginalFrame.bind(ralph));
+        var jj10 = new Cutscene('Ralph', "Legends say the old owner escaped to the basement before it burned down.", 'ralphPortrait', this.game, false, jj11);
+        var jj9 = new Cutscene('Ralph', "It might explain the dungeon and the horrors inside it.", 'ralphPortrait', this.game, false, jj10);
+        var jj8 = new Cutscene('Ralph', "Heard it burned down, along with the owner and countless ABGs.", 'ralphPortrait', this.game, false, jj9);
+        var jj7 = new Cutscene('James', "What happened to the old tea house?", 'playerPortrait', this.game, false, jj8);
+        var jj6 = new Cutscene('Ralph', "He built this tea house on top of the ruins of an old tea house.", 'ralphPortrait', this.game, false, jj7);
+        var jj5 = new Cutscene('Ralph', "Long ago, a boba enthusiast named Richard McKenna sought out to build a tea house.", 'ralphPortrait', this.game, false, jj6);
+        var jj4 = new Cutscene('Ralph', "Let's see... I remember Jing telling me something about that.", 'ralphPortrait', this.game, false, jj5);
+        var jjup = null;
+        var jj3 = new Cutscene('James', "Why is this place called McKenna's Tea House?", 'playerPortrait', this.game, false, jj4);
+        var jj2 = new Prompt('It costs ' + (stats.timeTier * 3) + ' Eyelash to upgrade.', [
+          {text:"Let's do it.", next: jjup, callback: function() {
+            if(inventory.items.eyelash >= (stats.timeTier * 3)) {
+              stats.timeTier++;
+              ralph.setOriginalFrame();
+              inventory.removeItem('eyelash', (stats.timeTier * 3));
+              stats.time += 30;
+              jj2.choice.next = new Cutscene('Ralph', "Your total time is now " + stats.time + ".", 'ralphPortrait', this.game, false, null);
+            } else {
+              ralph.setOriginalFrame();
+              jj2.choice.next = new Cutscene('Ralph', "Sorry, you don't have enough eyelashes.", 'ralphPortrait', this.game, false, null);
+            }
+          }.bind(this)},
+          {text:"Nevermind.", next: null, callback: ralph.setOriginalFrame.bind(ralph)}
+        ], false, this.game, null);
+        var r1 = new Prompt('What should I ask him?', [
+          {text: "Upgrade Timer", next: jj2},
+          {text: "Talk", next: jj3},
+          {text: 'Cancel', next: null, callback: ralph.setOriginalFrame.bind(ralph)}
+        ], false, this.game, null);
+        ralph.rootCutscene = new Cutscene('Ralph', "Well if it isn't the new guy.", 'ralphPortrait', this.game, false, r1);
+      }.bind(this));
+      ralph.setOriginalFrame();
+      var nick = new NPC(this.game.add.sprite(432, 368, 'npc4'), 0, 0, null, function() {
+        var jj13 = new Cutscene('Nick', "Be careful alright. We've lost too many already...", 'nickPortrait', this.game, false, null, nick.setOriginalFrame.bind(nick));
+        var jj11 = new Cutscene('Nick', "Joel went down there one day and never came back.", 'nickPortrait', this.game, false, jj13);
+        var jj10 = new Cutscene('Nick', "The dungeon below the Basement.", 'nickPortrait', this.game, false, jj11);
+        var jj9 = new Cutscene('James', "What's the Freezer? Is it like the Basement?", 'playerPortrait', this.game, false, jj10);
+        var jj8 = new Cutscene('Nick', "He was once one of our best employees who scouted the Freezer.", 'nickPortrait', this.game, false, jj9);
+        var jj7 = new Cutscene('James', 'What happened to him?', 'playerPortrait', this.game, false, jj8);
+        var jj6 = new Cutscene('Nick', "Well no. Funny story we had a guy named Joel who worked with us a while back.", 'nickPortrait', this.game, false, jj7);
+        var jj5 = new Cutscene('James', "Is that enough?", 'playerPortrait', this.game, false, jj6);
+        var jj4 = new Cutscene('Nick', "Well, we've got darts in the break room.", 'nickPortrait', this.game, false, jj5);
+        var jjup = null;
+        var jj3 = new Cutscene('James', "How do you guys not go crazy down there?", 'playerPortrait', this.game, false, jj4);
+        var jj2 = new Prompt('It costs ' + (stats.staminaTier * 3) + ' Ice to upgrade.', [
+          {text:"Let's do it.", next: jjup, callback: function() {
+            if(inventory.items.ice >= (stats.staminaTier * 3)) {
+              stats.staminaTier++;
+              nick.setOriginalFrame();
+              inventory.removeItem('ice', (stats.staminaTier * 3));
+              stats.maxStamina += 250;
+              jj2.choice.next = new Cutscene('Nick', "Your total time is now " + stats.maxStamina + ".", 'nickPortrait', this.game, false, null);
+            } else {
+              nick.setOriginalFrame();
+              jj2.choice.next = new Cutscene('Nick', "Sorry, you don't have enough ice.", 'nickPortrait', this.game, false, null);
+            }
+          }.bind(this)},
+          {text:"Nevermind.", next: null, callback: nick.setOriginalFrame.bind(nick)}
+        ], false, this.game, null);
+        var r1 = new Prompt('What should I ask him?', [
+          {text: "Upgrade Stamina", next: jj2},
+          {text: "Talk", next: jj3},
+          {text: 'Cancel', next: null, callback: nick.setOriginalFrame.bind(nick)}
+        ], false, this.game, null);
+        nick.rootCutscene = new Cutscene('Nick', "My man Jay! What's going on with you lately?", 'nickPortrait', this.game, false, r1);
+      }.bind(this));
+      nick.setOriginalFrame();
       rachel.sprite.frame = 3;
       nick.sprite.frame = 3;
       ralph.sprite.frame = 3;
       jing.sprite.frame = 3;
-      // var boba = new NPC()
-      // var npc1 = new NPC()
-      // var npc2 = new NPC()
-      // var npc3 = new NPC()
-      // var npc4 = new NPC()
-      // var npc5 = new NPC()
-      // var npc6 = new NPC()
+      this.npcs.push(jing, rachel, ralph, nick);
+    } else if (FLAGS.tutorial_one >= 3) {
+      // START MAIN LOOP
+      this.barrel.destroy();
+      var jing = new NPC(this.game.add.sprite(336, 524, 'npc1'), 0, 0, null, function() {
+        var jj10 = new Cutscene('Jing', "All we can do is try our hardest to survive until the promised day.", 'jingPortrait', this.game, false, null, jing.setOriginalFrame.bind(jing));
+        var jj9 = new Cutscene('James', "That doesn't sound reassuring.", 'playerPortrait', this.game, false, jj10);
+        var jj8 = new Cutscene('Jing', "Unfortunately, no one that I know has been freed from this curse.", 'jingPortrait', this.game, false, jj9);
+        var jj7 = new Cutscene('Jing', "Rachel has been here before I was. She never talks about her past.", 'jingPortrait', this.game, false, jj8);
+        var jj6 = new Cutscene('Jing', "As far as I know, Nick and Ralph have been here for at least 30.", 'jingPortrait', this.game, false, jj7);
+        var jj5 = new Cutscene('James', "That long? What about everyone else?", 'playerPortrait', this.game, false, jj6);
+        var jj4 = new Cutscene('Jing', "I'm not exactly sure. 60 years, 70?", 'jingPortrait', this.game, false, jj5);
+        var jjup = null;
+        var jj3 = new Cutscene('James', "How long have you been here for?", 'playerPortrait', this.game, false, jj4);
+        var jj2 = new Prompt('It costs ' + (stats.sizeTier * 3) + ' Sticky Bobas to upgrade.', [
+          {text:"Let's do it.", next: jjup, callback: function() {
+            if(inventory.items.stickyBoba >= (stats.sizeTier * 3)) {
+              stats.sizeTier++;
+              jing.setOriginalFrame();
+              inventory.removeItem('stickyBoba', (stats.sizeTier * 3));
+              stats.size += 5;
+              jj2.choice.next = new Cutscene('Jing', "Your inventory space is now " + stats.size + ".", 'jingPortrait', this.game, false, null);
+            } else {
+              jing.setOriginalFrame();
+              jj2.choice.next = new Cutscene('Jing', "Sorry, you don't have enough sticky bobas.", 'jingPortrait', this.game, false, null);
+            }
+          }.bind(this)},
+          {text:"Nevermind.", next: null, callback: jing.setOriginalFrame.bind(jing)}
+        ], false, this.game, null);
+        var jj1 = new Prompt('What should I ask her?', [
+          {text: "Upgrade Inventory", next: jj2},
+          {text: "Talk", next: jj3},
+          {text: 'Cancel', next: null, callback: jing.setOriginalFrame.bind(jing)}
+        ], false, this.game, null);
+        jing.rootCutscene = new Cutscene('Jing', "How goes the hunt for the ultimate boba ingredient?", 'jingPortrait', this.game, false, jj1);
+      }.bind(this));
+      jing.setOriginalFrame();
+      var rachel = new NPC(this.game.add.sprite(496, 312, 'npc2'), 1, -1, null, function() {
+        var jj13 = new Cutscene('James', "Thanks! That was really helpful.", 'playerPortrait', this.game, false, null, rachel.setOriginalFrame.bind(rachel));
+        var jj12 = new Cutscene('Rachel', "And that's it~ I hope I was helpful.", 'rachelPortrait', this.game, false, jj13);
+        var jj11 = new Cutscene('Rachel', "And finally, ice is optimal when used in a pinch.", 'rachelPortrait', this.game, false, jj12);
+        var jj10 = new Cutscene('Rachel', "Jelly is best used when trying to make it back in time.", 'rachelPortrait', this.game, false, jj11);
+        var jj9 = new Cutscene('Rachel', "Eyelashes are good against an enemy you need to get by.", 'rachelPortrait', this.game, false, jj10);
+        var jj8 = new Cutscene('Rachel', "Sticky Boba is good against being chased by multiple enemies.", 'rachelPortrait', this.game, false, jj9);
+        var jj7 = new Cutscene('Rachel', "If that's the case, come see me if you forget~", 'rachelPortrait', this.game, false, null, rachel.setOriginalFrame.bind(rachel));
+        var jj6 = new Cutscene('Rachel', "I see. Well I'll give you a quick rundown~", 'rachelPortrait', this.game, false, jj8);
+        var jj5 = new Prompt('Do I know what my items do?', [
+          {text:'Yes', next: jj7},
+          {text:'No', next: jj6}
+        ], false, this.game, null);
+        var jj4 = new Cutscene('Rachel', "Hmmm. Do you know what your items do?", 'rachelPortrait', this.game, false, jj5);
+        var jjup = null;
+        var jj3 = new Cutscene('James', "Got any tips?", 'playerPortrait', this.game, false, jj4);
+        var jj2 = new Prompt('It costs ' + (stats.speedTier * 3) + ' Jelly to upgrade.', [
+          {text:"Let's do it.", next: jjup, callback: function() {
+            if(inventory.items.jelly >= (stats.speedTier * 3)) {
+              stats.speedTier++;
+              rachel.setOriginalFrame();
+              inventory.removeItem('jelly', (stats.speedTier * 3));
+              stats.speed += 15;
+              jj2.choice.next = new Cutscene('Rachel', "Your speed is now " + stats.speed + ".", 'rachelPortrait', this.game, false, null);
+            } else {
+              rachel.setOriginalFrame();
+              jj2.choice.next = new Cutscene('Rachel', "Sorry, you don't have enough jelly.", 'rachelPortrait', this.game, false, null);
+            }
+          }.bind(this)},
+          {text:"Nevermind.", next: null, callback: rachel.setOriginalFrame.bind(rachel)}
+        ], false, this.game, null);
+        var r1 = new Prompt('What should I ask her?', [
+          {text: "Upgrade Speed", next: jj2},
+          {text: "Talk", next: jj3},
+          {text: 'Cancel', next: null, callback: rachel.setOriginalFrame.bind(rachel)}
+        ], false, this.game, null);
+        rachel.rootCutscene = new Cutscene('Rachel', "The basement is dark and full of ABGs~", 'rachelPortrait', this.game, false, r1);
+      }.bind(this));
+      var ralph = new NPC(this.game.add.sprite(400, 524, 'npc3'), 0, 0, null, function() {
+        var jj11 = new Cutscene('Ralph', "But that's just a rumor. I doubt it's true.", 'ralphPortrait', this.game, false, null, ralph.setOriginalFrame.bind(ralph));
+        var jj10 = new Cutscene('Ralph', "Legends say the old owner escaped to the basement before it burned down.", 'ralphPortrait', this.game, false, jj11);
+        var jj9 = new Cutscene('Ralph', "It might explain the dungeon and the horrors inside it.", 'ralphPortrait', this.game, false, jj10);
+        var jj8 = new Cutscene('Ralph', "Heard it burned down, along with the owner and countless ABGs.", 'ralphPortrait', this.game, false, jj9);
+        var jj7 = new Cutscene('James', "What happened to the old tea house?", 'playerPortrait', this.game, false, jj8);
+        var jj6 = new Cutscene('Ralph', "He built this tea house on top of the ruins of an old tea house.", 'ralphPortrait', this.game, false, jj7);
+        var jj5 = new Cutscene('Ralph', "Long ago, a boba enthusiast named Richard McKenna sought out to build a tea house.", 'ralphPortrait', this.game, false, jj6);
+        var jj4 = new Cutscene('Ralph', "Let's see... I remember Jing telling me something about that.", 'ralphPortrait', this.game, false, jj5);
+        var jjup = null;
+        var jj3 = new Cutscene('James', "Why is this place called McKenna's Tea House?", 'playerPortrait', this.game, false, jj4);
+        var jj2 = new Prompt('It costs ' + (stats.timeTier * 3) + ' Eyelash to upgrade.', [
+          {text:"Let's do it.", next: jjup, callback: function() {
+            if(inventory.items.eyelash >= (stats.timeTier * 3)) {
+              stats.timeTier++;
+              ralph.setOriginalFrame();
+              inventory.removeItem('eyelash', (stats.timeTier * 3));
+              stats.time += 30;
+              jj2.choice.next = new Cutscene('Ralph', "Your total time is now " + stats.time + ".", 'ralphPortrait', this.game, false, null);
+            } else {
+              ralph.setOriginalFrame();
+              jj2.choice.next = new Cutscene('Ralph', "Sorry, you don't have enough eyelashes.", 'ralphPortrait', this.game, false, null);
+            }
+          }.bind(this)},
+          {text:"Nevermind.", next: null, callback: ralph.setOriginalFrame.bind(ralph)}
+        ], false, this.game, null);
+        var r1 = new Prompt('What should I ask him?', [
+          {text: "Upgrade Timer", next: jj2},
+          {text: "Talk", next: jj3},
+          {text: 'Cancel', next: null, callback: ralph.setOriginalFrame.bind(ralph)}
+        ], false, this.game, null);
+        ralph.rootCutscene = new Cutscene('Ralph', "Well if it isn't the new guy.", 'ralphPortrait', this.game, false, r1);
+      }.bind(this));
+      ralph.setOriginalFrame();
+      var nick = new NPC(this.game.add.sprite(528, 312, 'npc4'), 1, 1, null, function() {
+        var jj13 = new Cutscene('Nick', "Be careful alright. We've lost too many already...", 'nickPortrait', this.game, false, null, nick.setOriginalFrame.bind(nick));
+        var jj11 = new Cutscene('Nick', "Joel went down there one day and never came back.", 'nickPortrait', this.game, false, jj13);
+        var jj10 = new Cutscene('Nick', "The dungeon below the Basement.", 'nickPortrait', this.game, false, jj11);
+        var jj9 = new Cutscene('James', "What's the Freezer? Is it like the Basement?", 'playerPortrait', this.game, false, jj10);
+        var jj8 = new Cutscene('Nick', "He was once one of our best employees who scouted the Freezer.", 'nickPortrait', this.game, false, jj9);
+        var jj7 = new Cutscene('James', 'What happened to him?', 'playerPortrait', this.game, false, jj8);
+        var jj6 = new Cutscene('Nick', "Well no. Funny story we had a guy named Joel who worked with us a while back.", 'nickPortrait', this.game, false, jj7);
+        var jj5 = new Cutscene('James', "Is that enough?", 'playerPortrait', this.game, false, jj6);
+        var jj4 = new Cutscene('Nick', "Well, we've got darts in the break room.", 'nickPortrait', this.game, false, jj5);
+        var jjup = null;
+        var jj3 = new Cutscene('James', "How do you guys not go crazy down there?", 'playerPortrait', this.game, false, jj4);
+        var jj2 = new Prompt('It costs ' + (stats.staminaTier * 3) + ' Ice to upgrade.', [
+          {text:"Let's do it.", next: jjup, callback: function() {
+            if(inventory.items.ice >= (stats.staminaTier * 3)) {
+              stats.staminaTier++;
+              nick.setOriginalFrame();
+              inventory.removeItem('ice', (stats.staminaTier * 3));
+              stats.maxStamina += 250;
+              jj2.choice.next = new Cutscene('Nick', "Your total time is now " + stats.maxStamina + ".", 'nickPortrait', this.game, false, null);
+            } else {
+              nick.setOriginalFrame();
+              jj2.choice.next = new Cutscene('Nick', "Sorry, you don't have enough ice.", 'nickPortrait', this.game, false, null);
+            }
+          }.bind(this)},
+          {text:"Nevermind.", next: null, callback: nick.setOriginalFrame.bind(nick)}
+        ], false, this.game, null);
+        var r1 = new Prompt('What should I ask him?', [
+          {text: "Upgrade Stamina", next: jj2},
+          {text: "Talk", next: jj3},
+          {text: 'Cancel', next: null, callback: nick.setOriginalFrame.bind(nick)}
+        ], false, this.game, null);
+        nick.rootCutscene = new Cutscene('Nick', "My man Jay! What's going on with you lately?", 'nickPortrait', this.game, false, r1);
+      }.bind(this));
+      nick.setOriginalFrame();
+      rachel.sprite.frame = 0;
+      nick.sprite.frame = 1;
+      ralph.sprite.frame = 2;
+      jing.sprite.frame = 2;
       this.npcs.push(jing, rachel, ralph, nick);
     }
-    this.barrel.destroy();
 
     //the first parameter is the tileset name as specified in Tiled, the second is the key to the asset
     this.map.addTilesetImage('floor1tiles', 'gameTiles');
@@ -547,13 +816,6 @@ TopDownGame.Overworld.prototype = {
 
     //create player and UI
     this.player = this.game.add.sprite(368, 320, 'player');
-    if(FLAGS.tutorial_one == 1) {
-      this.player.x = 208;
-      this.player.y = 276;
-    } else if (FLAGS.tutorial_one == 2) {
-      this.player.x = 336;
-      this.player.y = 336;
-    }
     this.game.world.bringToTop(this.npcs[0].sprite);
     this.game.physics.arcade.enable(this.player);
     this.currentRoomIndex = this.rooms.indexOf(this.currentRoom);
@@ -610,6 +872,16 @@ TopDownGame.Overworld.prototype = {
     this.player.animations.add('rightrun', [56,57,58,59], 16, true);
     this.player.animations.add('toprightrun', [48,49,50,51,52,53,54,55], 16, true);
     this.player.frame = 0;
+    if(FLAGS.tutorial_one == 1) {
+      this.player.x = 208;
+      this.player.y = 276;
+    } else if (FLAGS.tutorial_one == 2) {
+      this.player.x = 336;
+      this.player.y = 336;
+      paused = true;
+      this.direction = "right";
+      this.player.frame = 56;
+    }
     this.player.body.setSize(24,16,20,48);
     for(var i = 0; i < this.npcs.length; i++) {
       this.npcs[i].sprite.body.setSize(24, 16, 20, 48);
@@ -1262,6 +1534,10 @@ TopDownGame.Overworld.prototype = {
     }.bind(this), 5);   
 
     this.direction = 'bottom';
+    if (FLAGS.tutorial_one == 2) {
+      this.player.frame = 56;
+      this.direction = 'right';
+    }
   },
   loadLevel(level) {
     clearInterval(this.playerLoop);

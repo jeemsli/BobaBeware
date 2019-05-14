@@ -34,9 +34,7 @@ TopDownGame.Splash.prototype = {
         logo = game.add.sprite(320,320-112,'logo');
         logo.scale.setTo(1.5,1.5);
         logo.anchor.setTo(0.5,0.5);
-
-        // splash = new Phaser.Filter(game, null, game.cache.getShader('background'));
-
+        
         var style = {font: "40px ThinkNothing", fill: "#eeeeee"};
         text = this.game.add.text(320,320+128,"Click to begin...", style);
         text.anchor.setTo(0.5,0.5);

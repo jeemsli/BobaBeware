@@ -1,7 +1,5 @@
 var TopDownGame = TopDownGame || {};
 var paused = false;
-var inventory = new Inventory();
-var stats = new Stats(100, 1000, 300, 10);
 
 class Item {
 
@@ -10,7 +8,6 @@ class Item {
     this.type = type;
     this.roomX = roomX;
     this.roomY = roomY;
-    this.callback = callback;
     this.tileX = Math.floor(this.sprite.x / 32);
     this.tileY = Math.floor(this.sprite.y / 32);
     this.collected = false;
@@ -25,6 +22,18 @@ class Item {
   }
 }
 
+
+class Stats {
+
+  constructor(speed, stamina, time, size) {
+    this.speed = speed;
+    this.stamina = stamina;
+    this.maxStamina = stamina;
+    this.time = time;
+    this.size = size;
+  }
+}
+
 class Inventory {
   constructor() {
     this.sprite1 = null;
@@ -32,6 +41,10 @@ class Inventory {
     this.sprite3 = null;
     this.sprite4 = null;
     this.border = null;
+    this.text1 = null;
+    this.text2 = null;
+    this.text3 = null;
+    this.text4 = null;
     this.items = {
       stickyBoba: 0,
       eyelash: 0,
@@ -47,8 +60,8 @@ class Inventory {
   }
 
   addItem(type) {
-    this.items[type] += 1;
-    update();
+    this.items[type] += 1; 
+    this.update();
   }
 
   useItem(type) {
@@ -63,7 +76,7 @@ class Inventory {
         break;
       case "jelly":
         this.originalSpeed =  stats.speed;
-        stats.speed *= 1.2;
+        stats.speed *= 1.35;
         this.jellyTimer = setTimeout(function() {
           stats.speed = this.originalSpeed;
           this.jellyTimer = null;
@@ -76,7 +89,7 @@ class Inventory {
         }
         break;
     }
-    update();
+    this.update();
   }
 
   unload() {
@@ -89,11 +102,14 @@ class Inventory {
 
   removeItem(type, amt) {
     this.items[type] -= amt;
-    update();
+    this.update();
   }
 
   update() {
-    
+    this.text1.text = this.items.stickyBoba;
+    this.text2.text = this.items.eyelash;
+    this.text3.text = this.items.jelly;
+    this.text4.text = this.items.ice;
   }
 
   bringToTop(game) {
@@ -102,19 +118,15 @@ class Inventory {
     game.world.bringToTop(this.sprite2);
     game.world.bringToTop(this.sprite3);
     game.world.bringToTop(this.sprite4);
+    game.world.bringToTop(this.text1);
+    game.world.bringToTop(this.text2);
+    game.world.bringToTop(this.text3);
+    game.world.bringToTop(this.text4);
   }
 }
 
-class Stats {
-
-  constructor(speed, stamina, time, size) {
-    this.speed = speed;
-    this.stamina = stamina;
-    this.maxStamina = stamina;
-    this.time = time;
-    this.size = size;
-  }
-}
+var stats = new Stats(100, 1000, 300, 10);
+var inventory = new Inventory();
 
 class Room {
 
@@ -1159,6 +1171,7 @@ TopDownGame.Game.prototype = {
     this.sgraphics.beginFill(0x000000);
     this.sgraphics.drawRect(0, 0, 800, 800);
     this.sgraphics.endFill();
+    this.death = false;
 
     // SET UP ALL MAPS
     for(var i = 0; i < this.numRooms; i++) {
@@ -1319,10 +1332,8 @@ TopDownGame.Game.prototype = {
     this.player = this.game.add.sprite(368, 320, 'player');
     this.ladderBottom = this.game.add.sprite(384, 320, 'ladderBottom');
     this.ladderTop = this.game.add.sprite(384, 288, 'ladderTop');
-    this.staminaBar = this.game.add.sprite(58, 560, 'barIn');
-    this.staminaBar.alpha = 0.5;
-    this.staminaBarOut = this.game.add.sprite(60, 560, 'barOut');
-    this.staminaBarOut.alpha = 0.5;
+    this.staminaBar = this.game.add.sprite(58, 550, 'barIn');
+    this.staminaBarOut = this.game.add.sprite(60, 550, 'barOut');
     this.staminaBar.fixedToCamera = true;
     this.staminaBarOut.fixedToCamera = true;
     this.game.physics.arcade.enable(this.player);
@@ -1371,21 +1382,44 @@ TopDownGame.Game.prototype = {
     // SET UP INVENTORY AND ITEMS
     this.items = [];
 
-    inventory.sprite1 = this.game.add.sprite(178, 570, 'stickyBoba');
-    inventory.sprite1.alpha = 0.5;
+    inventory.sprite1 = this.game.add.sprite(248, 545, 'stickyBoba');
     inventory.sprite1.fixedToCamera = true;
-    inventory.sprite2 = this.game.add.sprite(242, 570, 'eyelash');
-    inventory.sprite2.alpha = 0.5;
+    inventory.sprite2 = this.game.add.sprite(308, 547, 'eyelash');
     inventory.sprite2.fixedToCamera = true;
-    inventory.sprite3 = this.game.add.sprite(306, 570, 'jelly');
-    inventory.sprite3.alpha = 0.5;
+    inventory.sprite3 = this.game.add.sprite(368, 550, 'jelly');
     inventory.sprite3.fixedToCamera = true;
-    inventory.sprite4 = this.game.add.sprite(370, 570, 'ice');
-    inventory.sprite4.alpha = 0.5;
+    inventory.sprite4 = this.game.add.sprite(428, 549, 'ice');
     inventory.sprite4.fixedToCamera = true;
-    inventory.border = this.game.add.sprite(158, 560, 'border');
-    inventory.border.alpha = 0.5;
+    inventory.border = this.game.add.sprite(232, 545, 'border');
     inventory.border.fixedToCamera = true;
+    inventory.text1 = this.game.add.text(248, 545, inventory.items.stickyBoba, {
+      font: '12px ZCOOLKuaiLe',
+      fill: '#f7c53d',
+      stroke: '#423f38',
+      strokeThickness: '3'
+    });
+    inventory.text1.fixedToCamera = true;
+    inventory.text2 = this.game.add.text(308, 545, inventory.items.eyelash, {
+      font: '12px ZCOOLKuaiLe',
+      fill: '#f7c53d',
+      stroke: '#423f38',
+      strokeThickness: '3'
+    });
+    inventory.text2.fixedToCamera = true;
+    inventory.text3 = this.game.add.text(368, 545, inventory.items.jelly, {
+      font: '12px ZCOOLKuaiLe',
+      fill: '#f7c53d',
+      stroke: '#423f38',
+      strokeThickness: '3'
+    });
+    inventory.text3.fixedToCamera = true;
+    inventory.text4 = this.game.add.text(428, 545, inventory.items.ice, {
+      font: '12px ZCOOLKuaiLe',
+      fill: '#f7c53d',
+      stroke: '#423f38',
+      strokeThickness: '3'
+    });
+    inventory.text4.fixedToCamera = true;
 
     this.one = this.game.input.keyboard.addKey(Phaser.Keyboard.ONE);
     this.one.onDown.add(function() {
@@ -1413,7 +1447,7 @@ TopDownGame.Game.prototype = {
     }.bind(this));
 
     // LOAD AUDIO
-    this.walkSound = this.game.add.audio('recording');
+    //this.walkSound = this.game.add.audio('recording');
 
     //LOAD ANIMATIONS
     this.player.animations.add('top', [40,41,42,43,44,45,46,47], 8, true);
@@ -1834,7 +1868,7 @@ TopDownGame.Game.prototype = {
               }
             }
 
-            if(roomsIndex != this.rooms.length && Math.random() > 0.15 - (this.items.length / 10)) {
+            if(roomsIndex != this.rooms.length && Math.random() < 0.2 - (this.items.length / 10)) {
               // PLACE SUCH THAT CURRENT PATH CAN GO TO DOOR!
               var tiles = this.tileList[this.mapList.indexOf(this.map)];
               var possibleTiles = [];
@@ -1872,9 +1906,14 @@ TopDownGame.Game.prototype = {
               }
 
               var spawnNumber = [1,1,1,1,1,2,2,3][Math.floor(Math.random() * 8)];
+              var tilesTaken = [];
               // CHOOSE TO SPAWN ENEMIES
               for(var i = 0; i < spawnNumber; i++) {
                 var tile = possibleTiles[Math.floor(Math.random()*possibleTiles.length)];
+                while(tilesTaken.includes(tile)) {
+                  tile = possibleTiles[Math.floor(Math.random()*possibleTiles.length)];
+                }
+                tilesTaken.push(tile);
                 var itemType = ['stickyBoba','eyelash','jelly', 'ice'][Math.floor(Math.random() * 4)];
                 var item = this.game.add.sprite((tile.x * 32), (tile.y * 32), itemType);
                 item.scale.x = 0.666;
@@ -2004,6 +2043,11 @@ TopDownGame.Game.prototype = {
       });
 
       // REORDER PLAYER, ENEMIES, AND ABOVEOBJECT TILES BASED ON Y VALUES
+      for(var i = 0; i < this.items.length; i++) {
+        if(this.items[i].roomX == this.currentRoom.x && this.items[i].roomY == this.currentRoom.y) {
+          this.game.world.bringToTop(this.items[i].sprite);
+        }
+      }
       var reorder = [this.player];
       if(this.currentRoom.x == 0 && this.currentRoom.y == 0) {
         reorder.push(this.ladderTop);
@@ -2049,11 +2093,6 @@ TopDownGame.Game.prototype = {
           this.game.world.bringToTop(reorder[i].layer);
         } else {
           this.game.world.bringToTop(reorder[i]);
-        }
-      }
-      for(var i = 0; i < this.items.length; i++) {
-        if(this.items[i].roomX == this.currentRoom.x && this.items[i].roomY == this.currentRoom.y) {
-          this.game.world.bringToTop(this.items[i].sprite);
         }
       }
 
@@ -2143,8 +2182,8 @@ TopDownGame.Game.prototype = {
       });
 
       Array.prototype.forEach.call(this.items, item => {
-        var x = Math.floor(this.player.x / 32);
-        var y = Math.floor(this.player.y / 32);
+        var x = Math.floor(this.player.x / 32) + 1;
+        var y = Math.floor(this.player.y / 32) + 2;
         if(x == item.tileX && y == item.tileY && this.currentRoom.x == item.roomX && this.currentRoom.y == item.roomY) {
           item.collect();
         }
@@ -2159,7 +2198,7 @@ TopDownGame.Game.prototype = {
           this.regen = true;
         }.bind(this), 1500);
         if(stats.stamina != 0) {
-          this.stamina--;
+          stats.stamina--;
           if(stats.stamina == 0) {
             clearTimeout(this.staminaTimer);
             this.staminaTimer = setTimeout(function() {
@@ -2170,7 +2209,7 @@ TopDownGame.Game.prototype = {
       }
 
       if(this.regen && stats.stamina != stats.maxStamina) {
-        this.stamina++;
+        stats.stamina++;
       }
 
       //Math.pow(3, -(1 - (this.stamina/1000)));
@@ -2178,15 +2217,6 @@ TopDownGame.Game.prototype = {
       this.staminaBar.scale.setTo(Math.pow(0.33, 1 - (stats.stamina / stats.maxStamina)), Math.pow(0.85, 1 - (stats.stamina / stats.maxStamina)));
 
       // SOUND
-      if(this.player.body.velocity.x != 0 || this.player.body.velocity.y != 0) {
-        if(!this.walkSound.isPlaying) {
-          this.walkSound.play();
-        }
-      } else {
-        if(this.walkSound.isPlaying) {
-          this.walkSound.stop();
-        }
-      }
     }.bind(this), 5);
 
     // TIMER
@@ -2224,12 +2254,28 @@ TopDownGame.Game.prototype = {
     this.direction = 'bottom';
   },
   loadLevel(level) {
-    if(!FLAGS.tutorial_one) {
-      paused = true;
-      FLAGS.tutorial_one = 1;
-      var tweenA = this.game.add.tween(this.sgraphics).to({alpha: 1}, 500, "Quart.easeOut");
-      tweenA.start();
-      this.rootCutscene = new Cutscene('James', "I'm getting the hell out of here!", 'playerPortrait', this.game, false, null, function() {
+    if(!this.death) {
+      this.death = true;
+      if(!FLAGS.tutorial_one) {
+        paused = true;
+        FLAGS.tutorial_one = 1;
+        var tweenA = this.game.add.tween(this.sgraphics).to({alpha: 1}, 500, "Quart.easeOut");
+        tweenA.start();
+        this.rootCutscene = new Cutscene('James', "I'm getting the hell out of here!", 'playerPortrait', this.game, false, null, function() {
+          inventory.unload();
+          clearInterval(this.playerLoop);
+          clearInterval(this.timer);
+          this.music.destroy();
+          Array.prototype.forEach.call(this.enemies, enemy => {
+            clearInterval(enemy.interval);
+          });
+          paused = false;
+          this.game.state.start(level, true, false);
+        }.bind(this));
+        setTimeout(function() {
+          this.rootCutscene.startCutscene();
+        }.bind(this), 750);
+      } else {
         inventory.unload();
         clearInterval(this.playerLoop);
         clearInterval(this.timer);
@@ -2237,21 +2283,8 @@ TopDownGame.Game.prototype = {
         Array.prototype.forEach.call(this.enemies, enemy => {
           clearInterval(enemy.interval);
         });
-        paused = false;
         this.game.state.start(level, true, false);
-      }.bind(this));
-      setTimeout(function() {
-        this.rootCutscene.startCutscene();
-      }.bind(this), 750);
-    } else {
-      inventory.unload();
-      clearInterval(this.playerLoop);
-      clearInterval(this.timer);
-      this.music.destroy();
-      Array.prototype.forEach.call(this.enemies, enemy => {
-        clearInterval(enemy.interval);
-      });
-      this.game.state.start(level, true, false);
+      }
     }
   },
   setProximity(p) {

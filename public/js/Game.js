@@ -1,5 +1,120 @@
 var TopDownGame = TopDownGame || {};
 var paused = false;
+var inventory = new Inventory();
+var stats = new Stats(100, 1000, 300, 10);
+
+class Item {
+
+  constructor(sprite, type, roomX, roomY) {
+    this.sprite = sprite;
+    this.type = type;
+    this.roomX = roomX;
+    this.roomY = roomY;
+    this.callback = callback;
+    this.tileX = Math.floor(this.sprite.x / 32);
+    this.tileY = Math.floor(this.sprite.y / 32);
+    this.collected = false;
+  }
+
+  collect() {
+    if(inventory.getSize() < stats.size && !this.collected) {
+      inventory.addItem(this.type);
+      this.collected = true;
+      this.sprite.destroy();
+    }
+  }
+}
+
+class Inventory {
+  constructor() {
+    this.sprite1 = null;
+    this.sprite2 = null;
+    this.sprite3 = null;
+    this.sprite4 = null;
+    this.border = null;
+    this.items = {
+      stickyBoba: 0,
+      eyelash: 0,
+      jelly: 0,
+      ice: 0
+    }
+    this.jellyTimer = null;
+    this.originalSpeed = null;
+  }
+
+  getSize() {
+    return this.items.stickyBoba + this.items.eyelash + this.items.jelly + this.items.ice;
+  }
+
+  addItem(type) {
+    this.items[type] += 1;
+    update();
+  }
+
+  useItem(type) {
+    this.items[type] -= 1;
+
+    switch(type) {
+      case "stickyBoba":
+        console.log("USED STICKY");
+        break;
+      case "eyelash":
+        console.log("USED EYELASH");
+        break;
+      case "jelly":
+        this.originalSpeed =  stats.speed;
+        stats.speed *= 1.2;
+        this.jellyTimer = setTimeout(function() {
+          stats.speed = this.originalSpeed;
+          this.jellyTimer = null;
+        }.bind(this), 10000);
+        break;
+      case "ice":
+        stats.stamina += Math.floor(stats.maxStamina * 0.5);
+        if (stats.stamina > stats.maxStamina) {
+          stats.stamina = stats.maxStamina;
+        }
+        break;
+    }
+    update();
+  }
+
+  unload() {
+    if(this.jellyTimer) {
+      clearTimeout(this.jellyTimer);
+      stats.speed = this.originalSpeed;
+    }
+    stats.stamina = stats.maxStamina;
+  }
+
+  removeItem(type, amt) {
+    this.items[type] -= amt;
+    update();
+  }
+
+  update() {
+    
+  }
+
+  bringToTop(game) {
+    game.world.bringToTop(this.border);
+    game.world.bringToTop(this.sprite1);
+    game.world.bringToTop(this.sprite2);
+    game.world.bringToTop(this.sprite3);
+    game.world.bringToTop(this.sprite4);
+  }
+}
+
+class Stats {
+
+  constructor(speed, stamina, time, size) {
+    this.speed = speed;
+    this.stamina = stamina;
+    this.maxStamina = stamina;
+    this.time = time;
+    this.size = size;
+  }
+}
 
 class Room {
 
@@ -1205,7 +1320,9 @@ TopDownGame.Game.prototype = {
     this.ladderBottom = this.game.add.sprite(384, 320, 'ladderBottom');
     this.ladderTop = this.game.add.sprite(384, 288, 'ladderTop');
     this.staminaBar = this.game.add.sprite(58, 560, 'barIn');
+    this.staminaBar.alpha = 0.5;
     this.staminaBarOut = this.game.add.sprite(60, 560, 'barOut');
+    this.staminaBarOut.alpha = 0.5;
     this.staminaBar.fixedToCamera = true;
     this.staminaBarOut.fixedToCamera = true;
     this.game.physics.arcade.enable(this.player);
@@ -1213,7 +1330,6 @@ TopDownGame.Game.prototype = {
     this.ladderBottom.body.immovable = true;
     this.ladderBottom.body.moves = false;
     this.currentRoomIndex = this.rooms.indexOf(this.currentRoom);
-    this.stamina = 1000;
     this.regen = true;
     this.staminaTimer = null;
     
@@ -1231,7 +1347,6 @@ TopDownGame.Game.prototype = {
     this.text.fixedToCamera = true;
     //move player with cursor keys
     this.cursors = this.game.input.keyboard.createCursorKeys();
-    this.playerSpeed = 100;
     if(!FLAGS.tutorial_one) {
       // DISABLE SPAWNING MAIN FRUIT
       var c14 = new Cutscene('James', "Good luck.", 'playerPortrait', this.game, false, null);
@@ -1252,6 +1367,50 @@ TopDownGame.Game.prototype = {
       this.rootCutscene.startCutscene();
     }
     this.tt = null;
+
+    // SET UP INVENTORY AND ITEMS
+    this.items = [];
+
+    inventory.sprite1 = this.game.add.sprite(178, 570, 'stickyBoba');
+    inventory.sprite1.alpha = 0.5;
+    inventory.sprite1.fixedToCamera = true;
+    inventory.sprite2 = this.game.add.sprite(242, 570, 'eyelash');
+    inventory.sprite2.alpha = 0.5;
+    inventory.sprite2.fixedToCamera = true;
+    inventory.sprite3 = this.game.add.sprite(306, 570, 'jelly');
+    inventory.sprite3.alpha = 0.5;
+    inventory.sprite3.fixedToCamera = true;
+    inventory.sprite4 = this.game.add.sprite(370, 570, 'ice');
+    inventory.sprite4.alpha = 0.5;
+    inventory.sprite4.fixedToCamera = true;
+    inventory.border = this.game.add.sprite(158, 560, 'border');
+    inventory.border.alpha = 0.5;
+    inventory.border.fixedToCamera = true;
+
+    this.one = this.game.input.keyboard.addKey(Phaser.Keyboard.ONE);
+    this.one.onDown.add(function() {
+      if(inventory.items['stickyBoba'] > 0) {
+        inventory.useItem('stickyBoba');
+      }
+    }.bind(this));
+    this.two = this.game.input.keyboard.addKey(Phaser.Keyboard.TWO);
+    this.two.onDown.add(function() {
+      if(inventory.items['eyelash'] > 0) {
+        inventory.useItem('eyelash');
+      }
+    }.bind(this));
+    this.three = this.game.input.keyboard.addKey(Phaser.Keyboard.THREE);
+    this.three.onDown.add(function() {
+      if(inventory.items['jelly'] > 0) {
+        inventory.useItem('jelly');
+      }
+    }.bind(this));
+    this.four = this.game.input.keyboard.addKey(Phaser.Keyboard.FOUR);
+    this.four.onDown.add(function() {
+      if(inventory.items['ice'] > 0) {
+        inventory.useItem('ice');
+      }
+    }.bind(this));
 
     // LOAD AUDIO
     this.walkSound = this.game.add.audio('recording');
@@ -1623,7 +1782,7 @@ TopDownGame.Game.prototype = {
             this.backgroundlayer.resizeWorld();
 
             // DETERMINE IF WE SPAWN ENEMIES, WE ONLY SPAWN THEM
-            if(roomsIndex != this.rooms.length && Math.random() < 0.2 - (this.enemies.length / 50)) {
+            if(roomsIndex != this.rooms.length && Math.random() < 0.25 - (this.enemies.length / 50)) {
               // PLACE SUCH THAT CURRENT PATH CAN GO TO DOOR!
               var tiles = this.tileList[this.mapList.indexOf(this.map)];
               var possibleTiles = [];
@@ -1663,6 +1822,7 @@ TopDownGame.Game.prototype = {
               this.pathGraphics = drawPathGraphics(this.pathGraphics, this.game, possibleTiles);
               
               var spawnNumber = [1,1,1,1,1,2,2,3][Math.floor(Math.random() * 8)];
+              // CHOOSE TO SPAWN ENEMIES
               for(var i = 0; i < spawnNumber; i++) {
                 var tile = possibleTiles[Math.floor(Math.random()*possibleTiles.length)];
                 var enemy = this.game.add.sprite((tile.x * 32) - 16, (tile.y * 32) - 48, 'abg');
@@ -1671,6 +1831,56 @@ TopDownGame.Game.prototype = {
                 bot.addBehavior(BotState.IDLE, new IdleBehavior(bot));
                 bot.addBehavior(BotState.ENRAGED, new EnrageBehavior(bot));
                 this.enemies.push(bot);
+              }
+            }
+
+            if(roomsIndex != this.rooms.length && Math.random() > 0.15 - (this.items.length / 10)) {
+              // PLACE SUCH THAT CURRENT PATH CAN GO TO DOOR!
+              var tiles = this.tileList[this.mapList.indexOf(this.map)];
+              var possibleTiles = [];
+              var doorTo = this.currentDoors[0];
+              var doorTile = this.tileList[this.mapList.indexOf(this.map)][doorTo.y-1][doorTo.x];
+              for(var m = 0; m < tiles.length; m++) {
+                for(var n = 0; n < tiles[m].length; n++) {
+                  var tile = tiles[m][n];
+                  var objl = this.objs[this.mapList.indexOf(this.map)];
+                  // ENEMIES CANNOT SPAWN IN OBJECTS
+                  for(var x = 0; x < objl.length; x++) {
+                    if(objl[x].x == tile.x && objl[x].y == tile.y) {
+                      tile = null;
+                      break;
+                    }
+                  }
+                  if(!tile) {
+                    continue;
+                  }
+                  for(var x = 0; x < this.currentDoors.length; x++) {
+                    if(this.currentDoors[x].x - 3 <= tile.x && this.currentDoors[x].x + 3 >= tile.x
+                      && this.currentDoors[x].y - 3 <= tile.y && this.currentDoors[x].y + 3 >= tile.y) {
+                        tile = null;
+                        break;
+                      }
+                  }
+                  if(!tile || tile.tile.collideDown) {
+                    continue;
+                  }
+                  var cPath = findPath({x:tile.x, y: tile.y, tile: tile.tile}, {x:doorTile.x, y:doorTile.y, tile: doorTile.tile}, this.nodeList[this.mapList.indexOf(this.map)], 25, 25);
+                  if(cPath) {
+                    possibleTiles.push(tile);
+                  }
+                }
+              }
+
+              var spawnNumber = [1,1,1,1,1,2,2,3][Math.floor(Math.random() * 8)];
+              // CHOOSE TO SPAWN ENEMIES
+              for(var i = 0; i < spawnNumber; i++) {
+                var tile = possibleTiles[Math.floor(Math.random()*possibleTiles.length)];
+                var itemType = ['stickyBoba','eyelash','jelly', 'ice'][Math.floor(Math.random() * 4)];
+                var item = this.game.add.sprite((tile.x * 32), (tile.y * 32), itemType);
+                item.scale.x = 0.666;
+                item.scale.y = 0.666;
+                var itemObj = new Item(item,itemType,this.currentRoom.x,this.currentRoom.y);
+                this.items.push(itemObj);
               }
             }
 
@@ -1841,6 +2051,11 @@ TopDownGame.Game.prototype = {
           this.game.world.bringToTop(reorder[i]);
         }
       }
+      for(var i = 0; i < this.items.length; i++) {
+        if(this.items[i].roomX == this.currentRoom.x && this.items[i].roomY == this.currentRoom.y) {
+          this.game.world.bringToTop(this.items[i].sprite);
+        }
+      }
 
       this.game.world.bringToTop(this.staminaBar);
       this.game.world.bringToTop(this.staminaBarOut);
@@ -1848,6 +2063,7 @@ TopDownGame.Game.prototype = {
       this.game.world.bringToTop(this.label1);
       this.game.world.bringToTop(this.label2);
       this.game.world.bringToTop(this.tt);
+      inventory.bringToTop(this.game);
       this.game.world.bringToTop(this.sgraphics);
       var tempC = this.rootCutscene;
       while(tempC && !tempC.active) {
@@ -1922,21 +2138,29 @@ TopDownGame.Game.prototype = {
 
       Array.prototype.forEach.call(this.enemies, enemy => {
         if(enemy.sprite.x - 16 <= this.player.x && enemy.sprite.x + 16 >= this.player.x && enemy.sprite.y - 16 <= this.player.y && enemy.sprite.y + 16 >= this.player.y && this.currentRoom.x == enemy.roomX && this.currentRoom.y == enemy.roomY) {
-          this.loadLevel('MainMenu');
+          this.loadLevel('Overworld');
+        }
+      });
+
+      Array.prototype.forEach.call(this.items, item => {
+        var x = Math.floor(this.player.x / 32);
+        var y = Math.floor(this.player.y / 32);
+        if(x == item.tileX && y == item.tileY && this.currentRoom.x == item.roomX && this.currentRoom.y == item.roomY) {
+          item.collect();
         }
       });
 
       //STAMINA HANDLER
-      if(Math.abs(this.player.body.velocity.x) == this.playerSpeed * 2 || Math.abs(this.player.body.velocity.y) == this.playerSpeed * 2) {
+      if(Math.abs(this.player.body.velocity.x) == stats.speed * 2 || Math.abs(this.player.body.velocity.y) == stats.speed * 2) {
         //PLAYER IS RUNNING
         clearTimeout(this.staminaTimer);
         this.regen = false;
         this.staminaTimer = setTimeout(function() {
           this.regen = true;
         }.bind(this), 1500);
-        if(this.stamina != 0) {
+        if(stats.stamina != 0) {
           this.stamina--;
-          if(this.stamina == 0) {
+          if(stats.stamina == 0) {
             clearTimeout(this.staminaTimer);
             this.staminaTimer = setTimeout(function() {
               this.regen = true;
@@ -1945,13 +2169,13 @@ TopDownGame.Game.prototype = {
         }
       }
 
-      if(this.regen && this.stamina != 1000) {
+      if(this.regen && stats.stamina != stats.maxStamina) {
         this.stamina++;
       }
 
       //Math.pow(3, -(1 - (this.stamina/1000)));
-      this.staminaBar.anchor.setTo(-0.125 * (1 - (this.stamina / 1000)), -0.085 * (1 - (this.stamina / 1000)));
-      this.staminaBar.scale.setTo(Math.pow(0.33, 1 - (this.stamina / 1000)), Math.pow(0.85, 1 - (this.stamina / 1000)));
+      this.staminaBar.anchor.setTo(-0.125 * (1 - (stats.stamina / stats.maxStamina)), -0.085 * (1 - (stats.stamina / stats.maxStamina)));
+      this.staminaBar.scale.setTo(Math.pow(0.33, 1 - (stats.stamina / stats.maxStamina)), Math.pow(0.85, 1 - (stats.stamina / stats.maxStamina)));
 
       // SOUND
       if(this.player.body.velocity.x != 0 || this.player.body.velocity.y != 0) {
@@ -2006,6 +2230,7 @@ TopDownGame.Game.prototype = {
       var tweenA = this.game.add.tween(this.sgraphics).to({alpha: 1}, 500, "Quart.easeOut");
       tweenA.start();
       this.rootCutscene = new Cutscene('James', "I'm getting the hell out of here!", 'playerPortrait', this.game, false, null, function() {
+        inventory.unload();
         clearInterval(this.playerLoop);
         clearInterval(this.timer);
         this.music.destroy();
@@ -2019,6 +2244,7 @@ TopDownGame.Game.prototype = {
         this.rootCutscene.startCutscene();
       }.bind(this), 750);
     } else {
+      inventory.unload();
       clearInterval(this.playerLoop);
       clearInterval(this.timer);
       this.music.destroy();
@@ -2057,91 +2283,91 @@ TopDownGame.Game.prototype = {
 
     if(!paused) {
       if(this.cursors.up.isDown && this.cursors.left.isDown) {
-        if(this.shift.isDown && this.stamina != 0) {
+        if(this.shift.isDown && stats.stamina != 0) {
           this.player.animations.play('topleftrun');
-          this.player.body.velocity.y = -(this.playerSpeed * 2);
-          this.player.body.velocity.x = -(this.playerSpeed * 2);
+          this.player.body.velocity.y = -(stats.speed * 2);
+          this.player.body.velocity.x = -(stats.speed * 2);
         } else {
           this.player.animations.play('topleft');
-          this.player.body.velocity.y = -(this.playerSpeed);
-          this.player.body.velocity.x = -(this.playerSpeed);
+          this.player.body.velocity.y = -(stats.speed);
+          this.player.body.velocity.x = -(stats.speed);
         }
         this.direction = 'topleft';
       } else if (this.cursors.up.isDown && this.cursors.right.isDown) {
-        if(this.shift.isDown && this.stamina != 0) {
+        if(this.shift.isDown && stats.stamina != 0) {
           this.player.animations.play('toprightrun');
-          this.player.body.velocity.y = -(this.playerSpeed * 2);
-          this.player.body.velocity.x = this.playerSpeed * 2;
+          this.player.body.velocity.y = -(stats.speed * 2);
+          this.player.body.velocity.x = stats.speed * 2;
         } else {
           this.player.animations.play('topright');
-          this.player.body.velocity.y = -(this.playerSpeed);
-          this.player.body.velocity.x = this.playerSpeed;
+          this.player.body.velocity.y = -(stats.speed);
+          this.player.body.velocity.x = stats.speed;
         }
         this.direction = 'topright';
       } else if (this.cursors.up.isDown) {
-          if(this.shift.isDown && this.stamina != 0) {
+          if(this.shift.isDown && stats.stamina != 0) {
             this.player.animations.play('toprun');
-            this.player.body.velocity.y = -(this.playerSpeed * 2);
+            this.player.body.velocity.y = -(stats.speed * 2);
             this.player.body.velocity.x = 0;
           } else {
             this.player.animations.play('top');
-            this.player.body.velocity.y = -(this.playerSpeed);
+            this.player.body.velocity.y = -(stats.speed);
             this.player.body.velocity.x = 0;
           }
           this.direction = 'top';
       } else if (this.cursors.down.isDown && this.cursors.left.isDown) {
-          if(this.shift.isDown && this.stamina != 0) {
+          if(this.shift.isDown && stats.stamina != 0) {
             this.player.animations.play('bottomleftrun');
-            this.player.body.velocity.y = this.playerSpeed * 2;
-            this.player.body.velocity.x = -(this.playerSpeed * 2);
+            this.player.body.velocity.y = stats.speed * 2;
+            this.player.body.velocity.x = -(stats.speed * 2);
           } else {
             this.player.animations.play('bottomleft');
-            this.player.body.velocity.y = this.playerSpeed;
-            this.player.body.velocity.x = -(this.playerSpeed);
+            this.player.body.velocity.y = stats.speed;
+            this.player.body.velocity.x = -(stats.speed);
           }
             this.direction = 'bottomleft';
       } else if (this.cursors.down.isDown && this.cursors.right.isDown) {
-          if(this.shift.isDown && this.stamina != 0) {
+          if(this.shift.isDown && stats.stamina != 0) {
             this.player.animations.play('bottomrightrun');
-            this.player.body.velocity.y = this.playerSpeed * 2;
-            this.player.body.velocity.x = this.playerSpeed * 2;
+            this.player.body.velocity.y = stats.speed * 2;
+            this.player.body.velocity.x = stats.speed * 2;
           } else {
             this.player.animations.play('bottomright');
-            this.player.body.velocity.y = this.playerSpeed;
-            this.player.body.velocity.x = this.playerSpeed;
+            this.player.body.velocity.y = stats.speed;
+            this.player.body.velocity.x = stats.speed;
           }
           this.direction = 'bottomright';
       } else if (this.cursors.down.isDown) {
-          if(this.shift.isDown && this.stamina != 0) {
+          if(this.shift.isDown && stats.stamina != 0) {
             this.player.animations.play('bottomrun');
-            this.player.body.velocity.y = this.playerSpeed * 2;
+            this.player.body.velocity.y = stats.speed * 2;
             this.player.body.velocity.x = 0;
           } else {
             this.player.animations.play('bottom');
-            this.player.body.velocity.y = this.playerSpeed;
+            this.player.body.velocity.y = stats.speed;
             this.player.body.velocity.x = 0;
           }
           this.direction = 'bottom';
       } else if (this.cursors.right.isDown) {
-          if(this.shift.isDown && this.stamina != 0) {
+          if(this.shift.isDown && stats.stamina != 0) {
             this.player.animations.play('rightrun');
             this.player.body.velocity.y = 0;
-            this.player.body.velocity.x = this.playerSpeed * 2;
+            this.player.body.velocity.x = stats.speed * 2;
           } else {
             this.player.animations.play('right');
             this.player.body.velocity.y = 0;
-            this.player.body.velocity.x = this.playerSpeed;
+            this.player.body.velocity.x = stats.speed;
           }
           this.direction = 'right';
       } else if (this.cursors.left.isDown) {
-          if(this.shift.isDown && this.stamina != 0) {
+          if(this.shift.isDown && stats.stamina != 0) {
             this.player.animations.play('leftrun');
             this.player.body.velocity.y = 0;
-            this.player.body.velocity.x = -(this.playerSpeed * 2);
+            this.player.body.velocity.x = -(stats.speed * 2);
           } else {
             this.player.animations.play('left');
             this.player.body.velocity.y = 0;
-            this.player.body.velocity.x = -(this.playerSpeed);
+            this.player.body.velocity.x = -(stats.speed);
           }
           this.direction = 'left';
       } else {

@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.2" tiledversion="1.2.3" orientation="orthogonal" renderorder="right-down" width="25" height="25" tilewidth="32" tileheight="32" infinite="0" nextlayerid="7" nextobjectid="4">
- <tileset firstgid="1" source="f2tiles.tsx"/>
- <tileset firstgid="57" source="f2objs.tsx"/>
+ <tileset firstgid="1" name="f2tiles" tilewidth="32" tileheight="32" tilecount="56" columns="8">
+  <image source="../../assets/Floor 2/f2spritesheet.png" width="256" height="224"/>
+ </tileset>
+ <tileset firstgid="57" name="f2objs" tilewidth="32" tileheight="32" tilecount="16" columns="4">
+  <image source="../../assets/Floor 2/objspritesheet.png" width="128" height="128"/>
+ </tileset>
  <layer id="1" name="backgroundLayer" width="25" height="25">
   <data encoding="csv">
 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,

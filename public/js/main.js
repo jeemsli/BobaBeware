@@ -15,6 +15,9 @@ TopDownGame.game.state.add('Missed', TopDownGame.Missed);
 TopDownGame.game.state.add('Gameover', TopDownGame.GameOver);
 TopDownGame.game.state.add('Game2', TopDownGame.Game2);
 TopDownGame.game.state.add('Game3', TopDownGame.Game3);
+TopDownGame.game.state.add('Game4', TopDownGame.Game4);
+TopDownGame.game.state.add('Game5', TopDownGame.Game5);
+TopDownGame.game.state.add('Game6', TopDownGame.Game6);
 
 TopDownGame.game.state.add('Overworld', TopDownGame.Overworld);
  

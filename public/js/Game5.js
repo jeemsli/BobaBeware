@@ -1,15 +1,15 @@
 var TopDownGame = TopDownGame || {};
 
 //title screen
-TopDownGame.Game2 = function(){};
+TopDownGame.Game5 = function(){};
 
-TopDownGame.Game2.prototype = {
+TopDownGame.Game5.prototype = {
   create: function() {
     // LOAD UP MAPPING FOR REALTIME DYNAMIC MAP GENERATION
     this.prevInventory = Object.assign({}, inventory.items);
     obtained = false;
     // SET UP VICTORY ITEM
-    this.currentRoom = new Room(null, null, null, null, '7', 0, 0);
+    this.currentRoom = new Room(null, null, null, null, 'x20', 0, 0);
     this.currentDoors = [];
     this.mapList = [];
     this.tileList = [];
@@ -25,9 +25,9 @@ TopDownGame.Game2.prototype = {
     this.leftRooms = [];
     this.rightRooms = [];
     this.deadEnds = [];
-    this.numRooms = 28;
+    this.numRooms = 24;
     this.timeLeft = 300;
-    this.rooms = [new Room(null, null, null, null, '7', 0, 0)];
+    this.rooms = [new Room(null, null, null, null, 'x20', 0, 0)];
     this.graphics = drawGraphics(this.graphics, this.game, this.rooms, this.currentRoom, stats.timeLeft);
     this.graphics.fixedToCamera = true;
 
@@ -39,8 +39,8 @@ TopDownGame.Game2.prototype = {
 
     // SET UP ALL MAPS
     for(var i = 0; i < this.numRooms; i++) {
-      var map = this.game.add.tilemap((i+1).toString());
-      var newRoom = new Room(null, null, null, null, (i+1).toString());
+      var map = this.game.add.tilemap("x" + (i+1).toString());
+      var newRoom = new Room(null, null, null, null, "x" + (i+1).toString());
       var counter = 0;
       map.objects['doorLayer'].forEach(function(door) {
         if(door.properties[0].value == 'up') {
@@ -68,14 +68,14 @@ TopDownGame.Game2.prototype = {
     }
 
     // SET STARTING ROOM
-    this.map = this.mapList[6];
+    this.map = this.mapList[19];
     this.swapList = [];
     this.currentSwapList = [];
     this.aboveList = [];
     this.currentAboveList = [];
 
     // TEST
-    this.music = this.game.add.audio('musicBasement');
+    this.music = this.game.add.audio('musicFreezer');
     this.game.sound.setDecodedCallback(this.music, function() {
       this.music.loopFull(0.5);
       this.music.volume = 0.15;
@@ -99,8 +99,8 @@ TopDownGame.Game2.prototype = {
       var newObjArr = [];
       var swapArr = [];
       //the first parameter is the tileset name as specified in Tiled, the second is the key to the asset
-      this.mapList[i].addTilesetImage('floor1tiles', 'gameTiles');
-      this.mapList[i].addTilesetImage('objects', 'objectTiles');
+      this.mapList[i].addTilesetImage('f2objs', 'objectTiles3');
+      this.mapList[i].addTilesetImage('f2tiles', 'gameTiles3');
 
       //create layer
       this.backgroundlayer = this.mapList[i].createLayer('backgroundLayer');
@@ -183,8 +183,8 @@ TopDownGame.Game2.prototype = {
     }.bind(this));
 
     //the first parameter is the tileset name as specified in Tiled, the second is the key to the asset
-    this.map.addTilesetImage('floor1tiles', 'gameTiles');
-    this.map.addTilesetImage('objects', 'objectTiles');
+    this.map.addTilesetImage('f2objs', 'objectTiles3');
+    this.map.addTilesetImage('f2tiles', 'gameTiles3');
 
     //create layer
     this.backgroundlayer = this.map.createLayer('backgroundLayer');
@@ -203,8 +203,8 @@ TopDownGame.Game2.prototype = {
 
     //create player and UI
     this.player = this.game.add.sprite(368, 320, 'player');
-    this.ladderBottom = this.game.add.sprite(384, 320, 'ladderBottom');
-    this.ladderTop = this.game.add.sprite(384, 288, 'ladderTop');
+    this.ladderBottom = this.game.add.sprite(288, 352, 'ladderBottom');
+    this.ladderTop = this.game.add.sprite(288, 320, 'ladderTop');
     this.staminaBar = this.game.add.sprite(58, 550, 'barIn');
     this.staminaBarOut = this.game.add.sprite(60, 550, 'barOut');
     this.staminaBar.fixedToCamera = true;
@@ -413,15 +413,15 @@ TopDownGame.Game2.prototype = {
     this.graphics = drawGraphics(this.graphics, this.game, this.rooms, this.currentRoom, stats.time);
     this.graphics.fixedToCamera = true;
     this.label1 = drawLabel1(this.label1, this.game);
-    this.label2 = drawLabel2(this.label2, this.game, "Basement II");
+    this.label2 = drawLabel2(this.label2, this.game, "Freezer I");
 
     // TRANSITION IN
     var tweenA = this.game.add.tween(this.sgraphics).to({alpha: 0}, 4000, "Quart.easeOut", 200);
     tweenA.start();
 
     // GENERATE WHERE WINNING ITEM WILL SPAWN BASED ON GRID
-    this.winningX = Math.random() > 0.5 ? Math.round(Math.random() * 3 + 3) : -(Math.round(Math.random() * 3 + 3));
-    this.winningY = Math.random() > 0.5 ? Math.round(Math.random() * 3 + 3) : -(Math.round(Math.random() * 3 + 3));
+    this.winningX = Math.random() > 0.5 ? Math.round(Math.random() * 3.5 + 1.5) : -(Math.round(Math.random() * 3.5 + 1.5));
+    this.winningY = Math.random() > 0.5 ? Math.round(Math.random() * 3.5 + 1.5) : -(Math.round(Math.random() * 3.5 + 1.5));
 
     // MAIN PLAYER LOOP
     this.playerLoop = setInterval(function() {
@@ -455,7 +455,7 @@ TopDownGame.Game2.prototype = {
                 if(counter == 0) {
                   //FIND A RANDOM ROOM AND LINK TO IT
                   // DETERMINE IF WE NEED A DEAD END
-                  if ((this.currentRoom.y > 5 || this.currentRoom.y < -5) || Math.random() * 10 < Math.pow(1.8, Math.abs(this.currentRoom.y))) {
+                  if ((this.currentRoom.y > 4 || this.currentRoom.y < -4) || Math.random() * 10 < Math.pow(1.9, Math.abs(this.currentRoom.y))) {
                     //GENERATE DEAD END
                     var deadendlist = [];
                     for(var x = 0; x < this.deadEnds.length; x++) {
@@ -514,7 +514,7 @@ TopDownGame.Game2.prototype = {
                 if(counter == 0) {
                   //FIND A RANDOM ROOM AND LINK TO IT
                   // DETERMINE IF WE NEED A DEAD END
-                  if ((this.currentRoom.y > 5 || this.currentRoom.y < -5) || Math.random() * 10 < Math.pow(1.8, Math.abs(this.currentRoom.y))) {
+                  if ((this.currentRoom.y > 4 || this.currentRoom.y < -4) || Math.random() * 10 < Math.pow(1.9, Math.abs(this.currentRoom.y))) {
                     //GENERATE DEAD END
                     var deadendlist = [];
                     for(var x = 0; x < this.deadEnds.length; x++) {
@@ -573,7 +573,7 @@ TopDownGame.Game2.prototype = {
                 if(counter == 0) {
                   //FIND A RANDOM ROOM AND LINK TO IT
                   // DETERMINE IF WE NEED A DEAD END
-                  if ((this.currentRoom.x > 5 || this.currentRoom.x < -5) || Math.random() * 10 < Math.pow(1.8, Math.abs(this.currentRoom.x))) {
+                  if ((this.currentRoom.x > 4 || this.currentRoom.x < -4) || Math.random() * 10 < Math.pow(1.9, Math.abs(this.currentRoom.x))) {
                     //GENERATE DEAD END
                     var deadendlist = [];
                     for(var x = 0; x < this.deadEnds.length; x++) {
@@ -632,7 +632,7 @@ TopDownGame.Game2.prototype = {
                 if(counter == 0) {
                   //FIND A RANDOM ROOM AND LINK TO IT
                   // DETERMINE IF WE NEED A DEAD END
-                  if ((this.currentRoom.x > 5 || this.currentRoom.x < -5) || Math.random() * 10 < Math.pow(1.8, Math.abs(this.currentRoom.x))) {
+                  if ((this.currentRoom.x > 4 || this.currentRoom.x < -4) || Math.random() * 10 < Math.pow(1.9, Math.abs(this.currentRoom.x))) {
                     //GENERATE DEAD END
                     var deadendlist = [];
                     for(var x = 0; x < this.deadEnds.length; x++) {
@@ -713,8 +713,8 @@ TopDownGame.Game2.prototype = {
             this.aboveObjectLayer.destroy();
             this.aboveLayer.destroy();
             //the first parameter is the tileset name as specified in Tiled, the second is the key to the asset
-            this.map.addTilesetImage('floor1tiles', 'gameTiles');
-            this.map.addTilesetImage('objects', 'objectTiles');
+            this.map.addTilesetImage('f2objs', 'objectTiles3');
+            this.map.addTilesetImage('f2tiles', 'gameTiles3');
 
             //create layer
             this.backgroundlayer = this.map.createLayer('backgroundLayer');
@@ -915,7 +915,7 @@ TopDownGame.Game2.prototype = {
             this.graphics = drawGraphics(this.graphics, this.game, this.rooms, this.currentRoom, stats.timeLeft);
             this.graphics.fixedToCamera = true;
             this.label1 = drawLabel1(this.label1, this.game);
-            this.label2 = drawLabel2(this.label2, this.game, "Basement II");
+            this.label2 = drawLabel2(this.label2, this.game, "Freezer I");
             stats.invincible = 0;
 
             this.currentRoomIndex = this.rooms.indexOf(this.currentRoom);
@@ -1107,7 +1107,7 @@ TopDownGame.Game2.prototype = {
             this.rootCutscene = new Prompt("Leave this floor?", 
             [{text: "Yes", next: null, callback: function() {
               if(obtained) {
-                FLAGS.OVERWORLD_STATE = 2;
+                FLAGS.OVERWORLD_STATE = 4;
                 this.loadLevel('Victory');
               } else {
                 this.loadLevel('Missed');
@@ -1165,10 +1165,10 @@ TopDownGame.Game2.prototype = {
         var x = Math.floor(this.player.x / 32) + 1;
         var y = Math.floor(this.player.y / 32) + 2;
         if(x == item.tileX && y == item.tileY && this.currentRoom.x == item.roomX && this.currentRoom.y == item.roomY) {
+          item.collect();
           if(inventory.getSize() < stats.size) {
             this.pickup.play();
           }
-          item.collect();
         }
       });
 

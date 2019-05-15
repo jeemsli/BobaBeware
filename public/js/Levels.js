@@ -23,27 +23,27 @@ TopDownGame.Levels.prototype = {
 
         this.createButton(game,"level2",320-144,320+48,200,125,
             function(){
-                this.state.start('Game');
+                this.state.start('Game2');
             });
 
         this.createButton(game,"level3",320-144,320+192,200,125,
             function(){
-                this.state.start('Game');
+                this.state.start('Game3');
             });
 
         this.createButton(game,"level4",320+144,320-96,200,125,
             function(){
-                this.state.start('Game');
+                this.state.start('Game4');
             });
 
         this.createButton(game,"level5",320+144,320+48,200,125,
             function(){
-                this.state.start('Game');
+                this.state.start('Game5');
             });
 
         this.createButton(game,"level6",320+144,320+192,200,125,
             function(){
-                this.state.start('Game');
+                this.state.start('Game6');
             });
     },
 

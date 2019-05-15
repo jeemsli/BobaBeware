@@ -9,7 +9,7 @@ let FLAGS = {
   flag_four: 0,
   flag_five: 0,
   tutorial_one: 3,
-  OVERWORLD_STATE: 2
+  OVERWORLD_STATE: 3
   //TUTORIAL ONE, Player cannot get the fruit on the first go
 };
 
@@ -1518,7 +1518,7 @@ TopDownGame.Overworld.prototype = {
                 stats.invincible = false;
                 this.music.stop();
                 var tweenA = this.game.add.tween(this.graphics).to({alpha: 1}, 1000, "Quart.easeOut");
-                this.areaText = this.game.add.text(this.game.world.centerX - 260, this.game.world.centerY - 100, floorName.toUpperCase(), {
+                this.areaText = this.game.add.text(this.game.world.centerX - 255, this.game.world.centerY - 100, floorName.toUpperCase(), {
                   font: '50px ZCOOLKuaiLe',
                   fill: '#000000',
                   fontWeight: 'bold',

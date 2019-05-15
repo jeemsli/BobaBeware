@@ -1230,7 +1230,14 @@ TopDownGame.Game.prototype = {
       this.music.volume = 0.15;
     }.bind(this), this);
     this.pickup = this.game.add.audio('pickup');
-    this.use = this.game.add.audio('use');
+    this.boba = this.game.add.audio('boba');
+    this.boba.volume = 0.2;
+    this.eyelash = this.game.add.audio('eyelash');
+    this.eyelash.volume = 0.2;
+    this.jelly = this.game.add.audio('jelly');
+    this.jelly.volume = 0.2;
+    this.ice = this.game.add.audio('ice');
+    this.ice.volume = 0.2;
     // SET UP DOORS
 
     //LOAD PATHFINDING TILES AND NODES
@@ -1440,7 +1447,7 @@ TopDownGame.Game.prototype = {
     this.one = this.game.input.keyboard.addKey(Phaser.Keyboard.ONE);
     this.one.onDown.add(function() {
       if(inventory.items['stickyBoba'] > 0) {
-        this.use.play();
+        this.boba.play();
         inventory.useItem('stickyBoba');
         var spr = this.game.add.sprite(this.player.x + 16, this.player.y + 32, 'stickyBoba');
         spr.scale.x = 0.5;
@@ -1482,21 +1489,21 @@ TopDownGame.Game.prototype = {
     this.two = this.game.input.keyboard.addKey(Phaser.Keyboard.TWO);
     this.two.onDown.add(function() {
       if(inventory.items['eyelash'] > 0) {
-        this.use.play();
+        this.eyelash.play();
         inventory.useItem('eyelash');
       }
     }.bind(this));
     this.three = this.game.input.keyboard.addKey(Phaser.Keyboard.THREE);
     this.three.onDown.add(function() {
       if(inventory.items['jelly'] > 0) {
-        this.use.play();
+        this.jelly.play();
         inventory.useItem('jelly');
       }
     }.bind(this));
     this.four = this.game.input.keyboard.addKey(Phaser.Keyboard.FOUR);
     this.four.onDown.add(function() {
       if(inventory.items['ice'] > 0) {
-        this.use.play();
+        this.ice.play();
         inventory.useItem('ice');
       }
     }.bind(this));
@@ -1564,8 +1571,6 @@ TopDownGame.Game.prototype = {
     // GENERATE WHERE WINNING ITEM WILL SPAWN BASED ON GRID
     this.winningX = Math.random() > 0.5 ? Math.round(Math.random() * 3.5 + 1.5) : -(Math.round(Math.random() * 3.5 + 1.5));
     this.winningY = Math.random() > 0.5 ? Math.round(Math.random() * 3.5 + 1.5) : -(Math.round(Math.random() * 3.5 + 1.5));
-    console.log(this.winningX);
-    console.log(this.winningY);
 
     // MAIN PLAYER LOOP
     this.playerLoop = setInterval(function() {
@@ -2311,8 +2316,10 @@ TopDownGame.Game.prototype = {
         var x = Math.floor(this.player.x / 32) + 1;
         var y = Math.floor(this.player.y / 32) + 2;
         if(x == item.tileX && y == item.tileY && this.currentRoom.x == item.roomX && this.currentRoom.y == item.roomY) {
+          if(inventory.getSize() < stats.size) {
+            this.pickup.play();
+          }
           item.collect();
-          this.pickup.play();
         }
       });
 

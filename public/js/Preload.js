@@ -114,8 +114,11 @@ TopDownGame.Preload.prototype = {
     this.load.spritesheet('abg', 'assets/Enemies/ABG/AbgSpriteSheet1.png', 64, 64, 72);
     this.game.load.audio('music', 'assets/audio/overworld.wav');
     this.game.load.audio('musicBasement', 'assets/audio/Basement.wav');
+    this.game.load.audio('pickup', 'assets/audio/Pickup.wav');
+    this.game.load.audio('use', 'assets/audio/UseItem.wav');
+    this.game.load.audio('musicFreeze', 'assets/audio/Freezer.wav');
     this.load.image('cutscene', 'assets/UI/cutscene.png');
-    this.game.add.text(0,0,"", {font: '20px ZCOOLKuaiLe'});
+    //this.game.add.text(0,0,"", {font: '20px ZCOOLKuaiLe'});
     this.game.load.audio('recording', 'assets/audio/Recording (18).m4a');
     this.load.image('openShaft', 'assets/Overworld/openShaft.png');
     this.load.image('closedShaft', 'assets/Overworld/closedShaft.png');

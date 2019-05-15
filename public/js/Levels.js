@@ -18,7 +18,7 @@ TopDownGame.Levels.prototype = {
 
         this.createButton(game,"level1",320-192,320-96,200,125,
             function(){
-                this.state.start('Game');
+                this.state.start('Game1');
             });
 
     },

@@ -113,7 +113,6 @@ class Inventory {
 
   removeItem(type, amt) {
     this.items[type] -= amt;
-    this.update();
   }
 
   update() {
@@ -1111,11 +1110,11 @@ function drawLabel1(label, game) {
   return s;
 }
 
-function drawLabel2(label, game) {
+function drawLabel2(label, game, text) {
   if(label) {
     label.destroy();
   }
-  var t = game.add.text(488, 126, "Basement I", {
+  var t = game.add.text(488, 126, text, {
     font: '20px ZCOOLKuaiLe',
     fill: '#f7c53d',
     stroke: '#423f38',
@@ -1230,6 +1229,8 @@ TopDownGame.Game.prototype = {
       this.music.loopFull(0.5);
       this.music.volume = 0.15;
     }.bind(this), this);
+    this.pickup = this.game.add.audio('pickup');
+    this.use = this.game.add.audio('use');
     // SET UP DOORS
 
     //LOAD PATHFINDING TILES AND NODES
@@ -1439,6 +1440,7 @@ TopDownGame.Game.prototype = {
     this.one = this.game.input.keyboard.addKey(Phaser.Keyboard.ONE);
     this.one.onDown.add(function() {
       if(inventory.items['stickyBoba'] > 0) {
+        this.use.play();
         inventory.useItem('stickyBoba');
         var spr = this.game.add.sprite(this.player.x + 16, this.player.y + 32, 'stickyBoba');
         spr.scale.x = 0.5;
@@ -1480,18 +1482,21 @@ TopDownGame.Game.prototype = {
     this.two = this.game.input.keyboard.addKey(Phaser.Keyboard.TWO);
     this.two.onDown.add(function() {
       if(inventory.items['eyelash'] > 0) {
+        this.use.play();
         inventory.useItem('eyelash');
       }
     }.bind(this));
     this.three = this.game.input.keyboard.addKey(Phaser.Keyboard.THREE);
     this.three.onDown.add(function() {
       if(inventory.items['jelly'] > 0) {
+        this.use.play();
         inventory.useItem('jelly');
       }
     }.bind(this));
     this.four = this.game.input.keyboard.addKey(Phaser.Keyboard.FOUR);
     this.four.onDown.add(function() {
       if(inventory.items['ice'] > 0) {
+        this.use.play();
         inventory.useItem('ice');
       }
     }.bind(this));
@@ -1523,7 +1528,6 @@ TopDownGame.Game.prototype = {
     this.graphics = this.game.add.graphics();
 
     //GENERATE MAP
-    console.log(this.map);
     this.lose = false;
 
     // DEBUG TOGGLE
@@ -1551,15 +1555,15 @@ TopDownGame.Game.prototype = {
     this.graphics = drawGraphics(this.graphics, this.game, this.rooms, this.currentRoom, stats.time);
     this.graphics.fixedToCamera = true;
     this.label1 = drawLabel1(this.label1, this.game);
-    this.label2 = drawLabel2(this.label2, this.game);
+    this.label2 = drawLabel2(this.label2, this.game, "Basement I");
 
     // TRANSITION IN
     var tweenA = this.game.add.tween(this.sgraphics).to({alpha: 0}, 4000, "Quart.easeOut", 200);
     tweenA.start();
 
     // GENERATE WHERE WINNING ITEM WILL SPAWN BASED ON GRID
-    this.winningX = Math.random() > 0.5 ? Math.round(Math.random() * 2 + 3) : -(Math.round(Math.random() * 2 + 3));
-    this.winningY = Math.random() > 0.5 ? Math.round(Math.random() * 2 + 3) : -(Math.round(Math.random() * 2 + 3));
+    this.winningX = Math.random() > 0.5 ? Math.round(Math.random() * 3.5 + 1.5) : -(Math.round(Math.random() * 3.5 + 1.5));
+    this.winningY = Math.random() > 0.5 ? Math.round(Math.random() * 3.5 + 1.5) : -(Math.round(Math.random() * 3.5 + 1.5));
     console.log(this.winningX);
     console.log(this.winningY);
 
@@ -1909,7 +1913,9 @@ TopDownGame.Game.prototype = {
                 }
               }
               this.pathGraphics = null;
-              this.pathGraphics = drawPathGraphics(this.pathGraphics, this.game, possibleTiles);
+              if(this.toggle) {
+                this.pathGraphics = drawPathGraphics(this.pathGraphics, this.game, possibleTiles);
+              }
               
               var spawnNumber = [1,1,1,1,1,2,2,3][Math.floor(Math.random() * 8)];
               // CHOOSE TO SPAWN ENEMIES
@@ -1924,7 +1930,7 @@ TopDownGame.Game.prototype = {
               }
             }
 
-            if(roomsIndex != this.rooms.length && Math.random() < 0.2 - (this.items.length / 10)) {
+            if(roomsIndex != this.rooms.length && Math.random() < 0.25 - (this.items.length / 10)) {
               // PLACE SUCH THAT CURRENT PATH CAN GO TO DOOR!
               var tiles = this.tileList[this.mapList.indexOf(this.map)];
               var possibleTiles = [];
@@ -1961,7 +1967,7 @@ TopDownGame.Game.prototype = {
                 }
               }
 
-              var spawnNumber = [1,1,1,1,1,2,2,3][Math.floor(Math.random() * 8)];
+              var spawnNumber = [1,1,1,1,1,1,2,2,3][Math.floor(Math.random() * 9)];
               var tilesTaken = [];
               // CHOOSE TO SPAWN ENEMIES
               for(var i = 0; i < spawnNumber; i++) {
@@ -2055,7 +2061,7 @@ TopDownGame.Game.prototype = {
             this.graphics = drawGraphics(this.graphics, this.game, this.rooms, this.currentRoom, stats.timeLeft);
             this.graphics.fixedToCamera = true;
             this.label1 = drawLabel1(this.label1, this.game);
-            this.label2 = drawLabel2(this.label2, this.game);
+            this.label2 = drawLabel2(this.label2, this.game, "Basement I");
             stats.invincible = 0;
 
             this.currentRoomIndex = this.rooms.indexOf(this.currentRoom);
@@ -2250,7 +2256,7 @@ TopDownGame.Game.prototype = {
                 FLAGS.OVERWORLD_STATE = 1;
                 this.loadLevel('Victory');
               } else {
-                this.loadLevel('Overworld');
+                this.loadLevel('Missed');
               }
             }.bind(this)}, {text: "No", next: null}]
             , false, this.game, null, this.cursors);
@@ -2306,6 +2312,7 @@ TopDownGame.Game.prototype = {
         var y = Math.floor(this.player.y / 32) + 2;
         if(x == item.tileX && y == item.tileY && this.currentRoom.x == item.roomX && this.currentRoom.y == item.roomY) {
           item.collect();
+          this.pickup.play();
         }
       });
 

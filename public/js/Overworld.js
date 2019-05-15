@@ -9,12 +9,12 @@ let FLAGS = {
   flag_four: 0,
   flag_five: 0,
   tutorial_one: 3,
-  OVERWORLD_STATE: 0
+  OVERWORLD_STATE: 2
   //TUTORIAL ONE, Player cannot get the fruit on the first go
 };
 
 class NPC {
-  constructor(sprite, roomX, roomY, rootCutscene, reset) {
+  constructor(sprite, roomX, roomY, rootCutscene, reset, interactable) {
     this.sprite = sprite;
     this.roomX = roomX;
     this.roomY = roomY;
@@ -22,6 +22,7 @@ class NPC {
     this.originalFrame = null;
     this.reset = reset;
     this.interactFrame = null;
+    this.interactable = interactable ? interactable : true;
   }
 
   setOriginalFrame() {
@@ -30,7 +31,7 @@ class NPC {
   }
 
   interact(player, direction) {
-    if(!paused) {
+    if(!paused && this.interactable) {
       this.originalFrame = this.sprite.frame;
       var pX = Math.floor(player.x / 32);
       var pY = Math.floor(player.y / 32);
@@ -68,6 +69,7 @@ TopDownGame.Overworld = function(){};
 
 TopDownGame.Overworld.prototype = {
   create: function() {
+    stats.invincible = 1;
     // LOAD UP MAPPING FOR REALTIME DYNAMIC MAP GENERATION
     this.currentRoom = new Room(null, null, null, null, 'f1', 0, 0);
     var r2 = new Room(null, null, this.currentRoom, null, 'f2', 1, 0);
@@ -240,6 +242,64 @@ TopDownGame.Overworld.prototype = {
       this.aboveObjectLayer.destroy();
       this.aboveLayer.destroy();
     }
+
+    this.ui = [];
+    this.boba = this.game.add.sprite(570, 100, 'stickyBoba');
+    this.boba.fixedToCamera = true;
+    this.bobaShadow = this.game.add.sprite(573, 103, 'stickyBoba');
+    this.bobaShadow.fixedToCamera = true;
+    this.bobaShadow.alpha = 0.6;
+    this.bobaShadow.tint = 0x000000;
+    this.bobaText = this.game.add.text(582, 150, inventory.items.stickyBoba, {
+      font: '15px ZCOOLKuaiLe',
+      fill: '#f7c53d',
+      stroke: '#423f38',
+      strokeThickness: '4'
+    });
+    this.bobaText.fixedToCamera = true;
+
+    this.eyelash = this.game.add.sprite(570, 160, 'eyelash');
+    this.eyelash.fixedToCamera = true;
+    this.eyelashShadow = this.game.add.sprite(572, 162, 'eyelash');
+    this.eyelashShadow.fixedToCamera = true;
+    this.eyelashShadow.alpha = 0.6;
+    this.eyelashShadow.tint = 0x000000;
+    this.eyelashText = this.game.add.text(582, 200, inventory.items.eyelash, {
+      font: '15px ZCOOLKuaiLe',
+      fill: '#f7c53d',
+      stroke: '#423f38',
+      strokeThickness: '4'
+    });
+    this.eyelashText.fixedToCamera = true;
+
+    this.jelly = this.game.add.sprite(570, 220, 'jelly');
+    this.jelly.fixedToCamera = true;
+    this.jellyShadow = this.game.add.sprite(573, 223, 'jelly');
+    this.jellyShadow.fixedToCamera = true;
+    this.jellyShadow.alpha = 0.6;
+    this.jellyShadow.tint = 0x000000;
+    this.jellyText = this.game.add.text(582, 270, inventory.items.jelly, {
+      font: '15px ZCOOLKuaiLe',
+      fill: '#f7c53d',
+      stroke: '#423f38',
+      strokeThickness: '4'
+    });
+    this.jellyText.fixedToCamera = true;
+
+    this.ice = this.game.add.sprite(570, 280, 'ice');
+    this.ice.fixedToCamera = true;
+    this.iceShadow = this.game.add.sprite(573, 283, 'ice');
+    this.iceShadow.fixedToCamera = true;
+    this.iceShadow.alpha = 0.6;
+    this.iceShadow.tint = 0x000000;
+    this.iceText = this.game.add.text(582, 330, inventory.items.ice, {
+      font: '15px ZCOOLKuaiLe',
+      fill: '#f7c53d',
+      stroke: '#423f38',
+      strokeThickness: '4'
+    });
+    this.iceText.fixedToCamera = true;
+    this.ui.push(this.bobaShadow, this.eyelashShadow, this.jellyShadow, this.iceShadow, this.boba, this.bobaText, this.eyelash, this.eyelashText, this.jelly, this.jellyText, this.ice, this.iceText);
 
     this.map.objects['doorLayer'].forEach(function(obj) {
       this.currentDoors.push({
@@ -565,7 +625,7 @@ TopDownGame.Overworld.prototype = {
         rachel.rootCutscene = new Cutscene('Rachel', "The basement is dark and full of ABGs~", 'rachelPortrait', this.game, false, r1);
       }.bind(this));
       rachel.setOriginalFrame();
-      var ralph = new NPC(this.game.add.sprite(432, 304, 'npc3'), 0, 0, null, function() {
+      var ralph = new NPC(this.game.add.sprite(432, 304, 'npc4'), 0, 0, null, function() {
         var jj11 = new Cutscene('Ralph', "But that's just a rumor. I doubt it's true.", 'ralphPortrait', this.game, false, null, ralph.setOriginalFrame.bind(ralph));
         var jj10 = new Cutscene('Ralph', "Legends say the old owner escaped to the basement before it burned down.", 'ralphPortrait', this.game, false, jj11);
         var jj9 = new Cutscene('Ralph', "It might explain the dungeon and the horrors inside it.", 'ralphPortrait', this.game, false, jj10);
@@ -599,7 +659,7 @@ TopDownGame.Overworld.prototype = {
         ralph.rootCutscene = new Cutscene('Ralph', "Well if it isn't the new guy.", 'ralphPortrait', this.game, false, r1);
       }.bind(this));
       ralph.setOriginalFrame();
-      var nick = new NPC(this.game.add.sprite(432, 368, 'npc4'), 0, 0, null, function() {
+      var nick = new NPC(this.game.add.sprite(432, 368, 'npc3'), 0, 0, null, function() {
         var jj13 = new Cutscene('Nick', "Be careful alright. We've lost too many already...", 'nickPortrait', this.game, false, null, nick.setOriginalFrame.bind(nick));
         var jj11 = new Cutscene('Nick', "Joel went down there one day and never came back.", 'nickPortrait', this.game, false, jj13);
         var jj10 = new Cutscene('Nick', "The dungeon below the Basement.", 'nickPortrait', this.game, false, jj11);
@@ -655,10 +715,10 @@ TopDownGame.Overworld.prototype = {
         var jj2 = new Prompt('It costs ' + (stats.sizeTier * 3) + ' Sticky Bobas to upgrade.', [
           {text:"Let's do it.", next: jjup, callback: function() {
             if(inventory.items.stickyBoba >= (stats.sizeTier * 3)) {
-              stats.sizeTier++;
               jing.setOriginalFrame();
               inventory.removeItem('stickyBoba', (stats.sizeTier * 3));
               stats.size += 5;
+              stats.sizeTier++;
               jj2.choice.next = new Cutscene('Jing', "Your inventory space is now " + stats.size + ".", 'jingPortrait', this.game, false, null);
             } else {
               jing.setOriginalFrame();
@@ -680,8 +740,8 @@ TopDownGame.Overworld.prototype = {
         var jj12 = new Cutscene('Rachel', "And that's it~ I hope I was helpful.", 'rachelPortrait', this.game, false, jj13);
         var jj11 = new Cutscene('Rachel', "And finally, ice is optimal when used in a pinch.", 'rachelPortrait', this.game, false, jj12);
         var jj10 = new Cutscene('Rachel', "Jelly is best used when trying to make it back in time.", 'rachelPortrait', this.game, false, jj11);
-        var jj9 = new Cutscene('Rachel', "Eyelashes are good against an enemy you need to get by.", 'rachelPortrait', this.game, false, jj10);
-        var jj8 = new Cutscene('Rachel', "Sticky Boba is good against being chased by multiple enemies.", 'rachelPortrait', this.game, false, jj9);
+        var jj9 = new Cutscene('Rachel', "Eyelashes are good against multiple enemies.", 'rachelPortrait', this.game, false, jj10);
+        var jj8 = new Cutscene('Rachel', "Sticky Boba is good against a single enemy.", 'rachelPortrait', this.game, false, jj9);
         var jj7 = new Cutscene('Rachel', "If that's the case, come see me if you forget~", 'rachelPortrait', this.game, false, null, rachel.setOriginalFrame.bind(rachel));
         var jj6 = new Cutscene('Rachel', "I see. Well I'll give you a quick rundown~", 'rachelPortrait', this.game, false, jj8);
         var jj5 = new Prompt('Do I know what my items do?', [
@@ -694,10 +754,10 @@ TopDownGame.Overworld.prototype = {
         var jj2 = new Prompt('It costs ' + (stats.speedTier * 3) + ' Jelly to upgrade.', [
           {text:"Let's do it.", next: jjup, callback: function() {
             if(inventory.items.jelly >= (stats.speedTier * 3)) {
-              stats.speedTier++;
               rachel.setOriginalFrame();
               inventory.removeItem('jelly', (stats.speedTier * 3));
               stats.speed += 15;
+              stats.speedTier++;
               jj2.choice.next = new Cutscene('Rachel', "Your speed is now " + stats.speed + ".", 'rachelPortrait', this.game, false, null);
             } else {
               rachel.setOriginalFrame();
@@ -713,7 +773,8 @@ TopDownGame.Overworld.prototype = {
         ], false, this.game, null);
         rachel.rootCutscene = new Cutscene('Rachel', "The basement is dark and full of ABGs~", 'rachelPortrait', this.game, false, r1);
       }.bind(this));
-      var ralph = new NPC(this.game.add.sprite(400, 524, 'npc3'), 0, 0, null, function() {
+      rachel.setOriginalFrame();
+      var ralph = new NPC(this.game.add.sprite(400, 524, 'npc4'), 0, 0, null, function() {
         var jj11 = new Cutscene('Ralph', "But that's just a rumor. I doubt it's true.", 'ralphPortrait', this.game, false, null, ralph.setOriginalFrame.bind(ralph));
         var jj10 = new Cutscene('Ralph', "Legends say the old owner escaped to the basement before it burned down.", 'ralphPortrait', this.game, false, jj11);
         var jj9 = new Cutscene('Ralph', "It might explain the dungeon and the horrors inside it.", 'ralphPortrait', this.game, false, jj10);
@@ -727,10 +788,10 @@ TopDownGame.Overworld.prototype = {
         var jj2 = new Prompt('It costs ' + (stats.timeTier * 3) + ' Eyelash to upgrade.', [
           {text:"Let's do it.", next: jjup, callback: function() {
             if(inventory.items.eyelash >= (stats.timeTier * 3)) {
-              stats.timeTier++;
               ralph.setOriginalFrame();
               inventory.removeItem('eyelash', (stats.timeTier * 3));
               stats.time += 30;
+              stats.timeTier++;
               jj2.choice.next = new Cutscene('Ralph', "Your total time is now " + stats.time + ".", 'ralphPortrait', this.game, false, null);
             } else {
               ralph.setOriginalFrame();
@@ -747,7 +808,7 @@ TopDownGame.Overworld.prototype = {
         ralph.rootCutscene = new Cutscene('Ralph', "Well if it isn't the new guy.", 'ralphPortrait', this.game, false, r1);
       }.bind(this));
       ralph.setOriginalFrame();
-      var nick = new NPC(this.game.add.sprite(528, 312, 'npc4'), 1, 1, null, function() {
+      var nick = new NPC(this.game.add.sprite(528, 312, 'npc3'), 1, 1, null, function() {
         var jj13 = new Cutscene('Nick', "Be careful alright. We've lost too many already...", 'nickPortrait', this.game, false, null, nick.setOriginalFrame.bind(nick));
         var jj11 = new Cutscene('Nick', "Joel went down there one day and never came back.", 'nickPortrait', this.game, false, jj13);
         var jj10 = new Cutscene('Nick', "The dungeon below the Basement.", 'nickPortrait', this.game, false, jj11);
@@ -762,10 +823,10 @@ TopDownGame.Overworld.prototype = {
         var jj2 = new Prompt('It costs ' + (stats.staminaTier * 3) + ' Ice to upgrade.', [
           {text:"Let's do it.", next: jjup, callback: function() {
             if(inventory.items.ice >= (stats.staminaTier * 3)) {
-              stats.staminaTier++;
               nick.setOriginalFrame();
               inventory.removeItem('ice', (stats.staminaTier * 3));
               stats.maxStamina += 250;
+              stats.staminaTier++;
               jj2.choice.next = new Cutscene('Nick', "Your total time is now " + stats.maxStamina + ".", 'nickPortrait', this.game, false, null);
             } else {
               nick.setOriginalFrame();
@@ -1434,34 +1495,34 @@ TopDownGame.Overworld.prototype = {
               var floorName = null;
               switch(i) {
                 case 0:
-                  floorName = 'Basement Surface';
+                  floorName = 'Basement I';
                   break;
                 case 1:
-                  floorName = 'Basement Depths';
+                  floorName = 'Basement II';
                   break;
                 case 2:
-                  floorName = 'Basement Labyrinth';
+                  floorName = 'Basement III';
                   break;
                 case 3:
-                  floorName = 'Outer Freezer';
+                  floorName = 'Freezer I';
                   break;
                 case 4:
-                  floorName = 'Middle Freezer';
+                  floorName = 'Freezer II';
                   break;
                 case 5:
-                  floorName = 'Bottom Freezer';
+                  floorName = 'Freezer III';
+                  break;
               }
               this.rootCutscene = new Prompt('Do you want to head to ' + floorName + '?', [{text:'Yes', next: null, callback: function() {
                 paused = true;
+                stats.invincible = false;
                 this.music.stop();
                 var tweenA = this.game.add.tween(this.graphics).to({alpha: 1}, 1000, "Quart.easeOut");
-                this.areaText = this.game.add.text(this.game.world.centerX, this.game.world.centerY, floorName.toUpperCase(), {
+                this.areaText = this.game.add.text(this.game.world.centerX - 260, this.game.world.centerY - 100, floorName.toUpperCase(), {
                   font: '50px ZCOOLKuaiLe',
                   fill: '#000000',
                   fontWeight: 'bold',
-                  boundsAlignH: "center", boundsAlignV: "middle" 
                 });
-                this.areaText.setTextBounds(0, 0, this.game.world.width, 0);
                 this.areaText.alpha = 0;
                 var grd = this.areaText.context.createLinearGradient(0, 0, 0, this.areaText.height);
                 //  Add in 2 color stops
@@ -1475,12 +1536,13 @@ TopDownGame.Overworld.prototype = {
                 tweenA.start();
                 setTimeout(function() {
                   paused = false;
-                  if(i == 0) {
-                    this.loadLevel('Game');
-                  } else {
-                    this.loadLevel('Game' + (i + 1));
+                  var index = null;
+                  for(var z = 0; z < this.proximity2.length; z++) {
+                    if(this.proximity2[z]) {
+                      index = z;
+                    }
                   }
-                  this.loadLevel('Game');
+                  this.loadLevel('Game' + (index+1));
                 }.bind(this), 4000);
               }.bind(this)}, {text: 'No', next: null}], false, this.game, null);
               this.proximity2[i] = true;
@@ -1553,6 +1615,15 @@ TopDownGame.Overworld.prototype = {
       if(tempC) {
         tempC.bringToTop();
       }
+
+      for(var i = 0; i < this.ui.length; i++) {
+        this.game.world.bringToTop(this.ui[i]);
+      }
+      this.bobaText.text = inventory.items.stickyBoba;
+      this.eyelashText.text = inventory.items.eyelash;
+      this.jellyText.text = inventory.items.jelly;
+      this.iceText.text = inventory.items.ice;
+
       this.game.world.bringToTop(this.graphics);
       if(this.areaText) {
         this.game.world.bringToTop(this.areaText);
@@ -1566,6 +1637,8 @@ TopDownGame.Overworld.prototype = {
     }
   },
   loadLevel(level) {
+    stats.stamina = stats.maxStamina;
+    stats.timeLeft = stats.time;
     clearInterval(this.playerLoop);
     clearInterval(this.timer);
     this.music.destroy();

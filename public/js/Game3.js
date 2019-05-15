@@ -1,15 +1,15 @@
 var TopDownGame = TopDownGame || {};
 
 //title screen
-TopDownGame.Game2 = function(){};
+TopDownGame.Game3 = function(){};
 
-TopDownGame.Game2.prototype = {
+TopDownGame.Game3.prototype = {
   create: function() {
     // LOAD UP MAPPING FOR REALTIME DYNAMIC MAP GENERATION
     this.prevInventory = Object.assign({}, inventory.items);
     obtained = false;
     // SET UP VICTORY ITEM
-    this.currentRoom = new Room(null, null, null, null, '7', 0, 0);
+    this.currentRoom = new Room(null, null, null, null, '32', 0, 0);
     this.currentDoors = [];
     this.mapList = [];
     this.tileList = [];
@@ -25,9 +25,9 @@ TopDownGame.Game2.prototype = {
     this.leftRooms = [];
     this.rightRooms = [];
     this.deadEnds = [];
-    this.numRooms = 28;
+    this.numRooms = 37;
     this.timeLeft = 300;
-    this.rooms = [new Room(null, null, null, null, '7', 0, 0)];
+    this.rooms = [new Room(null, null, null, null, '32', 0, 0)];
     this.graphics = drawGraphics(this.graphics, this.game, this.rooms, this.currentRoom, stats.timeLeft);
     this.graphics.fixedToCamera = true;
 
@@ -68,7 +68,7 @@ TopDownGame.Game2.prototype = {
     }
 
     // SET STARTING ROOM
-    this.map = this.mapList[6];
+    this.map = this.mapList[31];
     this.swapList = [];
     this.currentSwapList = [];
     this.aboveList = [];
@@ -406,7 +406,7 @@ TopDownGame.Game2.prototype = {
     this.graphics = drawGraphics(this.graphics, this.game, this.rooms, this.currentRoom, stats.time);
     this.graphics.fixedToCamera = true;
     this.label1 = drawLabel1(this.label1, this.game);
-    this.label2 = drawLabel2(this.label2, this.game, "Basement II");
+    this.label2 = drawLabel2(this.label2, this.game, "Basement III");
 
     // TRANSITION IN
     var tweenA = this.game.add.tween(this.sgraphics).to({alpha: 0}, 4000, "Quart.easeOut", 200);
@@ -448,7 +448,7 @@ TopDownGame.Game2.prototype = {
                 if(counter == 0) {
                   //FIND A RANDOM ROOM AND LINK TO IT
                   // DETERMINE IF WE NEED A DEAD END
-                  if ((this.currentRoom.y > 5 || this.currentRoom.y < -5) || Math.random() * 10 < Math.pow(1.8, Math.abs(this.currentRoom.y))) {
+                  if ((this.currentRoom.y > 6 || this.currentRoom.y < -6) || Math.random() * 10 < Math.pow(1.7, Math.abs(this.currentRoom.y))) {
                     //GENERATE DEAD END
                     var deadendlist = [];
                     for(var x = 0; x < this.deadEnds.length; x++) {
@@ -507,7 +507,7 @@ TopDownGame.Game2.prototype = {
                 if(counter == 0) {
                   //FIND A RANDOM ROOM AND LINK TO IT
                   // DETERMINE IF WE NEED A DEAD END
-                  if ((this.currentRoom.y > 5 || this.currentRoom.y < -5) || Math.random() * 10 < Math.pow(1.8, Math.abs(this.currentRoom.y))) {
+                  if ((this.currentRoom.y > 6 || this.currentRoom.y < -6) || Math.random() * 10 < Math.pow(1.7, Math.abs(this.currentRoom.y))) {
                     //GENERATE DEAD END
                     var deadendlist = [];
                     for(var x = 0; x < this.deadEnds.length; x++) {
@@ -566,7 +566,7 @@ TopDownGame.Game2.prototype = {
                 if(counter == 0) {
                   //FIND A RANDOM ROOM AND LINK TO IT
                   // DETERMINE IF WE NEED A DEAD END
-                  if ((this.currentRoom.x > 5 || this.currentRoom.x < -5) || Math.random() * 10 < Math.pow(1.8, Math.abs(this.currentRoom.x))) {
+                  if ((this.currentRoom.x > 6 || this.currentRoom.x < -6) || Math.random() * 10 < Math.pow(1.7, Math.abs(this.currentRoom.x))) {
                     //GENERATE DEAD END
                     var deadendlist = [];
                     for(var x = 0; x < this.deadEnds.length; x++) {
@@ -625,7 +625,7 @@ TopDownGame.Game2.prototype = {
                 if(counter == 0) {
                   //FIND A RANDOM ROOM AND LINK TO IT
                   // DETERMINE IF WE NEED A DEAD END
-                  if ((this.currentRoom.x > 5 || this.currentRoom.x < -5) || Math.random() * 10 < Math.pow(1.8, Math.abs(this.currentRoom.x))) {
+                  if ((this.currentRoom.x > 6 || this.currentRoom.x < -6) || Math.random() * 10 < Math.pow(1.7, Math.abs(this.currentRoom.x))) {
                     //GENERATE DEAD END
                     var deadendlist = [];
                     for(var x = 0; x < this.deadEnds.length; x++) {
@@ -908,7 +908,7 @@ TopDownGame.Game2.prototype = {
             this.graphics = drawGraphics(this.graphics, this.game, this.rooms, this.currentRoom, stats.timeLeft);
             this.graphics.fixedToCamera = true;
             this.label1 = drawLabel1(this.label1, this.game);
-            this.label2 = drawLabel2(this.label2, this.game, "Basement II");
+            this.label2 = drawLabel2(this.label2, this.game, "Basement III");
             stats.invincible = 0;
 
             this.currentRoomIndex = this.rooms.indexOf(this.currentRoom);
@@ -1100,7 +1100,7 @@ TopDownGame.Game2.prototype = {
             this.rootCutscene = new Prompt("Leave this floor?", 
             [{text: "Yes", next: null, callback: function() {
               if(obtained) {
-                FLAGS.OVERWORLD_STATE = 2;
+                FLAGS.OVERWORLD_STATE = 3;
                 this.loadLevel('Victory');
               } else {
                 this.loadLevel('Missed');

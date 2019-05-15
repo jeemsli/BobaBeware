@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.2" tiledversion="1.2.3" orientation="orthogonal" renderorder="right-down" width="25" height="25" tilewidth="32" tileheight="32" infinite="0" nextlayerid="7" nextobjectid="2">
- <tileset firstgid="1" source="f2objs.tsx"/>
- <tileset firstgid="17" source="f2tiles.tsx"/>
+ <tileset firstgid="1" name="f2objs" tilewidth="32" tileheight="32" tilecount="16" columns="4">
+  <image source="../../assets/Floor 2/objspritesheet.png" width="128" height="128"/>
+ </tileset>
+ <tileset firstgid="17" name="f2tiles" tilewidth="32" tileheight="32" tilecount="56" columns="8">
+  <image source="../../assets/Floor 2/f2spritesheet.png" width="256" height="224"/>
+ </tileset>
  <layer id="1" name="backgroundLayer" width="25" height="25">
   <data encoding="csv">
 17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,
@@ -17,8 +21,8 @@
 17,17,17,17,17,17,17,17,24,24,24,24,24,24,24,24,24,17,17,17,17,17,17,17,17,
 17,17,17,17,17,17,17,24,24,24,24,24,24,24,24,24,24,24,17,17,17,17,17,17,17,
 17,17,17,17,17,17,17,24,24,24,24,24,24,24,24,24,24,24,17,17,17,17,17,17,17,
-17,17,17,17,17,17,17,24,2684354630,24,24,24,24,24,24,24,24,24,17,17,17,17,17,17,17,
-17,17,17,17,17,17,17,24,2684354631,24,65,24,24,24,24,24,24,24,17,17,17,17,17,17,17,
+17,17,17,17,17,17,17,24,24,24,24,24,24,24,24,24,24,24,17,17,17,17,17,17,17,
+17,17,17,17,17,17,17,24,70,71,65,24,24,24,24,24,24,24,17,17,17,17,17,17,17,
 17,17,17,17,17,17,17,24,24,24,24,24,24,24,24,24,24,24,17,17,17,17,17,17,17,
 17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,
 17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,

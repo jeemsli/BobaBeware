@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.2" tiledversion="1.2.3" orientation="orthogonal" renderorder="right-down" width="25" height="25" tilewidth="32" tileheight="32" infinite="0" nextlayerid="7" nextobjectid="3">
+<map version="1.2" tiledversion="1.2.3" orientation="orthogonal" renderorder="right-down" width="25" height="25" tilewidth="32" tileheight="32" infinite="0" nextlayerid="7" nextobjectid="5">
  <tileset firstgid="1" name="f2tiles" tilewidth="32" tileheight="32" tilecount="56" columns="8">
   <image source="../../assets/Floor 2/f2spritesheet.png" width="256" height="224"/>
  </tileset>
@@ -13,7 +13,7 @@
 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,12,1,1,1,1,1,1,1,1,1,1,
 1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,36,1,1,1,1,1,1,1,1,1,
 1,1,1,1,1,1,1,1,1,1,1,1,1,1,36,8,1,1,1,1,1,1,1,1,1,
 1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,42,1,1,1,1,1,1,1,1,1,
@@ -26,7 +26,7 @@
 1,1,1,1,1,1,1,1,1,8,41,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
 1,1,1,1,1,1,1,1,1,36,8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
 1,1,1,1,1,1,1,1,1,8,36,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+1,1,1,1,1,1,1,1,1,1,18,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
@@ -132,6 +132,16 @@
    </properties>
   </object>
   <object id="2" gid="18" x="320" y="608" width="32" height="32"/>
+  <object id="3" gid="16" x="448" y="192" width="32" height="32">
+   <properties>
+    <property name="door" value="up"/>
+   </properties>
+  </object>
+  <object id="4" gid="16" x="320" y="608" width="32" height="32">
+   <properties>
+    <property name="door" value="down"/>
+   </properties>
+  </object>
  </objectgroup>
  <layer id="4" name="aboveLayer" width="25" height="25">
   <data encoding="csv">

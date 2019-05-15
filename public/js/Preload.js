@@ -29,6 +29,8 @@ TopDownGame.Preload.prototype = {
 
     this.load.image('victory','/assets/Victory/victory.png');
 
+    this.load.image('missed','assets/Missed/missed.png');
+
     this.load.image('gameOver','/assets/GameOver/gameover.png');
 
     this.load.image('barOut', 'assets/UI/barOut2.png');
@@ -42,6 +44,13 @@ TopDownGame.Preload.prototype = {
     this.load.image('jelly', 'assets/Items/jelly.png');
     this.load.image('ice', 'assets/Items/ice.png');
     this.load.image('border', 'assets/Items/border.png');
+
+    this.load.image('item0', 'assets/Items/aloe.png');
+    this.load.image('item1', 'assets/Items/dragonfruit.png');
+    this.load.image('item2', 'assets/Items/durian.png');
+    this.load.image('item3', 'assets/Items/orange.png');
+    this.load.image('item4', 'assets/Items/pocky.png');
+    this.load.image('item5', 'assets/Items/yakult.png');
 
     this.load.tilemap('1', '../maps/Floor 1/1.json', null, Phaser.Tilemap.TILED_JSON);
     this.load.tilemap('2', '../maps/Floor 1/2.json', null, Phaser.Tilemap.TILED_JSON);
@@ -104,6 +113,7 @@ TopDownGame.Preload.prototype = {
     this.load.image('ralphPortrait', 'assets/UI/ralph.png');
     this.load.spritesheet('abg', 'assets/Enemies/ABG/AbgSpriteSheet1.png', 64, 64, 72);
     this.game.load.audio('music', 'assets/audio/overworld.wav');
+    this.game.load.audio('musicBasement', 'assets/audio/Basement.wav');
     this.load.image('cutscene', 'assets/UI/cutscene.png');
     this.game.add.text(0,0,"", {font: '20px ZCOOLKuaiLe'});
     this.game.load.audio('recording', 'assets/audio/Recording (18).m4a');

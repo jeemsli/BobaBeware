@@ -18,6 +18,11 @@ TopDownGame.Preload.prototype = {
     this.load.spritesheet('levelsBack','assets/Levels/levelsBack.png',56,48,2);  
     this.load.image('levelsText','assets/Levels/levelsText.png');
     this.load.image('level1','assets/Levels/level1.png');
+    this.load.image('level2','assets/Levels/level2.png');
+    this.load.image('level3','assets/Levels/level3.png');
+    this.load.image('level4','assets/Levels/level4.png');
+    this.load.image('level5','assets/Levels/level5.png');
+    this.load.image('level6','assets/Levels/level6.png');
   
     this.load.spritesheet('controlsBack','assets/Controls/controlsBack.png',56,48,2);  
     this.load.image('controlsScreen','assets/Controls/controlsScreen.png');

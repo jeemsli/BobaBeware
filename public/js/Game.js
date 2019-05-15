@@ -1,5 +1,6 @@
 var TopDownGame = TopDownGame || {};
 var paused = false;
+var obtained = true;
 
 class Item {
 
@@ -14,7 +15,11 @@ class Item {
   }
 
   collect() {
-    if(inventory.getSize() < stats.size && !this.collected) {
+    if(this.type == 'boba') {
+      obtained = true;
+      this.sprite.destroy();
+    }
+    else if(inventory.getSize() < stats.size && !this.collected) {
       inventory.addItem(this.type);
       this.collected = true;
       this.sprite.destroy();
@@ -36,6 +41,7 @@ class Stats {
     this.timeTier = 1;
     this.speedTier = 1;
     this.staminaTier = 1;
+    this.invincible = 0;
   }
 }
 
@@ -51,8 +57,8 @@ class Inventory {
     this.text3 = null;
     this.text4 = null;
     this.items = {
-      stickyBoba: 0,
-      eyelash: 0,
+      stickyBoba: 100,
+      eyelash: 100,
       jelly: 0,
       ice: 0
     }
@@ -74,10 +80,9 @@ class Inventory {
 
     switch(type) {
       case "stickyBoba":
-        console.log("USED STICKY");
         break;
       case "eyelash":
-        console.log("USED EYELASH");
+        stats.invincible = 1;
         break;
       case "jelly":
         this.originalSpeed =  stats.speed;
@@ -131,7 +136,7 @@ class Inventory {
   }
 }
 
-var stats = new Stats(100, 1000, 120, 10);
+var stats = new Stats(100, 1000, 150, 10);
 var inventory = new Inventory();
 
 class Room {
@@ -282,7 +287,7 @@ class EnrageBehavior {
     var y = Math.floor(this.bot.player.y / 32);
     var x2 = this.bot.spritePosition.x;
     var y2 = this.bot.spritePosition.y;
-    if((x > (x2 - 5)) && (x < (x2 + 5)) && (y > (y2 - 5)) && (y < (y2 + 5)) && this.bot.currentRoom.x == this.bot.roomX && this.bot.currentRoom.y == this.bot.roomY) {
+    if((x > (x2 - 5)) && (x < (x2 + 5)) && (y > (y2 - 5)) && (y < (y2 + 5)) && this.bot.currentRoom.x == this.bot.roomX && this.bot.currentRoom.y == this.bot.roomY && !stats.invincible) {
       var tile = this.bot.tiles[y + 2][x + 1];
       this.bot.currentPath = findPath({x: x2 + 1, y: y2 + 2, tile: this.bot.spritePosition.tile}, {x: x + 1, y: y + 2, tile: tile}, this.bot.nodes, 25, 25);
       this.bot.setState(BotState.ENRAGED);
@@ -466,7 +471,7 @@ class IdleBehavior {
     var y = Math.floor(this.bot.player.y / 32);
     var x2 = this.bot.spritePosition.x;
     var y2 = this.bot.spritePosition.y;
-    if((x > (x2 - 5)) && (x < (x2 + 5)) && (y > (y2 - 5)) && (y < (y2 + 5)) && this.bot.currentRoom.x == this.bot.roomX && this.bot.currentRoom.y == this.bot.roomY) {
+    if((x > (x2 - 5)) && (x < (x2 + 5)) && (y > (y2 - 5)) && (y < (y2 + 5)) && this.bot.currentRoom.x == this.bot.roomX && this.bot.currentRoom.y == this.bot.roomY && !stats.invincible) {
       var tile = this.bot.tiles[y + 2][x + 1];
       this.bot.currentPath = findPath({x: x2 + 1, y: y2 + 2, tile: this.bot.spritePosition.tile}, {x: x + 1, y: y + 2, tile: tile}, this.bot.nodes, 25, 25);
       if(this.bot.currentPath && this.bot.currentPath != []) {
@@ -1152,6 +1157,8 @@ TopDownGame.Game.prototype = {
   create: function() {
     // LOAD UP MAPPING FOR REALTIME DYNAMIC MAP GENERATION
     this.prevInventory = Object.assign({}, inventory.items);
+    obtained = false;
+    // SET UP VICTORY ITEM
     this.currentRoom = new Room(null, null, null, null, '2', 0, 0);
     this.currentDoors = [];
     this.mapList = [];
@@ -1350,6 +1357,7 @@ TopDownGame.Game.prototype = {
     this.currentRoomIndex = this.rooms.indexOf(this.currentRoom);
     this.regen = true;
     this.staminaTimer = null;
+    this.projectiles = [];
     
     //create enemy
     this.enemies = [];
@@ -1432,6 +1440,41 @@ TopDownGame.Game.prototype = {
     this.one.onDown.add(function() {
       if(inventory.items['stickyBoba'] > 0) {
         inventory.useItem('stickyBoba');
+        var spr = this.game.add.sprite(this.player.x + 16, this.player.y + 32, 'stickyBoba');
+        spr.scale.x = 0.5;
+        spr.scale.y = 0.5;
+        this.game.physics.arcade.enable(spr);
+        switch(this.direction) {
+          case 'bottom':
+            spr.body.velocity.y = 200;
+            break;
+          case 'bottomleft':
+            spr.body.velocity.y = 200;
+            spr.body.velocity.x = -200;
+            break;
+          case 'bottomright':
+            spr.body.velocity.y = 200;
+            spr.body.velocity.x = 200;
+            break;
+          case 'top':
+            spr.body.velocity.y = -200;
+            break;
+          case 'topleft':
+            spr.body.velocity.y = -200;
+            spr.body.velocity.x = -200;
+            break;
+          case 'topright':
+            spr.body.velocity.y = -200;
+            spr.body.velocity.x = 200;
+            break;
+          case 'left':
+            spr.body.velocity.x = -200;
+            break;
+          case 'right':
+            spr.body.velocity.x = 200;
+            break;
+        }
+        this.projectiles.push(spr);
       }
     }.bind(this));
     this.two = this.game.input.keyboard.addKey(Phaser.Keyboard.TWO);
@@ -1513,6 +1556,12 @@ TopDownGame.Game.prototype = {
     // TRANSITION IN
     var tweenA = this.game.add.tween(this.sgraphics).to({alpha: 0}, 4000, "Quart.easeOut", 200);
     tweenA.start();
+
+    // GENERATE WHERE WINNING ITEM WILL SPAWN BASED ON GRID
+    this.winningX = Math.random() > 0.5 ? Math.round(Math.random() * 2 + 3) : -(Math.round(Math.random() * 2 + 3));
+    this.winningY = Math.random() > 0.5 ? Math.round(Math.random() * 2 + 3) : -(Math.round(Math.random() * 2 + 3));
+    console.log(this.winningX);
+    console.log(this.winningY);
 
     // MAIN PLAYER LOOP
     this.playerLoop = setInterval(function() {
@@ -1930,6 +1979,49 @@ TopDownGame.Game.prototype = {
               }
             }
 
+            if(this.currentRoom.x == this.winningX && this.currentRoom.y == this.winningY && roomsIndex != this.rooms.length) {
+              //SPAWN VICTORY ITEM
+              // PLACE SUCH THAT CURRENT PATH CAN GO TO DOOR!
+              var tiles = this.tileList[this.mapList.indexOf(this.map)];
+              var possibleTiles = [];
+              var doorTo = this.currentDoors[0];
+              var doorTile = this.tileList[this.mapList.indexOf(this.map)][doorTo.y-1][doorTo.x];
+              for(var m = 0; m < tiles.length; m++) {
+                for(var n = 0; n < tiles[m].length; n++) {
+                  var tile = tiles[m][n];
+                  var objl = this.objs[this.mapList.indexOf(this.map)];
+                  // ENEMIES CANNOT SPAWN IN OBJECTS
+                  for(var x = 0; x < objl.length; x++) {
+                    if(objl[x].x == tile.x && objl[x].y == tile.y) {
+                      tile = null;
+                      break;
+                    }
+                  }
+                  if(!tile) {
+                    continue;
+                  }
+                  for(var x = 0; x < this.currentDoors.length; x++) {
+                    if(this.currentDoors[x].x - 3 <= tile.x && this.currentDoors[x].x + 3 >= tile.x
+                      && this.currentDoors[x].y - 3 <= tile.y && this.currentDoors[x].y + 3 >= tile.y) {
+                        tile = null;
+                        break;
+                      }
+                  }
+                  if(!tile || tile.tile.collideDown) {
+                    continue;
+                  }
+                  var cPath = findPath({x:tile.x, y: tile.y, tile: tile.tile}, {x:doorTile.x, y:doorTile.y, tile: doorTile.tile}, this.nodeList[this.mapList.indexOf(this.map)], 25, 25);
+                  if(cPath) {
+                    possibleTiles.push(tile);
+                  }
+                }
+              }
+
+              var tile = possibleTiles[Math.floor(Math.random()*possibleTiles.length)];
+              var itemObj = new Item(this.game.add.sprite((tile.x * 32), (tile.y * 32), 'item' + FLAGS.OVERWORLD_STATE), 'boba', this.winningX, this.winningY);
+              this.items.push(itemObj);
+            }
+
             this.game.world.bringToTop(this.player);
             if(this.currentRoom.x == 0 && this.currentRoom.y == 0) {
               this.ladderBottom.body.enable = true;
@@ -1964,6 +2056,7 @@ TopDownGame.Game.prototype = {
             this.graphics.fixedToCamera = true;
             this.label1 = drawLabel1(this.label1, this.game);
             this.label2 = drawLabel2(this.label2, this.game);
+            stats.invincible = 0;
 
             this.currentRoomIndex = this.rooms.indexOf(this.currentRoom);
           } else {
@@ -2153,7 +2246,12 @@ TopDownGame.Game.prototype = {
           if(!this.proximity) {
             this.rootCutscene = new Prompt("Leave this floor?", 
             [{text: "Yes", next: null, callback: function() {
-              this.loadLevel('Overworld');
+              if(obtained) {
+                FLAGS.OVERWORLD_STATE = 1;
+                this.loadLevel('Victory');
+              } else {
+                this.loadLevel('Overworld');
+              }
             }.bind(this)}, {text: "No", next: null}]
             , false, this.game, null, this.cursors);
             this.proximity = true;
@@ -2182,8 +2280,22 @@ TopDownGame.Game.prototype = {
         }
       }
 
+      for(var z = 0; z < this.projectiles.length; z++) {
+        if (this.projectiles[z].body.velocity.x == 0 && this.projectiles[z].body.velocity.y == 0) {
+          this.projectiles[z].destroy();
+          this.projectiles.splice(z, 1);
+        }
+      }
+
       Array.prototype.forEach.call(this.enemies, enemy => {
-        if(enemy.sprite.x - 16 <= this.player.x && enemy.sprite.x + 16 >= this.player.x && enemy.sprite.y - 16 <= this.player.y && enemy.sprite.y + 16 >= this.player.y && this.currentRoom.x == enemy.roomX && this.currentRoom.y == enemy.roomY) {
+        for(var x = 0; x < this.projectiles.length; x++) {
+          if(enemy.sprite.x - 16 <= this.projectiles[x].x - 16 && enemy.sprite.x + 16 >= this.projectiles[x].x - 16 && enemy.sprite.y - 16 <= this.projectiles[x].y - 48 && enemy.sprite.y + 16 >= this.projectiles[x].y - 48 && this.currentRoom.x == enemy.roomX && this.currentRoom.y == enemy.roomY) {
+            this.projectiles[x].destroy();
+            this.projectiles.splice(x, 1);
+            enemy.speed = 20;
+          }
+        }
+        if(enemy.sprite.x - 16 <= this.player.x && enemy.sprite.x + 16 >= this.player.x && enemy.sprite.y - 16 <= this.player.y && enemy.sprite.y + 16 >= this.player.y && this.currentRoom.x == enemy.roomX && this.currentRoom.y == enemy.roomY && !stats.invincible) {
           inventory.items = this.prevInventory;
           this.loadLevel('Gameover');
         }
@@ -2301,6 +2413,13 @@ TopDownGame.Game.prototype = {
   },
   update: function() {
     //collision
+    for(var i = 0; i < this.projectiles.length; i++) {
+      this.game.physics.arcade.collide(this.projectiles[i], this.wallLayer);
+      this.game.physics.arcade.collide(this.projectiles[i], this.objectLayer);
+      for(var x = 0; x < this.enemies.length; x++) {
+        this.game.physics.arcade.collide(this.projectiles[i], this.enemies[x]);
+      }
+    }
     this.game.physics.arcade.collide(this.player, this.wallLayer);
     this.game.physics.arcade.collide(this.player, this.objectLayer);
     this.game.physics.arcade.collide(this.player, this.ladderBottom);

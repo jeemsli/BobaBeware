@@ -43,6 +43,13 @@ TopDownGame.Preload.prototype = {
     this.load.image('ice', 'assets/Items/ice.png');
     this.load.image('border', 'assets/Items/border.png');
 
+    this.load.image('item0', 'assets/Items/aloe.png');
+    this.load.image('item1', 'assets/Items/dragonfruit.png');
+    this.load.image('item2', 'assets/Items/durian.png');
+    this.load.image('item3', 'assets/Items/orange.png');
+    this.load.image('item4', 'assets/Items/pocky.png');
+    this.load.image('item5', 'assets/Items/yakult.png');
+
     this.load.tilemap('1', '../maps/Floor 1/1.json', null, Phaser.Tilemap.TILED_JSON);
     this.load.tilemap('2', '../maps/Floor 1/2.json', null, Phaser.Tilemap.TILED_JSON);
     this.load.tilemap('3', '../maps/Floor 1/3.json', null, Phaser.Tilemap.TILED_JSON);

@@ -12,6 +12,7 @@ TopDownGame.game.state.add('Controls', TopDownGame.Controls);
 TopDownGame.game.state.add('About', TopDownGame.About);
 TopDownGame.game.state.add('Victory', TopDownGame.Victory);
 TopDownGame.game.state.add('Gameover', TopDownGame.GameOver);
+TopDownGame.game.state.add('Game2', TopDownGame.Game2);
 
 TopDownGame.game.state.add('Overworld', TopDownGame.Overworld);
  

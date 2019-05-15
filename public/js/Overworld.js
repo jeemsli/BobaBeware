@@ -8,10 +8,9 @@ let FLAGS = {
   //FINISHED INTRODUCTIONS
   flag_four: 0,
   flag_five: 0,
-  tutorial_one: 2,
+  tutorial_one: 3,
   OVERWORLD_STATE: 0
   //TUTORIAL ONE, Player cannot get the fruit on the first go
-  
 };
 
 class NPC {
@@ -1432,15 +1431,37 @@ TopDownGame.Overworld.prototype = {
           var py = Math.floor(this.player.y / 32) + 2;
           if(hx == px && hy == py) {
             if(!this.proximity2[i]) {
-              this.rootCutscene = new Prompt('Do you want to head to Basement I?', [{text:'Yes', next: null, callback: function() {
+              var floorName = null;
+              switch(i) {
+                case 0:
+                  floorName = 'Basement Surface';
+                  break;
+                case 1:
+                  floorName = 'Basement Depths';
+                  break;
+                case 2:
+                  floorName = 'Basement Labyrinth';
+                  break;
+                case 3:
+                  floorName = 'Outer Freezer';
+                  break;
+                case 4:
+                  floorName = 'Middle Freezer';
+                  break;
+                case 5:
+                  floorName = 'Bottom Freezer';
+              }
+              this.rootCutscene = new Prompt('Do you want to head to ' + floorName + '?', [{text:'Yes', next: null, callback: function() {
                 paused = true;
                 this.music.stop();
                 var tweenA = this.game.add.tween(this.graphics).to({alpha: 1}, 1000, "Quart.easeOut");
-                this.areaText = this.game.add.text(160, 300, "BASEMENT I", {
+                this.areaText = this.game.add.text(this.game.world.centerX, this.game.world.centerY, floorName.toUpperCase(), {
                   font: '50px ZCOOLKuaiLe',
                   fill: '#000000',
                   fontWeight: 'bold',
+                  boundsAlignH: "center", boundsAlignV: "middle" 
                 });
+                this.areaText.setTextBounds(0, 0, this.game.world.width, 0);
                 this.areaText.alpha = 0;
                 var grd = this.areaText.context.createLinearGradient(0, 0, 0, this.areaText.height);
                 //  Add in 2 color stops
@@ -1454,6 +1475,11 @@ TopDownGame.Overworld.prototype = {
                 tweenA.start();
                 setTimeout(function() {
                   paused = false;
+                  if(i == 0) {
+                    this.loadLevel('Game');
+                  } else {
+                    this.loadLevel('Game' + (i + 1));
+                  }
                   this.loadLevel('Game');
                 }.bind(this), 4000);
               }.bind(this)}, {text: 'No', next: null}], false, this.game, null);

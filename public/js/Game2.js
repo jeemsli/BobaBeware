@@ -1,4 +1,5 @@
 var TopDownGame = TopDownGame || {};
+
 //title screen
 TopDownGame.Game2 = function(){};
 
@@ -6,7 +7,9 @@ TopDownGame.Game2.prototype = {
   create: function() {
     // LOAD UP MAPPING FOR REALTIME DYNAMIC MAP GENERATION
     this.prevInventory = Object.assign({}, inventory.items);
-    this.currentRoom = new Room(null, null, null, null, '2', 0, 0);
+    obtained = false;
+    // SET UP VICTORY ITEM
+    this.currentRoom = new Room(null, null, null, null, '7', 0, 0);
     this.currentDoors = [];
     this.mapList = [];
     this.tileList = [];
@@ -24,7 +27,7 @@ TopDownGame.Game2.prototype = {
     this.deadEnds = [];
     this.numRooms = 28;
     this.timeLeft = 300;
-    this.rooms = [new Room(null, null, null, null, '2', 0, 0)];
+    this.rooms = [new Room(null, null, null, null, '7', 0, 0)];
     this.graphics = drawGraphics(this.graphics, this.game, this.rooms, this.currentRoom, stats.timeLeft);
     this.graphics.fixedToCamera = true;
 
@@ -65,7 +68,7 @@ TopDownGame.Game2.prototype = {
     }
 
     // SET STARTING ROOM
-    this.map = this.mapList[1];
+    this.map = this.mapList[6];
     this.swapList = [];
     this.currentSwapList = [];
     this.aboveList = [];
@@ -204,6 +207,7 @@ TopDownGame.Game2.prototype = {
     this.currentRoomIndex = this.rooms.indexOf(this.currentRoom);
     this.regen = true;
     this.staminaTimer = null;
+    this.projectiles = [];
     
     //create enemy
     this.enemies = [];
@@ -286,6 +290,41 @@ TopDownGame.Game2.prototype = {
     this.one.onDown.add(function() {
       if(inventory.items['stickyBoba'] > 0) {
         inventory.useItem('stickyBoba');
+        var spr = this.game.add.sprite(this.player.x + 16, this.player.y + 32, 'stickyBoba');
+        spr.scale.x = 0.5;
+        spr.scale.y = 0.5;
+        this.game.physics.arcade.enable(spr);
+        switch(this.direction) {
+          case 'bottom':
+            spr.body.velocity.y = 200;
+            break;
+          case 'bottomleft':
+            spr.body.velocity.y = 200;
+            spr.body.velocity.x = -200;
+            break;
+          case 'bottomright':
+            spr.body.velocity.y = 200;
+            spr.body.velocity.x = 200;
+            break;
+          case 'top':
+            spr.body.velocity.y = -200;
+            break;
+          case 'topleft':
+            spr.body.velocity.y = -200;
+            spr.body.velocity.x = -200;
+            break;
+          case 'topright':
+            spr.body.velocity.y = -200;
+            spr.body.velocity.x = 200;
+            break;
+          case 'left':
+            spr.body.velocity.x = -200;
+            break;
+          case 'right':
+            spr.body.velocity.x = 200;
+            break;
+        }
+        this.projectiles.push(spr);
       }
     }.bind(this));
     this.two = this.game.input.keyboard.addKey(Phaser.Keyboard.TWO);
@@ -368,6 +407,10 @@ TopDownGame.Game2.prototype = {
     var tweenA = this.game.add.tween(this.sgraphics).to({alpha: 0}, 4000, "Quart.easeOut", 200);
     tweenA.start();
 
+    // GENERATE WHERE WINNING ITEM WILL SPAWN BASED ON GRID
+    this.winningX = Math.random() > 0.5 ? Math.round(Math.random() * 2 + 4) : -(Math.round(Math.random() * 2 + 4));
+    this.winningY = Math.random() > 0.5 ? Math.round(Math.random() * 2 + 4) : -(Math.round(Math.random() * 2 + 4));
+
     // MAIN PLAYER LOOP
     this.playerLoop = setInterval(function() {
       // PLAYER ENTER DOOR
@@ -400,7 +443,7 @@ TopDownGame.Game2.prototype = {
                 if(counter == 0) {
                   //FIND A RANDOM ROOM AND LINK TO IT
                   // DETERMINE IF WE NEED A DEAD END
-                  if ((this.currentRoom.y > 4 || this.currentRoom.y < -4) || Math.random() * 10 < Math.pow(1.75, Math.abs(this.currentRoom.y))) {
+                  if ((this.currentRoom.y > 4 || this.currentRoom.y < -4) || Math.random() * 10 < Math.pow(1.8, Math.abs(this.currentRoom.y))) {
                     //GENERATE DEAD END
                     var deadendlist = [];
                     for(var x = 0; x < this.deadEnds.length; x++) {
@@ -459,7 +502,7 @@ TopDownGame.Game2.prototype = {
                 if(counter == 0) {
                   //FIND A RANDOM ROOM AND LINK TO IT
                   // DETERMINE IF WE NEED A DEAD END
-                  if ((this.currentRoom.y > 4 || this.currentRoom.y < -4) || Math.random() * 10 < Math.pow(1.75, Math.abs(this.currentRoom.y))) {
+                  if ((this.currentRoom.y > 4 || this.currentRoom.y < -4) || Math.random() * 10 < Math.pow(1.8, Math.abs(this.currentRoom.y))) {
                     //GENERATE DEAD END
                     var deadendlist = [];
                     for(var x = 0; x < this.deadEnds.length; x++) {
@@ -518,7 +561,7 @@ TopDownGame.Game2.prototype = {
                 if(counter == 0) {
                   //FIND A RANDOM ROOM AND LINK TO IT
                   // DETERMINE IF WE NEED A DEAD END
-                  if ((this.currentRoom.x > 4 || this.currentRoom.x < -4) || Math.random() * 10 >  Math.pow(1.75, Math.abs(this.currentRoom.x))) {
+                  if ((this.currentRoom.x > 4 || this.currentRoom.x < -4) || Math.random() * 10 < Math.pow(1.8, Math.abs(this.currentRoom.x))) {
                     //GENERATE DEAD END
                     var deadendlist = [];
                     for(var x = 0; x < this.deadEnds.length; x++) {
@@ -577,7 +620,7 @@ TopDownGame.Game2.prototype = {
                 if(counter == 0) {
                   //FIND A RANDOM ROOM AND LINK TO IT
                   // DETERMINE IF WE NEED A DEAD END
-                  if ((this.currentRoom.x > 4 || this.currentRoom.x < -4) || Math.random() * 10 > Math.pow(1.75, Math.abs(this.currentRoom.x))) {
+                  if ((this.currentRoom.x > 4 || this.currentRoom.x < -4) || Math.random() * 10 < Math.pow(1.8, Math.abs(this.currentRoom.x))) {
                     //GENERATE DEAD END
                     var deadendlist = [];
                     for(var x = 0; x < this.deadEnds.length; x++) {
@@ -784,6 +827,49 @@ TopDownGame.Game2.prototype = {
               }
             }
 
+            if(this.currentRoom.x == this.winningX && this.currentRoom.y == this.winningY && roomsIndex != this.rooms.length) {
+              //SPAWN VICTORY ITEM
+              // PLACE SUCH THAT CURRENT PATH CAN GO TO DOOR!
+              var tiles = this.tileList[this.mapList.indexOf(this.map)];
+              var possibleTiles = [];
+              var doorTo = this.currentDoors[0];
+              var doorTile = this.tileList[this.mapList.indexOf(this.map)][doorTo.y-1][doorTo.x];
+              for(var m = 0; m < tiles.length; m++) {
+                for(var n = 0; n < tiles[m].length; n++) {
+                  var tile = tiles[m][n];
+                  var objl = this.objs[this.mapList.indexOf(this.map)];
+                  // ENEMIES CANNOT SPAWN IN OBJECTS
+                  for(var x = 0; x < objl.length; x++) {
+                    if(objl[x].x == tile.x && objl[x].y == tile.y) {
+                      tile = null;
+                      break;
+                    }
+                  }
+                  if(!tile) {
+                    continue;
+                  }
+                  for(var x = 0; x < this.currentDoors.length; x++) {
+                    if(this.currentDoors[x].x - 3 <= tile.x && this.currentDoors[x].x + 3 >= tile.x
+                      && this.currentDoors[x].y - 3 <= tile.y && this.currentDoors[x].y + 3 >= tile.y) {
+                        tile = null;
+                        break;
+                      }
+                  }
+                  if(!tile || tile.tile.collideDown) {
+                    continue;
+                  }
+                  var cPath = findPath({x:tile.x, y: tile.y, tile: tile.tile}, {x:doorTile.x, y:doorTile.y, tile: doorTile.tile}, this.nodeList[this.mapList.indexOf(this.map)], 25, 25);
+                  if(cPath) {
+                    possibleTiles.push(tile);
+                  }
+                }
+              }
+
+              var tile = possibleTiles[Math.floor(Math.random()*possibleTiles.length)];
+              var itemObj = new Item(this.game.add.sprite((tile.x * 32), (tile.y * 32), 'item' + FLAGS.OVERWORLD_STATE), 'boba', this.winningX, this.winningY);
+              this.items.push(itemObj);
+            }
+
             this.game.world.bringToTop(this.player);
             if(this.currentRoom.x == 0 && this.currentRoom.y == 0) {
               this.ladderBottom.body.enable = true;
@@ -818,6 +904,7 @@ TopDownGame.Game2.prototype = {
             this.graphics.fixedToCamera = true;
             this.label1 = drawLabel1(this.label1, this.game);
             this.label2 = drawLabel2(this.label2, this.game);
+            stats.invincible = 0;
 
             this.currentRoomIndex = this.rooms.indexOf(this.currentRoom);
           } else {
@@ -1007,7 +1094,12 @@ TopDownGame.Game2.prototype = {
           if(!this.proximity) {
             this.rootCutscene = new Prompt("Leave this floor?", 
             [{text: "Yes", next: null, callback: function() {
-              this.loadLevel('Overworld');
+              if(obtained) {
+                FLAGS.OVERWORLD_STATE = 2;
+                this.loadLevel('Victory');
+              } else {
+                this.loadLevel('Overworld');
+              }
             }.bind(this)}, {text: "No", next: null}]
             , false, this.game, null, this.cursors);
             this.proximity = true;
@@ -1036,10 +1128,24 @@ TopDownGame.Game2.prototype = {
         }
       }
 
+      for(var z = 0; z < this.projectiles.length; z++) {
+        if (this.projectiles[z].body.velocity.x == 0 && this.projectiles[z].body.velocity.y == 0) {
+          this.projectiles[z].destroy();
+          this.projectiles.splice(z, 1);
+        }
+      }
+
       Array.prototype.forEach.call(this.enemies, enemy => {
-        if(enemy.sprite.x - 16 <= this.player.x && enemy.sprite.x + 16 >= this.player.x && enemy.sprite.y - 16 <= this.player.y && enemy.sprite.y + 16 >= this.player.y && this.currentRoom.x == enemy.roomX && this.currentRoom.y == enemy.roomY) {
-            inventory.items = this.prevInventory;
-            this.loadLevel('Gameover');
+        for(var x = 0; x < this.projectiles.length; x++) {
+          if(enemy.sprite.x - 16 <= this.projectiles[x].x - 16 && enemy.sprite.x + 16 >= this.projectiles[x].x - 16 && enemy.sprite.y - 16 <= this.projectiles[x].y - 48 && enemy.sprite.y + 16 >= this.projectiles[x].y - 48 && this.currentRoom.x == enemy.roomX && this.currentRoom.y == enemy.roomY) {
+            this.projectiles[x].destroy();
+            this.projectiles.splice(x, 1);
+            enemy.speed = 20;
+          }
+        }
+        if(enemy.sprite.x - 16 <= this.player.x && enemy.sprite.x + 16 >= this.player.x && enemy.sprite.y - 16 <= this.player.y && enemy.sprite.y + 16 >= this.player.y && this.currentRoom.x == enemy.roomX && this.currentRoom.y == enemy.roomY && !stats.invincible) {
+          inventory.items = this.prevInventory;
+          this.loadLevel('Gameover');
         }
       });
 
@@ -1102,7 +1208,7 @@ TopDownGame.Game2.prototype = {
       if(!paused) {
         stats.timeLeft--;
         if(stats.timeLeft <= 0) {
-            inventory.items = this.prevInventory;
+          inventory.items = this.prevInventory;
           this.loadLevel('Gameover');
         }
         // TIMER
@@ -1155,6 +1261,13 @@ TopDownGame.Game2.prototype = {
   },
   update: function() {
     //collision
+    for(var i = 0; i < this.projectiles.length; i++) {
+      this.game.physics.arcade.collide(this.projectiles[i], this.wallLayer);
+      this.game.physics.arcade.collide(this.projectiles[i], this.objectLayer);
+      for(var x = 0; x < this.enemies.length; x++) {
+        this.game.physics.arcade.collide(this.projectiles[i], this.enemies[x]);
+      }
+    }
     this.game.physics.arcade.collide(this.player, this.wallLayer);
     this.game.physics.arcade.collide(this.player, this.objectLayer);
     this.game.physics.arcade.collide(this.player, this.ladderBottom);

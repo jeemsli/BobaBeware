@@ -1134,7 +1134,8 @@ TopDownGame.Game4.prototype = {
         this.text.fixedToCamera = true;
         this.text.text = (Math.floor(this.player.x / 32)+1) + ", " + (Math.floor(this.player.y / 32)+2) + "\n"
         + this.currentRoom.x + ", " + this.currentRoom.y + "\n"
-        + this.currentRoom.tileMap + "/" + this.stamina;
+        + this.currentRoom.tileMap + "/" + this.stamina + "\n" +
+        this.winningX + ", " + this.winningY;
         if(this.locked) {
           this.text.text += "\nThe door is locked!";
         }

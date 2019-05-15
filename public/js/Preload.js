@@ -29,6 +29,8 @@ TopDownGame.Preload.prototype = {
 
     this.load.image('victory','/assets/Victory/victory.png');
 
+    this.load.image('missed','assets/Missed/missed.png');
+
     this.load.image('gameOver','/assets/GameOver/gameover.png');
 
     this.load.image('barOut', 'assets/UI/barOut2.png');

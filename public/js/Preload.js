@@ -153,7 +153,7 @@ TopDownGame.Preload.prototype = {
     this.game.load.audio('eyelash', 'assets/audio/Eyelash.wav');
     this.game.load.audio('jelly', 'assets/audio/Jelly.wav');
     this.game.load.audio('ice', 'assets/audio/Ice.wav');
-    this.game.load.audio('musicFreeze', 'assets/audio/Freezer.wav');
+    this.game.load.audio('musicFreezer', 'assets/audio/Freezer.wav');
     this.load.image('cutscene', 'assets/UI/cutscene.png');
     //this.game.add.text(0,0,"", {font: '20px ZCOOLKuaiLe'});
     this.game.load.audio('recording', 'assets/audio/Recording (18).m4a');

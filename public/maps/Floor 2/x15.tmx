@@ -6,7 +6,7 @@
  <tileset firstgid="57" name="f2objs" tilewidth="32" tileheight="32" tilecount="16" columns="4">
   <image source="../../assets/Floor 2/objspritesheet.png" width="128" height="128"/>
  </tileset>
- <layer id="1" name="backgroundLayer" width="25" height="25">
+ <layer id="1" name="backgroundLayer" width="25" height="25" visible="0">
   <data encoding="csv">
 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
@@ -35,7 +35,7 @@
 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
 </data>
  </layer>
- <layer id="3" name="wallLayer" width="25" height="25">
+ <layer id="3" name="wallLayer" width="25" height="25" visible="0">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -64,7 +64,7 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 </data>
  </layer>
- <layer id="6" name="objectLayer" width="25" height="25">
+ <layer id="6" name="objectLayer" width="25" height="25" visible="0">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -93,7 +93,7 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 </data>
  </layer>
- <layer id="5" name="objectAboveLayer" width="25" height="25">
+ <layer id="5" name="objectAboveLayer" width="25" height="25" visible="0">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -131,19 +131,13 @@
     <property name="door" value="up"/>
    </properties>
   </object>
-  <object id="2" gid="18" x="320" y="608" width="32" height="32"/>
-  <object id="3" gid="16" x="448" y="192" width="32" height="32">
-   <properties>
-    <property name="door" value="up"/>
-   </properties>
-  </object>
   <object id="4" gid="16" x="320" y="608" width="32" height="32">
    <properties>
     <property name="door" value="down"/>
    </properties>
   </object>
  </objectgroup>
- <layer id="4" name="aboveLayer" width="25" height="25">
+ <layer id="4" name="aboveLayer" width="25" height="25" visible="0">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,

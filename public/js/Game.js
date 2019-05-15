@@ -57,8 +57,8 @@ class Inventory {
     this.text3 = null;
     this.text4 = null;
     this.items = {
-      stickyBoba: 100,
-      eyelash: 100,
+      stickyBoba: 0,
+      eyelash: 0,
       jelly: 0,
       ice: 0
     }

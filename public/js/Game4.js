@@ -202,7 +202,7 @@ TopDownGame.Game4.prototype = {
     this.backgroundlayer.resizeWorld();
 
     //create player and UI
-    this.player = this.game.add.sprite(368, 320, 'player');
+    this.player = this.game.add.sprite(288, 384, 'player');
     this.ladderBottom = this.game.add.sprite(288, 352, 'ladderBottom');
     this.ladderTop = this.game.add.sprite(288, 320, 'ladderTop');
     this.staminaBar = this.game.add.sprite(58, 550, 'barIn');

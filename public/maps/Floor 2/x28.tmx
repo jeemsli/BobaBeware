@@ -2,7 +2,7 @@
 <map version="1.2" tiledversion="1.2.3" orientation="orthogonal" renderorder="right-down" width="25" height="25" tilewidth="32" tileheight="32" infinite="0" nextlayerid="7" nextobjectid="2">
  <tileset firstgid="1" source="f2tiles.tsx"/>
  <tileset firstgid="57" source="f2objs.tsx"/>
- <layer id="1" name="backgroundLayer" width="25" height="25" visible="0">
+ <layer id="1" name="backgroundLayer" width="25" height="25">
   <data encoding="csv">
 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,

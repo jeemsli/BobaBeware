@@ -8,8 +8,8 @@ let FLAGS = {
   //FINISHED INTRODUCTIONS
   flag_four: 0,
   flag_five: 0,
-  tutorial_one: 0,
-  OVERWORLD_STATE: 0
+  tutorial_one: 3,
+  OVERWORLD_STATE: 3
   //TUTORIAL ONE, Player cannot get the fruit on the first go
 };
 
